@@ -1,0 +1,6 @@
+magista:
+  url: http://localhost:8022/stat
+storage:
+  endpoint: localhost
+  bucketName: "reports"
+
