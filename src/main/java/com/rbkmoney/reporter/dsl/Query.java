@@ -1,18 +1,21 @@
 package com.rbkmoney.reporter.dsl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Created by tolkonepiu on 10/07/2017.
  */
 public class Query {
 
-    private PaymentQuery payments;
+    @JsonProperty("shop_accounting_report")
+    private ShopAccountingQuery shopAccountingQuery;
 
-    public PaymentQuery getPayments() {
-        return payments;
+    public ShopAccountingQuery getShopAccountingQuery() {
+        return shopAccountingQuery;
     }
 
-    public void setPayments(PaymentQuery payments) {
-        this.payments = payments;
+    public void setShopAccountingQuery(ShopAccountingQuery shopAccountingQuery) {
+        this.shopAccountingQuery = shopAccountingQuery;
     }
 
     @Override
@@ -22,18 +25,18 @@ public class Query {
 
         Query query = (Query) o;
 
-        return payments != null ? payments.equals(query.payments) : query.payments == null;
+        return shopAccountingQuery != null ? shopAccountingQuery.equals(query.shopAccountingQuery) : query.shopAccountingQuery == null;
     }
 
     @Override
     public int hashCode() {
-        return payments != null ? payments.hashCode() : 0;
+        return shopAccountingQuery != null ? shopAccountingQuery.hashCode() : 0;
     }
 
     @Override
     public String toString() {
         return "Query{" +
-                "payments=" + payments +
+                "shopAccountingQuery=" + shopAccountingQuery +
                 '}';
     }
 }

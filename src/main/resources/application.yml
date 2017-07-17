@@ -1,3 +1,5 @@
+partyManagement:
+  url: http://localhost:8022/repo
 magista:
   url: http://localhost:8022/stat
 storage:
