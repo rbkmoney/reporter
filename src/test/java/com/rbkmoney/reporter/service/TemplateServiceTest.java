@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Date;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
@@ -78,13 +79,13 @@ public class TemplateServiceTest {
                 "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
                 fromTimeCell.getCellStyle().getDataFormatString()
         );
-        assertEquals(fromTime, fromTimeCell.getDateCellValue());
+        assertEquals(Date.from(fromTime), fromTimeCell.getDateCellValue());
         Cell toTimeCell = dateRow.getCell(3);
         assertEquals(
                 "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
                 toTimeCell.getCellStyle().getDataFormatString()
         );
-        assertEquals(toTime, toTimeCell.getDateCellValue());
+        assertEquals(Date.from(toTime), toTimeCell.getDateCellValue());
 
         Cell openingBalanceCell = sheet.getRow(23).getCell(3);
         assertEquals("#,##0.00", openingBalanceCell.getCellStyle().getDataFormatString());

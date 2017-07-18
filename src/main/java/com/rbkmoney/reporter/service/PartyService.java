@@ -9,6 +9,7 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.model.PartyRepresentation;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import java.util.Objects;
 /**
  * Created by tolkonepiu on 17/07/2017.
  */
+@Service
 public class PartyService {
 
     private final UserInfo userInfo = new UserInfo("admin", UserType.internal_user(new InternalUser()));
