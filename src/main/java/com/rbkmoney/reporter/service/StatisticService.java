@@ -7,7 +7,7 @@ import com.rbkmoney.damsel.merch_stat.StatRequest;
 import com.rbkmoney.reporter.dsl.Query;
 import com.rbkmoney.reporter.dsl.ShopAccountingQuery;
 import com.rbkmoney.reporter.dsl.StatisticDsl;
-import com.rbkmoney.reporter.model.ShopAccounting;
+import com.rbkmoney.reporter.model.ShopAccountingModel;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,13 +28,13 @@ public class StatisticService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public List<ShopAccounting> getShopAccountings(Instant from, Instant to) {
+    public List<ShopAccountingModel> getShopAccountings(Instant from, Instant to) {
         try {
             return merchantStatisticsSrv.getStatistics(createShopAccountingStatRequest(from, to))
                     .getData()
                     .getRecords()
                     .stream()
-                    .map(record -> objectMapper.convertValue(record, ShopAccounting.class))
+                    .map(record -> objectMapper.convertValue(record, ShopAccountingModel.class))
                     .collect(Collectors.toList());
         } catch (TException ex) {
             throw new RuntimeException(ex);

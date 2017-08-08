@@ -6,7 +6,7 @@ import com.rbkmoney.reporter.serializer.CurrencyDeserializer;
 /**
  * Created by tolkonepiu on 17/07/2017.
  */
-public class ShopAccounting {
+public class ShopAccountingModel {
 
     private String merchantId;
 
@@ -87,7 +87,7 @@ public class ShopAccounting {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ShopAccounting that = (ShopAccounting) o;
+        ShopAccountingModel that = (ShopAccountingModel) o;
 
         if (Double.compare(that.fundsAcquired, fundsAcquired) != 0) return false;
         if (Double.compare(that.feeCharged, feeCharged) != 0) return false;
@@ -118,7 +118,7 @@ public class ShopAccounting {
 
     @Override
     public String toString() {
-        return "ShopAccounting{" +
+        return "ShopAccountingModel{" +
                 "merchantId='" + merchantId + '\'' +
                 ", shopId='" + shopId + '\'' +
                 ", currencyCode='" + currencyCode + '\'' +

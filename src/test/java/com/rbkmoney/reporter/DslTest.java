@@ -1,35 +1,35 @@
 package com.rbkmoney.reporter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.rbkmoney.reporter.dsl.StatisticDsl;
-import org.junit.Ignore;
+import com.rbkmoney.reporter.service.StatisticService;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 /**
  * Created by tolkonepiu on 10/07/2017.
  */
-@Ignore
+//@RunWith(SpringRunner.class)
+//@SpringBootTest(webEnvironment = RANDOM_PORT)
 public class DslTest {
+//
+//    @Autowired
+//    StatisticService statisticService;
 
     @Test
     public void magistaDslTest() throws JsonProcessingException {
-        StatisticDsl dsl = random(StatisticDsl.class);
-
-        ObjectMapper objectMapper = new ObjectMapper()
-                .registerModule(new ParameterNamesModule())
-                .registerModule(new Jdk8Module())
-                .registerModule(new JavaTimeModule());
-
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        System.out.println(objectMapper.writeValueAsString(dsl));
+        Instant fromTime = LocalDateTime.of(2016, 01, 01, 00, 00).toInstant(ZoneOffset.UTC);
+        Instant toTime = LocalDateTime.of(2016, 12, 31, 11, 59).toInstant(ZoneOffset.UTC);
+        System.out.println(String.format("%s %s", fromTime, toTime));
+//        System.out.println(statisticService.getShopAccountings(fromTime, toTime));
     }
 
 }

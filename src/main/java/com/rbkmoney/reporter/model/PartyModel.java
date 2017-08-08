@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  * Created by tolkonepiu on 17/07/2017.
  */
-public class PartyRepresentation {
+public class PartyModel {
 
     private String merchantId;
 
@@ -82,7 +82,7 @@ public class PartyRepresentation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        PartyRepresentation that = (PartyRepresentation) o;
+        PartyModel that = (PartyModel) o;
 
         if (merchantId != null ? !merchantId.equals(that.merchantId) : that.merchantId != null) return false;
         if (merchantName != null ? !merchantName.equals(that.merchantName) : that.merchantName != null) return false;
@@ -111,7 +111,7 @@ public class PartyRepresentation {
 
     @Override
     public String toString() {
-        return "PartyRepresentation{" +
+        return "PartyModel{" +
                 "merchantId='" + merchantId + '\'' +
                 ", merchantName='" + merchantName + '\'' +
                 ", merchantContractId='" + merchantContractId + '\'' +

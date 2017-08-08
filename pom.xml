@@ -17,7 +17,7 @@
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
-        <damsel.version>1.185-25f72ed-epic</damsel.version>
+        <damsel.version>1.178-7a3d0b3</damsel.version>
         <shared.resources.version>0.2.1</shared.resources.version>
         <server.port>8022</server.port>
         <dockerfile.base.service.tag>f26fcc19d1941ab74f1c72dd8a408be17a769333</dockerfile.base.service.tag>
@@ -118,6 +118,18 @@
             <groupId>com.rbkmoney.geck</groupId>
             <artifactId>serializer</artifactId>
             <version>0.6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

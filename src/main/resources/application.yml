@@ -5,4 +5,3 @@ magista:
 storage:
   endpoint: localhost
   bucketName: "reports"
-

@@ -1,7 +1,7 @@
 package com.rbkmoney.reporter.service;
 
-import com.rbkmoney.reporter.model.PartyRepresentation;
-import com.rbkmoney.reporter.model.ShopAccounting;
+import com.rbkmoney.reporter.model.PartyModel;
+import com.rbkmoney.reporter.model.ShopAccountingModel;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -41,12 +41,12 @@ public class TemplateServiceTest {
 
         Instant fromTime = random(Instant.class);
         Instant toTime = random(Instant.class);
-        PartyRepresentation partyRepresentation = random(PartyRepresentation.class);
-        ShopAccounting shopAccounting = random(ShopAccounting.class);
+        PartyModel partyModel = random(PartyModel.class);
+        ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
 
         templateService.processProvisionOfServiceTemplate(
-                partyRepresentation,
-                shopAccounting,
+                partyModel,
+                shopAccountingModel,
                 fromTime,
                 toTime,
                 Files.newOutputStream(tempFile));
@@ -57,21 +57,21 @@ public class TemplateServiceTest {
         Row headerRow = sheet.getRow(1);
         Cell merchantContractIdCell = headerRow.getCell(0);
         assertEquals(
-                String.format("к Договору № %s от", partyRepresentation.getMerchantContractId()),
+                String.format("к Договору № %s от", partyModel.getMerchantContractId()),
                 merchantContractIdCell.getStringCellValue()
         );
         Cell merchantContractCreatedAtCell = headerRow.getCell(3);
         assertEquals("dd\\.mm\\.yyyy", merchantContractCreatedAtCell.getCellStyle().getDataFormatString());
         assertEquals(
-                partyRepresentation.getMerchantContractCreatedAt(),
+                partyModel.getMerchantContractCreatedAt(),
                 merchantContractCreatedAtCell.getDateCellValue()
         );
 
         Cell merchantNameCell = sheet.getRow(5).getCell(4);
-        assertEquals(partyRepresentation.getMerchantName(), merchantNameCell.getStringCellValue());
+        assertEquals(partyModel.getMerchantName(), merchantNameCell.getStringCellValue());
 
         Cell merchantIdCell = sheet.getRow(7).getCell(4);
-        assertEquals(partyRepresentation.getMerchantId(), merchantIdCell.getStringCellValue());
+        assertEquals(partyModel.getMerchantId(), merchantIdCell.getStringCellValue());
 
         Row dateRow = sheet.getRow(14);
         Cell fromTimeCell = dateRow.getCell(1);
@@ -90,21 +90,21 @@ public class TemplateServiceTest {
         Cell openingBalanceCell = sheet.getRow(23).getCell(3);
         assertEquals("#,##0.00", openingBalanceCell.getCellStyle().getDataFormatString());
         assertEquals(
-                BigDecimal.valueOf(shopAccounting.getOpeningBalance()),
+                BigDecimal.valueOf(shopAccountingModel.getOpeningBalance()),
                 BigDecimal.valueOf(openingBalanceCell.getNumericCellValue())
         );
 
         Cell closingBalanceCell = sheet.getRow(29).getCell(3);
         assertEquals("#,##0.00", closingBalanceCell.getCellStyle().getDataFormatString());
         assertEquals(
-                BigDecimal.valueOf(shopAccounting.getClosingBalance()),
+                BigDecimal.valueOf(shopAccountingModel.getClosingBalance()),
                 BigDecimal.valueOf(closingBalanceCell.getNumericCellValue())
         );
 
         Cell fundsAcquiredCell = sheet.getRow(17).getCell(3);
         assertEquals("#,##0.00", fundsAcquiredCell.getCellStyle().getDataFormatString());
         assertEquals(
-                BigDecimal.valueOf(shopAccounting.getFundsAcquired()),
+                BigDecimal.valueOf(shopAccountingModel.getFundsAcquired()),
                 BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue())
         );
         assertEquals(
@@ -115,7 +115,7 @@ public class TemplateServiceTest {
         Cell feeChargedCell = sheet.getRow(19).getCell(3);
         assertEquals("#,##0.00", feeChargedCell.getCellStyle().getDataFormatString());
         assertEquals(
-                BigDecimal.valueOf(shopAccounting.getFeeCharged()),
+                BigDecimal.valueOf(shopAccountingModel.getFeeCharged()),
                 BigDecimal.valueOf(feeChargedCell.getNumericCellValue())
         );
         assertEquals(

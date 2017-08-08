@@ -6,8 +6,12 @@ import com.rbkmoney.damsel.domain.RussianLegalEntity;
 import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.reporter.model.PartyRepresentation;
+import com.rbkmoney.reporter.exception.PartyNotFoundException;
+import com.rbkmoney.reporter.exception.ShopNotFoundException;
+import com.rbkmoney.reporter.model.PartyModel;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,49 +25,63 @@ import java.util.Objects;
 @Service
 public class PartyService {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final UserInfo userInfo = new UserInfo("admin", UserType.internal_user(new InternalUser()));
 
-    @Autowired
-    PartyManagementSrv.Iface partyManagementSrv;
+    private final PartyManagementSrv.Iface partyManagementSrv;
 
-    public PartyRepresentation getPartyRepresentation(String partyId, String shopId, Instant timestamp) throws RuntimeException {
+    @Autowired
+    public PartyService(PartyManagementSrv.Iface partyManagementSrv) {
+        this.partyManagementSrv = partyManagementSrv;
+    }
+
+    public PartyModel getPartyRepresentation(String partyId, String shopId, Instant timestamp) throws PartyNotFoundException, ShopNotFoundException, RuntimeException {
         try {
             Party party = partyManagementSrv.checkout(userInfo, partyId, TypeUtil.temporalToString(timestamp));
 
-
-            PartyRepresentation partyRepresentation = new PartyRepresentation();
-            partyRepresentation.setMerchantId(partyId);
+            PartyModel partyModel = new PartyModel();
+            partyModel.setMerchantId(partyId);
 
             Shop shop = party.getShops().get(shopId);
-            Objects.requireNonNull(shop, "shop must be not null");
+
+            if (shop == null) {
+                throw new ShopNotFoundException(
+                        String.format("Shop not found, shopId='%s', partyId='%s', time='%s'", shopId, partyId, timestamp)
+                );
+            }
 
             String contractId = shop.getContractId();
             Contract contract = party.getContracts().get(contractId);
-            Objects.requireNonNull(contract, "contract must be not null");
+            if (contract == null) {
+                throw new ShopNotFoundException(
+                        String.format("Contract on shop not found, contractId='%s', shopId='%s', partyId='%s', time='%s'", contractId, shopId, partyId, timestamp)
+                );
+            }
 
-            partyRepresentation.setMerchantContractId(contractId);
-            partyRepresentation.setMerchantContractCreatedAt(
+            partyModel.setMerchantContractId(contractId);
+            partyModel.setMerchantContractCreatedAt(
                     Date.from(TypeUtil.stringToInstant(contract.getCreatedAt()))
             );
 
-            partyRepresentation.setMerchantContractId(contract.getId());
+            partyModel.setMerchantContractId(contract.getId());
             if (contract.isSetContractor()
                     && contract.getContractor().isSetLegalEntity()
                     && contract.getContractor().getLegalEntity().isSetRussianLegalEntity()) {
                 RussianLegalEntity entity = contract.getContractor()
                         .getLegalEntity()
                         .getRussianLegalEntity();
-                partyRepresentation.setMerchantName(entity.getRegisteredName());
-                partyRepresentation.setMerchantRepresentativeFullName(entity.getRepresentativeFullName());
-                partyRepresentation.setMerchantRepresentativePosition(entity.getRepresentativePosition());
-                partyRepresentation.setMerchantRepresentativeDocument(entity.getRepresentativeDocument());
+                partyModel.setMerchantName(entity.getRegisteredName());
+                partyModel.setMerchantRepresentativeFullName(entity.getRepresentativeFullName());
+                partyModel.setMerchantRepresentativePosition(entity.getRepresentativePosition());
+                partyModel.setMerchantRepresentativeDocument(entity.getRepresentativeDocument());
             }
 
-            return partyRepresentation;
+            return partyModel;
         } catch (PartyNotFound ex) {
-            throw new RuntimeException(String.format("Party not found, partyId='%s'", partyId), ex);
+            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
         } catch (PartyNotExistsYet ex) {
-            throw new RuntimeException(String.format("Party not exists at this time, partyId='%s', timestamp='%s'", partyId, timestamp), ex);
+            throw new PartyNotFoundException(String.format("Party not exists at this time, partyId='%s', timestamp='%s'", partyId, timestamp), ex);
         } catch (TException ex) {
             throw new RuntimeException("Exception with get party from hg", ex);
         }

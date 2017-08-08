@@ -1,8 +1,8 @@
 package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.reporter.ReportType;
-import com.rbkmoney.reporter.model.PartyRepresentation;
-import com.rbkmoney.reporter.model.ShopAccounting;
+import com.rbkmoney.reporter.model.PartyModel;
+import com.rbkmoney.reporter.model.ShopAccountingModel;
 import org.jxls.common.Context;
 import org.jxls.util.JxlsHelper;
 import org.springframework.stereotype.Service;
@@ -19,14 +19,14 @@ import java.time.Instant;
 @Service
 public class TemplateService {
 
-    public void processProvisionOfServiceTemplate(PartyRepresentation partyRepresentation,
-                                                  ShopAccounting shopAccounting,
+    public void processProvisionOfServiceTemplate(PartyModel partyModel,
+                                                  ShopAccountingModel shopAccountingModel,
                                                   Instant fromTime,
                                                   Instant toTime,
                                                   OutputStream outputStream) {
         Context context = new Context();
-        context.putVar("shopAccounting", shopAccounting);
-        context.putVar("partyRepresentation", partyRepresentation);
+        context.putVar("shopAccounting", shopAccountingModel);
+        context.putVar("partyRepresentation", partyModel);
         context.putVar("fromTime", Date.from(fromTime));
         context.putVar("toTime", Date.from(toTime));
 
