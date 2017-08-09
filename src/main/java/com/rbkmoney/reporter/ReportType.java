@@ -6,7 +6,7 @@ import org.springframework.core.io.ClassPathResource;
  * Created by tolkonepiu on 13/07/2017.
  */
 public enum ReportType {
-    PROVISION_OF_SERVICE("templates/provision_of_service_act.xlsx");
+    provision_of_service("templates/provision_of_service_act.xlsx");
 
     ClassPathResource templateResource;
 

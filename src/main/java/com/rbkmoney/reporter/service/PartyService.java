@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.Objects;
 
 /**
  * Created by tolkonepiu on 17/07/2017.
@@ -36,7 +35,7 @@ public class PartyService {
         this.partyManagementSrv = partyManagementSrv;
     }
 
-    public PartyModel getPartyRepresentation(String partyId, String shopId, Instant timestamp) throws PartyNotFoundException, ShopNotFoundException, RuntimeException {
+    public PartyModel getPartyRepresentation(String partyId, String shopId, Instant timestamp) throws PartyNotFoundException, ShopNotFoundException {
         try {
             Party party = partyManagementSrv.checkout(userInfo, partyId, TypeUtil.temporalToString(timestamp));
 

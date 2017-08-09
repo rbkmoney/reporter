@@ -32,7 +32,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public class TemplateServiceTest {
 
     @Autowired
-    private TemplateService templateService;
+    private ReportService reportService;
 
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException {
@@ -44,7 +44,7 @@ public class TemplateServiceTest {
         PartyModel partyModel = random(PartyModel.class);
         ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
 
-        templateService.processProvisionOfServiceTemplate(
+        reportService.generateProvisionOfServiceReport(
                 partyModel,
                 shopAccountingModel,
                 fromTime,
