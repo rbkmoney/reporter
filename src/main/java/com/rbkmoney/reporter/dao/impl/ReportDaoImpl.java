@@ -4,6 +4,7 @@ import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.domain.tables.records.ReportRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import static com.rbkmoney.reporter.domain.tables.File.FILE;
 import static com.rbkmoney.reporter.domain.tables.Report.REPORT;
@@ -35,11 +37,16 @@ public class ReportDaoImpl implements ReportDao {
 
     @Override
     public Report getReport(String partyId, String shopId, long reportId) {
-        return dslContext.selectFrom(REPORT).where(
+        ReportRecord reportRecord = dslContext.selectFrom(REPORT).where(
                 REPORT.ID.eq(reportId)
                         .and(REPORT.PARTY_ID.eq(partyId))
                         .and(REPORT.PARTY_SHOP_ID.eq(shopId))
-        ).fetchOne().into(Report.class);
+        ).fetchOne();
+        if (Objects.nonNull(reportRecord)) {
+            return reportRecord.into(Report.class);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -70,6 +77,7 @@ public class ReportDaoImpl implements ReportDao {
                 .set(REPORT.TO_TIME, toTime)
                 .set(REPORT.TYPE, reportType.name())
                 .set(REPORT.TIMEZONE, timezone)
+                .set(REPORT.CREATED_AT, createdAt)
                 .returning(REPORT.ID).fetchOne();
         return record.get(REPORT.ID);
     }
