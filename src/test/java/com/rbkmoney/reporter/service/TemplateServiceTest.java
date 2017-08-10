@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.service;
 
+import com.rbkmoney.reporter.AbstractIntegrationTest;
 import com.rbkmoney.reporter.model.PartyModel;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 import org.apache.poi.ss.usermodel.Cell;
@@ -8,10 +9,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -22,14 +20,11 @@ import java.util.Date;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 /**
  * Created by tolkonepiu on 12/07/2017.
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-public class TemplateServiceTest {
+public class TemplateServiceTest extends AbstractIntegrationTest {
 
     @Autowired
     private ReportService reportService;

@@ -11,7 +11,6 @@ import com.rbkmoney.reporter.domain.tables.records.ReportRecord;
 
 import javax.annotation.Generated;
 
-import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.UniqueKey;
 import org.jooq.impl.AbstractKeys;
@@ -48,7 +47,6 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final ForeignKey<FileRecord, ReportRecord> FILE__FILE_REPORT_ID_FKEY = ForeignKeys0.FILE__FILE_REPORT_ID_FKEY;
 
     // -------------------------------------------------------------------------
     // [#1459] distribute members to avoid static initialisers > 64kb
@@ -61,9 +59,5 @@ public class Keys {
     private static class UniqueKeys0 extends AbstractKeys {
         public static final UniqueKey<FileRecord> FILE_PKEY = createUniqueKey(File.FILE, "file_pkey", File.FILE.ID);
         public static final UniqueKey<ReportRecord> REPORT_PKEY = createUniqueKey(Report.REPORT, "report_pkey", Report.REPORT.ID);
-    }
-
-    private static class ForeignKeys0 extends AbstractKeys {
-        public static final ForeignKey<FileRecord, ReportRecord> FILE__FILE_REPORT_ID_FKEY = createForeignKey(com.rbkmoney.reporter.domain.Keys.REPORT_PKEY, File.FILE, "file__file_report_id_fkey", File.FILE.REPORT_ID);
     }
 }

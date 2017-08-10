@@ -14,7 +14,6 @@ import java.util.List;
 import javax.annotation.Generated;
 
 import org.jooq.Field;
-import org.jooq.ForeignKey;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -35,7 +34,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class File extends TableImpl<FileRecord> {
 
-    private static final long serialVersionUID = 397859060;
+    private static final long serialVersionUID = -2134847330;
 
     /**
      * The reference instance of <code>rpt.file</code>
@@ -124,14 +123,6 @@ public class File extends TableImpl<FileRecord> {
     @Override
     public List<UniqueKey<FileRecord>> getKeys() {
         return Arrays.<UniqueKey<FileRecord>>asList(Keys.FILE_PKEY);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<ForeignKey<FileRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<FileRecord, ?>>asList(Keys.FILE__FILE_REPORT_ID_FKEY);
     }
 
     /**
