@@ -45,17 +45,13 @@ public class PartyService {
             Shop shop = party.getShops().get(shopId);
 
             if (shop == null) {
-                throw new ShopNotFoundException(
-                        String.format("Shop not found, shopId='%s', partyId='%s', time='%s'", shopId, partyId, timestamp)
-                );
+                throw new ShopNotFoundException("Shop not found, shopId='%s', partyId='%s', time='%s'", shopId, partyId, timestamp);
             }
 
             String contractId = shop.getContractId();
             Contract contract = party.getContracts().get(contractId);
             if (contract == null) {
-                throw new ShopNotFoundException(
-                        String.format("Contract on shop not found, contractId='%s', shopId='%s', partyId='%s', time='%s'", contractId, shopId, partyId, timestamp)
-                );
+                throw new ShopNotFoundException("Contract on shop not found, contractId='%s', shopId='%s', partyId='%s', time='%s'", contractId, shopId, partyId, timestamp);
             }
 
             partyModel.setMerchantContractId(contractId);
@@ -78,9 +74,9 @@ public class PartyService {
 
             return partyModel;
         } catch (PartyNotFound ex) {
-            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
+            throw new PartyNotFoundException("Party not found, partyId='%s'", ex, partyId);
         } catch (PartyNotExistsYet ex) {
-            throw new PartyNotFoundException(String.format("Party not exists at this time, partyId='%s', timestamp='%s'", partyId, timestamp), ex);
+            throw new PartyNotFoundException("Party not exists at this time, partyId='%s', timestamp='%s'", ex, partyId, timestamp);
         } catch (TException ex) {
             throw new RuntimeException("Exception with get party from hg", ex);
         }

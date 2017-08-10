@@ -2,6 +2,14 @@ package com.rbkmoney.reporter.exception;
 
 public class PartyNotFoundException extends RuntimeException {
 
+    public PartyNotFoundException(String message, Object... args) {
+        this(String.format(message, args));
+    }
+
+    public PartyNotFoundException(String message, Throwable cause, Object... args) {
+        this(String.format(message, args), cause);
+    }
+
     public PartyNotFoundException(String message) {
         super(message);
     }

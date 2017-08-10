@@ -1,9 +1,11 @@
 package com.rbkmoney.reporter.util;
 
+import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.reports.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.domain.tables.pojos.File;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +39,14 @@ public class DamselUtil {
         signature.setSha256(file.getSha256());
         fileMeta.setSignature(signature);
         return fileMeta;
+    }
+
+    public static InvalidRequest buildInvalidRequest(Throwable throwable) {
+        return buildInvalidRequest(throwable.getMessage());
+    }
+
+    public static InvalidRequest buildInvalidRequest(String... messages) {
+        return new InvalidRequest(Arrays.asList(messages));
     }
 
 }

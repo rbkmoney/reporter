@@ -23,7 +23,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by tolkonepiu on 17/07/2017.
@@ -50,9 +49,7 @@ public class ReportService {
     public Report getReport(String partyId, String shopId, long reportId) throws ReportNotFoundException {
         Report report = reportDao.getReport(partyId, shopId, reportId);
         if (report == null) {
-            throw new ReportNotFoundException(
-                    String.format("Report not found, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId)
-            );
+            throw new ReportNotFoundException("Report not found, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId);
         }
         return report;
     }
@@ -64,7 +61,7 @@ public class ReportService {
     public long generateReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, ZoneId timezone, LocalDateTime createdAt) throws PartyNotFoundException, ShopNotFoundException {
         PartyModel partyModel = partyService.getPartyRepresentation(partyId, shopId, createdAt.toInstant(ZoneOffset.UTC));
         if (partyModel == null) {
-            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId));
+            throw new PartyNotFoundException("Party not found, partyId='%s'", partyId);
         }
 
         return reportDao.createReport(partyId, shopId, fromTime, toTime, reportType, timezone.getId(), createdAt);

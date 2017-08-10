@@ -14,9 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.rbkmoney.reporter.util.DamselUtil.buildInvalidRequest;
 
 /**
  * Created by tolkonepiu on 18/07/2017.
@@ -38,7 +39,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
             LocalDateTime toTime = TypeUtil.stringToLocalDateTime(reportRequest.getTimeRange().getToTime());
 
             if (fromTime.compareTo(toTime) > 0) {
-                throw new InvalidRequest(Arrays.asList("fromTime must be less that toTime"));
+                throw buildInvalidRequest("fromTime must be less that toTime");
             }
 
             return reportService.getReportsByRange(
@@ -52,7 +53,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
             ).stream().map(report -> DamselUtil.toDamselReport(report, reportService.getReportFiles(report.getId())))
                     .collect(Collectors.toList());
         } catch (IllegalArgumentException ex) {
-            throw new InvalidRequest(Arrays.asList(ex.getMessage()));
+            throw buildInvalidRequest(ex);
         }
     }
 
@@ -75,7 +76,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
         } catch (ShopNotFoundException ex) {
             throw new ShopNotFound();
         } catch (IllegalArgumentException ex) {
-            throw new InvalidRequest(Arrays.asList(ex.getMessage()));
+            throw buildInvalidRequest(ex);
         }
     }
 

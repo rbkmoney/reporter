@@ -4,6 +4,16 @@ partyManagement:
   url: http://localhost:8022/repo
 magista:
   url: http://localhost:8022/stat
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.postgresql.Driver
+    url: @db.url@
+    username: @db.user@
+    password: @db.password@
+    hikari:
+      maximum-pool-size: 3
+      idle-timeout: 30000
 storage:
   endpoint: localhost
   bucketName: "reports"

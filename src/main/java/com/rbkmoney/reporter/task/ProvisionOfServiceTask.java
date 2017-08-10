@@ -24,6 +24,6 @@ public class ProvisionOfServiceTask implements Runnable {
         Instant fromTime = currentYearMonth.minusMonths(1).atDay(1).atStartOfDay(task.getTimezone().toZoneId()).toInstant();
         Instant toTime = currentYearMonth.atDay(1).atStartOfDay(task.getTimezone().toZoneId()).toInstant();
 
-        reportService.generateProvisionOfServiceReport(fromTime, toTime);
+//        reportService.generateProvisionOfServiceReport(fromTime, toTime);
     }
 }
