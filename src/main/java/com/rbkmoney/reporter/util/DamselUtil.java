@@ -14,7 +14,7 @@ public class DamselUtil {
     public static Report toDamselReport(com.rbkmoney.reporter.domain.tables.pojos.Report report, List<File> files) {
         Report dReport = new Report();
         dReport.setReportId(report.getId());
-        dReport.setStatus(ReportStatus.valueOf(report.getStatus().getName()));
+        dReport.setStatus(ReportStatus.valueOf(report.getStatus().getLiteral()));
         ReportTimeRange timeRange = new ReportTimeRange(
                 TypeUtil.temporalToString(report.getFromTime()),
                 TypeUtil.temporalToString(report.getToTime())
