@@ -4,6 +4,7 @@ import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.exception.FileNotFoundException;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ReportNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
@@ -38,8 +39,17 @@ public class ReportService {
     @Autowired
     private PartyService partyService;
 
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) {
-        return reportDao.getReportsByRange(partyId, shopId, reportTypes, fromTime, toTime);
+    @Autowired
+    private StorageService storageService;
+
+    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) {
+        return reportDao.getReportsByRange(
+                partyId,
+                shopId,
+                reportTypes,
+                LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
+                LocalDateTime.ofInstant(toTime, ZoneOffset.UTC)
+        );
     }
 
     public List<File> getReportFiles(long reportId) {
@@ -54,17 +64,34 @@ public class ReportService {
         return report;
     }
 
-    public long generateReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
-        return generateReport(partyId, shopId, fromTime, toTime, reportType, DEFAULT_TIMEZONE, LocalDateTime.now(ZoneOffset.UTC));
+    public long generateReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
+        return generateReport(partyId, shopId, fromTime, toTime, reportType, DEFAULT_TIMEZONE, Instant.now());
     }
 
-    public long generateReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, ZoneId timezone, LocalDateTime createdAt) throws PartyNotFoundException, ShopNotFoundException {
-        PartyModel partyModel = partyService.getPartyRepresentation(partyId, shopId, createdAt.toInstant(ZoneOffset.UTC));
+    public long generateReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
+        PartyModel partyModel = partyService.getPartyRepresentation(partyId, shopId, createdAt);
         if (partyModel == null) {
             throw new PartyNotFoundException("Party not found, partyId='%s'", partyId);
         }
 
-        return reportDao.createReport(partyId, shopId, fromTime, toTime, reportType, timezone.getId(), createdAt);
+        return reportDao.createReport(
+                partyId,
+                shopId,
+                LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
+                LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
+                reportType,
+                timezone.getId(),
+                LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
+        );
+    }
+
+    public String generatePresignedUrl(String fileId, Instant expiresAt) throws FileNotFoundException {
+        File file = reportDao.getFile(fileId);
+        if (file == null) {
+            throw new FileNotFoundException("File with id '%s' not found", fileId);
+        }
+
+        return storageService.getFileUrl(file.getId(), file.getBucketId(), expiresAt);
     }
 
     public void generateProvisionOfServiceReport(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, OutputStream outputStream) {

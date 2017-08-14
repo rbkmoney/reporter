@@ -13,7 +13,7 @@ import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,8 +35,8 @@ public class ReportsHandler implements ReportingSrv.Iface {
     @Override
     public List<Report> getReports(ReportRequest reportRequest, List<ReportType> reportTypes) throws DatasetTooBig, InvalidRequest, TException {
         try {
-            LocalDateTime fromTime = TypeUtil.stringToLocalDateTime(reportRequest.getTimeRange().getFromTime());
-            LocalDateTime toTime = TypeUtil.stringToLocalDateTime(reportRequest.getTimeRange().getToTime());
+            Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
+            Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
 
             if (fromTime.compareTo(toTime) > 0) {
                 throw buildInvalidRequest("fromTime must be less that toTime");
@@ -61,8 +61,8 @@ public class ReportsHandler implements ReportingSrv.Iface {
     public long generateReport(ReportRequest reportRequest, ReportType reportType) throws PartyNotFound, ShopNotFound, InvalidRequest, TException {
         try {
 
-            LocalDateTime fromTime = TypeUtil.stringToLocalDateTime(reportRequest.getTimeRange().getFromTime());
-            LocalDateTime toTime = TypeUtil.stringToLocalDateTime(reportRequest.getTimeRange().getToTime());
+            Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
+            Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
 
             return reportService.generateReport(
                     reportRequest.getPartyId(),
@@ -93,11 +93,14 @@ public class ReportsHandler implements ReportingSrv.Iface {
     }
 
     @Override
-    public String generatePresignedUrl(String fileId, String expiresAt) throws FileNotFound, InvalidRequest, TException {
+    public String generatePresignedUrl(String fileId, String expiresIn) throws FileNotFound, InvalidRequest, TException {
         try {
-            return "test";
+            Instant expiresInInstant = TypeUtil.stringToInstant(expiresIn);
+            return reportService.generatePresignedUrl(fileId, expiresInInstant);
         } catch (FileNotFoundException ex) {
             throw new FileNotFound();
+        } catch (IllegalArgumentException ex) {
+            throw buildInvalidRequest(ex);
         }
     }
 }

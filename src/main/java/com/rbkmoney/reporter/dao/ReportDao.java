@@ -13,6 +13,10 @@ public interface ReportDao {
 
     List<File> getReportFiles(long reportId);
 
+    File getFile(String fileId);
+
+    String attachFile(long reportId, File file);
+
     List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime);
 
     long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, String timezone, LocalDateTime createdAt);

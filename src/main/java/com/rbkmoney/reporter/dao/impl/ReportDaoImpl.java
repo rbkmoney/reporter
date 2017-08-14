@@ -4,6 +4,7 @@ import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.domain.tables.records.FileRecord;
 import com.rbkmoney.reporter.domain.tables.records.ReportRecord;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
@@ -44,9 +45,8 @@ public class ReportDaoImpl implements ReportDao {
         ).fetchOne();
         if (Objects.nonNull(reportRecord)) {
             return reportRecord.into(Report.class);
-        } else {
-            return null;
         }
+        return null;
     }
 
     @Override
@@ -55,6 +55,30 @@ public class ReportDaoImpl implements ReportDao {
                 .where(
                         FILE.REPORT_ID.eq(reportId)
                 ).fetch().into(File.class);
+    }
+
+    @Override
+    public File getFile(String fileId) {
+        FileRecord fileRecord = dslContext
+                .selectFrom(FILE)
+                .where(FILE.ID.eq(fileId))
+                .fetchOne();
+        if (Objects.nonNull(fileRecord)) {
+            return fileRecord.into(File.class);
+        }
+        return null;
+    }
+
+    @Override
+    public String attachFile(long reportId, File file) {
+        file.setReportId(reportId);
+
+        Record record = dslContext.insertInto(FILE)
+                .values(dslContext.newRecord(FILE, file))
+                .returning(FILE.ID)
+                .fetchOne();
+
+        return record.get(FILE.ID);
     }
 
     @Override
