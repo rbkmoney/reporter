@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
@@ -43,6 +44,8 @@ public class ReportDaoTest extends AbstractIntegrationTest {
         assertEquals(reportType.name(), report.getType());
         assertEquals(timezone, report.getTimezone());
         assertEquals(createdAt, report.getCreatedAt());
+
+        assertEquals(1, reportDao.getReportsByRange(partyId, shopId, new ArrayList<>(), createdAt.minusDays(1), createdAt.plusDays(1)).size());
 
         assertEquals(1, reportDao.getReportsByRange(partyId, shopId, Arrays.asList(reportType), createdAt.minusDays(1), createdAt.plusDays(1)).size());
     }

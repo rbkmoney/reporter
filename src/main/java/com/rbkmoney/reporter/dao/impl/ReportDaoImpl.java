@@ -7,10 +7,7 @@ import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.domain.tables.records.FileRecord;
 import com.rbkmoney.reporter.domain.tables.records.ReportRecord;
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Record;
-import org.jooq.SQLDialect;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,13 +106,16 @@ public class ReportDaoImpl implements ReportDao {
 
     @Override
     public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) {
-        return dslContext.selectFrom(REPORT).where(
-                REPORT.PARTY_ID.eq(partyId)
-                        .and(REPORT.PARTY_SHOP_ID.eq(shopId))
-                        .and(REPORT.TYPE.in(reportTypes))
-                        .and(REPORT.CREATED_AT.ge(fromTime))
-                        .and(REPORT.CREATED_AT.lt(toTime))
-        ).fetch().into(Report.class);
+        Condition conditon = REPORT.PARTY_ID.eq(partyId)
+                .and(REPORT.PARTY_SHOP_ID.eq(shopId))
+                .and(REPORT.CREATED_AT.ge(fromTime))
+                .and(REPORT.CREATED_AT.lt(toTime));
+
+        if (!reportTypes.isEmpty()) {
+            conditon = conditon.and(REPORT.TYPE.in(reportTypes));
+        }
+
+        return dslContext.selectFrom(REPORT).where(conditon).fetch().into(Report.class);
     }
 
     @Override
