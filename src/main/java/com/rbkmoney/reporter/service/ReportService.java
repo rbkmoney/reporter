@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
+import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.FileNotFoundException;
@@ -52,6 +53,10 @@ public class ReportService {
         );
     }
 
+    public List<Report> getPendingReportsByType(ReportType reportType) {
+        return reportDao.getPendingReportsByType(reportType);
+    }
+
     public List<File> getReportFiles(long reportId) {
         return reportDao.getReportFiles(reportId);
     }
@@ -94,22 +99,28 @@ public class ReportService {
         return storageService.getFileUrl(file.getId(), file.getBucketId(), expiresAt);
     }
 
-    public void generateProvisionOfServiceReport(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, OutputStream outputStream) {
-        try {
-            Context context = new Context();
-            context.putVar("shopAccounting", shopAccountingModel);
-            context.putVar("partyRepresentation", partyModel);
-            context.putVar("fromTime", Date.from(fromTime));
-            context.putVar("toTime", Date.from(toTime));
+    public void finishedReportTask(Report report, File... files) {
+        reportDao.getDSLContext().transaction(configuration -> {
+            for (File file : files) {
+                reportDao.attachFile(report.getId(), file);
+            }
 
-            processTemplate(
-                    context,
-                    ReportType.provision_of_service,
-                    outputStream
-            );
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+            reportDao.changeReportStatus(report.getId(), ReportStatus.created);
+        });
+    }
+
+    public void generateProvisionOfServiceReport(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, OutputStream outputStream) throws IOException {
+        Context context = new Context();
+        context.putVar("shopAccounting", shopAccountingModel);
+        context.putVar("partyRepresentation", partyModel);
+        context.putVar("fromTime", Date.from(fromTime));
+        context.putVar("toTime", Date.from(toTime));
+
+        processTemplate(
+                context,
+                ReportType.provision_of_service,
+                outputStream
+        );
     }
 
     public void processTemplate(Context context, ReportType reportType, OutputStream outputStream) throws IOException {

@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.dao.impl;
 
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
+import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.domain.tables.records.FileRecord;
@@ -37,6 +38,11 @@ public class ReportDaoImpl implements ReportDao {
     }
 
     @Override
+    public DSLContext getDSLContext() {
+        return dslContext;
+    }
+
+    @Override
     public Report getReport(String partyId, String shopId, long reportId) {
         ReportRecord reportRecord = dslContext.selectFrom(REPORT).where(
                 REPORT.ID.eq(reportId)
@@ -58,6 +64,15 @@ public class ReportDaoImpl implements ReportDao {
     }
 
     @Override
+    public void changeReportStatus(long reportId, ReportStatus status) {
+        //TODO affected rows
+        int affectedRow = dslContext.update(REPORT)
+                .set(REPORT.STATUS, status)
+                .where(REPORT.ID.eq(reportId))
+                .execute();
+    }
+
+    @Override
     public File getFile(String fileId) {
         FileRecord fileRecord = dslContext
                 .selectFrom(FILE)
@@ -71,14 +86,25 @@ public class ReportDaoImpl implements ReportDao {
 
     @Override
     public String attachFile(long reportId, File file) {
-        file.setReportId(reportId);
-
         Record record = dslContext.insertInto(FILE)
-                .values(dslContext.newRecord(FILE, file))
+                .set(FILE.ID, file.getId())
+                .set(FILE.REPORT_ID, reportId)
+                .set(FILE.BUCKET_ID, file.getBucketId())
+                .set(FILE.FILENAME, file.getFilename())
+                .set(FILE.MD5, file.getMd5())
+                .set(FILE.SHA256, file.getSha256())
                 .returning(FILE.ID)
                 .fetchOne();
 
         return record.get(FILE.ID);
+    }
+
+    @Override
+    public List<Report> getPendingReportsByType(ReportType reportType) {
+        return dslContext.selectFrom(REPORT)
+                .where(REPORT.STATUS.eq(ReportStatus.pending))
+                .and(REPORT.TYPE.eq(reportType.name()))
+                .fetch().into(Report.class);
     }
 
     @Override

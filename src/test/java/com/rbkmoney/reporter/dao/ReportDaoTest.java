@@ -2,12 +2,14 @@ package com.rbkmoney.reporter.dao;
 
 import com.rbkmoney.reporter.AbstractIntegrationTest;
 import com.rbkmoney.reporter.ReportType;
+import com.rbkmoney.reporter.domain.tables.pojos.File;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.TimeZone;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -42,7 +44,35 @@ public class ReportDaoTest extends AbstractIntegrationTest {
         assertEquals(timezone, report.getTimezone());
         assertEquals(createdAt, report.getCreatedAt());
 
-        assertEquals(reportDao.getReportsByRange(partyId, shopId, Arrays.asList(reportType), createdAt.minusDays(1), createdAt.plusDays(1)).size(), 1);
+        assertEquals(1, reportDao.getReportsByRange(partyId, shopId, Arrays.asList(reportType), createdAt.minusDays(1), createdAt.plusDays(1)).size());
+    }
+
+    @Test
+    public void attachFileTest() {
+        File file = random(File.class);
+        Long reportId = random(Long.class);
+
+        String fileId = reportDao.attachFile(reportId, file);
+        File currentFile = reportDao.getFile(fileId);
+
+        assertEquals(file.getId(), currentFile.getId());
+        assertEquals(reportId, currentFile.getReportId());
+        assertEquals(file.getBucketId(), currentFile.getBucketId());
+        assertEquals(file.getFilename(), currentFile.getFilename());
+        assertEquals(file.getMd5(), currentFile.getMd5());
+        assertEquals(file.getSha256(), currentFile.getSha256());
+
+        List<File> files = reportDao.getReportFiles(reportId);
+        assertEquals(1, files.size());
+
+        currentFile = files.get(0);
+
+        assertEquals(file.getId(), currentFile.getId());
+        assertEquals(reportId, currentFile.getReportId());
+        assertEquals(file.getBucketId(), currentFile.getBucketId());
+        assertEquals(file.getFilename(), currentFile.getFilename());
+        assertEquals(file.getMd5(), currentFile.getMd5());
+        assertEquals(file.getSha256(), currentFile.getSha256());
     }
 
 }

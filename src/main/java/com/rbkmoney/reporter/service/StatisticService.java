@@ -28,9 +28,16 @@ public class StatisticService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public List<ShopAccountingModel> getShopAccountings(Instant from, Instant to) {
+    public ShopAccountingModel getShopAccounting(String partyId, String shopId, Instant fromTime, Instant toTime) {
+        return getShopAccountings(fromTime, toTime).stream().filter(
+                shopAccountingModel -> shopAccountingModel.getMerchantId().equals(partyId)
+                        && shopAccountingModel.getShopId().equals(shopId)
+        ).findFirst().orElse(new ShopAccountingModel());
+    }
+
+    public List<ShopAccountingModel> getShopAccountings(Instant fromTime, Instant toTime) {
         try {
-            return merchantStatisticsSrv.getStatistics(createShopAccountingStatRequest(from, to))
+            return merchantStatisticsSrv.getStatistics(createShopAccountingStatRequest(fromTime, toTime))
                     .getData()
                     .getRecords()
                     .stream()
