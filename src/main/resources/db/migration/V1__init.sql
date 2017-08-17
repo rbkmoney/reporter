@@ -15,7 +15,7 @@ CREATE TABLE rpt.report (
   CONSTRAINT report_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE rpt.file (
+CREATE TABLE rpt.file_meta (
   id        CHARACTER VARYING NOT NULL,
   report_id BIGINT            NOT NULL,
   bucket_id CHARACTER VARYING NOT NULL,

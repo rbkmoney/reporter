@@ -3,7 +3,7 @@ package com.rbkmoney.reporter.service;
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.FileNotFoundException;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
@@ -57,7 +57,7 @@ public class ReportService {
         return reportDao.getPendingReportsByType(reportType);
     }
 
-    public List<File> getReportFiles(long reportId) {
+    public List<FileMeta> getReportFiles(long reportId) {
         return reportDao.getReportFiles(reportId);
     }
 
@@ -91,7 +91,7 @@ public class ReportService {
     }
 
     public String generatePresignedUrl(String fileId, Instant expiresAt) throws FileNotFoundException {
-        File file = reportDao.getFile(fileId);
+        FileMeta file = reportDao.getFile(fileId);
         if (file == null) {
             throw new FileNotFoundException("File with id '%s' not found", fileId);
         }
@@ -99,9 +99,9 @@ public class ReportService {
         return storageService.getFileUrl(file.getId(), file.getBucketId(), expiresAt);
     }
 
-    public void finishedReportTask(Report report, File... files) {
+    public void finishedReportTask(Report report, FileMeta... files) {
         reportDao.getDSLContext().transaction(configuration -> {
-            for (File file : files) {
+            for (FileMeta file : files) {
                 reportDao.attachFile(report.getId(), file);
             }
 

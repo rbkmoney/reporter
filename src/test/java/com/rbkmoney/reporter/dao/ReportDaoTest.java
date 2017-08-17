@@ -2,7 +2,8 @@ package com.rbkmoney.reporter.dao;
 
 import com.rbkmoney.reporter.AbstractIntegrationTest;
 import com.rbkmoney.reporter.ReportType;
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+import com.rbkmoney.reporter.domain.enums.ReportStatus;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,12 +52,28 @@ public class ReportDaoTest extends AbstractIntegrationTest {
     }
 
     @Test
+    public void checkCreatedStatus() {
+        String partyId = random(String.class);
+        String shopId = random(String.class);
+        LocalDateTime fromTime = random(LocalDateTime.class);
+        LocalDateTime toTime = random(LocalDateTime.class);
+        ReportType reportType = random(ReportType.class);
+        String timezone = random(TimeZone.class).getID();
+        LocalDateTime createdAt = random(LocalDateTime.class);
+
+        long reportId = reportDao.createReport(partyId, shopId, fromTime, toTime, reportType, timezone, createdAt);
+        reportDao.changeReportStatus(reportId, ReportStatus.created);
+
+        reportDao.getReport(partyId, shopId, reportId);
+    }
+
+    @Test
     public void attachFileTest() {
-        File file = random(File.class);
+        FileMeta file = random(FileMeta.class);
         Long reportId = random(Long.class);
 
         String fileId = reportDao.attachFile(reportId, file);
-        File currentFile = reportDao.getFile(fileId);
+        FileMeta currentFile = reportDao.getFile(fileId);
 
         assertEquals(file.getId(), currentFile.getId());
         assertEquals(reportId, currentFile.getReportId());
@@ -65,7 +82,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
         assertEquals(file.getMd5(), currentFile.getMd5());
         assertEquals(file.getSha256(), currentFile.getSha256());
 
-        List<File> files = reportDao.getReportFiles(reportId);
+        List<FileMeta> files = reportDao.getReportFiles(reportId);
         assertEquals(1, files.size());
 
         currentFile = files.get(0);

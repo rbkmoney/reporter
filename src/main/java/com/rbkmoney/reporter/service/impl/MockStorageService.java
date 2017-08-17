@@ -1,6 +1,6 @@
 package com.rbkmoney.reporter.service.impl;
 
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.service.StorageService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
@@ -18,8 +18,8 @@ public class MockStorageService implements StorageService {
     }
 
     @Override
-    public File saveFile(String keyName, String bucketName, String filename, InputStream inputStream) throws IOException {
-        File file = new File();
+    public FileMeta saveFile(String keyName, String bucketName, String filename, InputStream inputStream) throws IOException {
+        FileMeta file = new FileMeta();
         file.setId(keyName);
         file.setBucketId(bucketName);
         file.setFilename(filename);

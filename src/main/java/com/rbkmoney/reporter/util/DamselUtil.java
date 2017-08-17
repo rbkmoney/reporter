@@ -3,7 +3,7 @@ package com.rbkmoney.reporter.util;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.reports.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class DamselUtil {
 
-    public static Report toDamselReport(com.rbkmoney.reporter.domain.tables.pojos.Report report, List<File> files) {
+    public static Report toDamselReport(com.rbkmoney.reporter.domain.tables.pojos.Report report, List<com.rbkmoney.reporter.domain.tables.pojos.FileMeta> files) {
         Report dReport = new Report();
         dReport.setReportId(report.getId());
         dReport.setStatus(ReportStatus.valueOf(report.getStatus().getLiteral()));
@@ -30,7 +30,7 @@ public class DamselUtil {
         return dReport;
     }
 
-    public static FileMeta toDamselFile(File file) {
+    public static FileMeta toDamselFile(com.rbkmoney.reporter.domain.tables.pojos.FileMeta file) {
         FileMeta fileMeta = new FileMeta();
         fileMeta.setFileId(file.getId());
         fileMeta.setFilename(file.getFilename());

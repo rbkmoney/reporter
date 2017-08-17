@@ -1,7 +1,7 @@
 package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.reporter.ReportType;
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.model.PartyModel;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -36,7 +35,7 @@ public class TaskService {
     @Value("${storage.bucketName}")
     private String bucketName;
 
-    @Scheduled(fixedDelay=500)
+    @Scheduled(fixedDelay = 500)
     public void processProvisionOfServicePendingTasks() {
         List<Report> reports = reportService.getPendingReportsByType(ReportType.provision_of_service);
         for (Report report : reports) {
@@ -61,29 +60,32 @@ public class TaskService {
 
             try {
                 Path reportFile = Files.createTempFile("provision_of_service_", "_report.xlsx");
-                reportService.generateProvisionOfServiceReport(
-                        partyModel,
-                        shopAccountingModel,
-                        fromTime,
-                        toTime,
-                        Files.newOutputStream(reportFile)
-                );
 
-                //TODO report uniq id
-                File reportFileModel = storageService.saveFile(
-                        UUID.randomUUID().toString(),
-                        bucketName,
-                        reportFile.getFileName().toString(),
-                        Files.newInputStream(reportFile)
-                );
+                try {
+                    reportService.generateProvisionOfServiceReport(
+                            partyModel,
+                            shopAccountingModel,
+                            fromTime,
+                            toTime,
+                            Files.newOutputStream(reportFile)
+                    );
 
-                reportService.finishedReportTask(report, reportFileModel);
+                    FileMeta reportFileModel = storageService.saveFile(
+                            //TODO without id here
+                            UUID.randomUUID().toString(),
+                            //TODO without bucket name here
+                            bucketName,
+                            reportFile.getFileName().toString(),
+                            Files.newInputStream(reportFile)
+                    );
+                    reportService.finishedReportTask(report, reportFileModel);
 
-                Files.delete(reportFile);
+                } finally {
+                    Files.delete(reportFile);
+                }
 
-            } catch (IOException ex) {
-                //TODO блэт
-                ex.printStackTrace();
+            } catch (Throwable ex) {
+
             }
         }
     }

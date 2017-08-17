@@ -3,9 +3,9 @@ package com.rbkmoney.reporter.dao.impl;
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import com.rbkmoney.reporter.domain.tables.records.FileRecord;
+import com.rbkmoney.reporter.domain.tables.records.FileMetaRecord;
 import com.rbkmoney.reporter.domain.tables.records.ReportRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static com.rbkmoney.reporter.domain.tables.File.FILE;
+import static com.rbkmoney.reporter.domain.tables.FileMeta.FILE_META;
 import static com.rbkmoney.reporter.domain.tables.Report.REPORT;
 
 @Component
@@ -53,11 +53,11 @@ public class ReportDaoImpl implements ReportDao {
     }
 
     @Override
-    public List<File> getReportFiles(long reportId) {
-        return dslContext.selectFrom(FILE)
+    public List<FileMeta> getReportFiles(long reportId) {
+        return dslContext.selectFrom(FILE_META)
                 .where(
-                        FILE.REPORT_ID.eq(reportId)
-                ).fetch().into(File.class);
+                        FILE_META.REPORT_ID.eq(reportId)
+                ).fetch().into(FileMeta.class);
     }
 
     @Override
@@ -70,30 +70,30 @@ public class ReportDaoImpl implements ReportDao {
     }
 
     @Override
-    public File getFile(String fileId) {
-        FileRecord fileRecord = dslContext
-                .selectFrom(FILE)
-                .where(FILE.ID.eq(fileId))
+    public FileMeta getFile(String fileId) {
+        FileMetaRecord fileMetaRecord = dslContext
+                .selectFrom(FILE_META)
+                .where(FILE_META.ID.eq(fileId))
                 .fetchOne();
-        if (Objects.nonNull(fileRecord)) {
-            return fileRecord.into(File.class);
+        if (Objects.nonNull(fileMetaRecord)) {
+            return fileMetaRecord.into(FileMeta.class);
         }
         return null;
     }
 
     @Override
-    public String attachFile(long reportId, File file) {
-        Record record = dslContext.insertInto(FILE)
-                .set(FILE.ID, file.getId())
-                .set(FILE.REPORT_ID, reportId)
-                .set(FILE.BUCKET_ID, file.getBucketId())
-                .set(FILE.FILENAME, file.getFilename())
-                .set(FILE.MD5, file.getMd5())
-                .set(FILE.SHA256, file.getSha256())
-                .returning(FILE.ID)
+    public String attachFile(long reportId, FileMeta file) {
+        Record record = dslContext.insertInto(FILE_META)
+                .set(FILE_META.ID, file.getId())
+                .set(FILE_META.REPORT_ID, reportId)
+                .set(FILE_META.BUCKET_ID, file.getBucketId())
+                .set(FILE_META.FILENAME, file.getFilename())
+                .set(FILE_META.MD5, file.getMd5())
+                .set(FILE_META.SHA256, file.getSha256())
+                .returning(FILE_META.ID)
                 .fetchOne();
 
-        return record.get(FILE.ID);
+        return record.get(FILE_META.ID);
     }
 
     @Override

@@ -4,9 +4,9 @@
 package com.rbkmoney.reporter.domain;
 
 
-import com.rbkmoney.reporter.domain.tables.File;
+import com.rbkmoney.reporter.domain.tables.FileMeta;
 import com.rbkmoney.reporter.domain.tables.Report;
-import com.rbkmoney.reporter.domain.tables.records.FileRecord;
+import com.rbkmoney.reporter.domain.tables.records.FileMetaRecord;
 import com.rbkmoney.reporter.domain.tables.records.ReportRecord;
 
 import javax.annotation.Generated;
@@ -40,7 +40,7 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<FileRecord> FILE_PKEY = UniqueKeys0.FILE_PKEY;
+    public static final UniqueKey<FileMetaRecord> FILE_PKEY = UniqueKeys0.FILE_PKEY;
     public static final UniqueKey<ReportRecord> REPORT_PKEY = UniqueKeys0.REPORT_PKEY;
 
     // -------------------------------------------------------------------------
@@ -57,7 +57,7 @@ public class Keys {
     }
 
     private static class UniqueKeys0 extends AbstractKeys {
-        public static final UniqueKey<FileRecord> FILE_PKEY = createUniqueKey(File.FILE, "file_pkey", File.FILE.ID);
+        public static final UniqueKey<FileMetaRecord> FILE_PKEY = createUniqueKey(FileMeta.FILE_META, "file_pkey", FileMeta.FILE_META.ID);
         public static final UniqueKey<ReportRecord> REPORT_PKEY = createUniqueKey(Report.REPORT, "report_pkey", Report.REPORT.ID);
     }
 }

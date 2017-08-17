@@ -39,86 +39,88 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
         PartyModel partyModel = random(PartyModel.class);
         ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
 
-        reportService.generateProvisionOfServiceReport(
-                partyModel,
-                shopAccountingModel,
-                fromTime,
-                toTime,
-                Files.newOutputStream(tempFile));
+        try {
+            reportService.generateProvisionOfServiceReport(
+                    partyModel,
+                    shopAccountingModel,
+                    fromTime,
+                    toTime,
+                    Files.newOutputStream(tempFile));
 
-        Workbook wb = new XSSFWorkbook(Files.newInputStream(tempFile));
-        Sheet sheet = wb.getSheetAt(0);
+            Workbook wb = new XSSFWorkbook(Files.newInputStream(tempFile));
+            Sheet sheet = wb.getSheetAt(0);
 
-        Row headerRow = sheet.getRow(1);
-        Cell merchantContractIdCell = headerRow.getCell(0);
-        assertEquals(
-                String.format("к Договору № %s от", partyModel.getMerchantContractId()),
-                merchantContractIdCell.getStringCellValue()
-        );
-        Cell merchantContractCreatedAtCell = headerRow.getCell(3);
-        assertEquals("dd\\.mm\\.yyyy", merchantContractCreatedAtCell.getCellStyle().getDataFormatString());
-        assertEquals(
-                partyModel.getMerchantContractCreatedAt(),
-                merchantContractCreatedAtCell.getDateCellValue()
-        );
+            Row headerRow = sheet.getRow(1);
+            Cell merchantContractIdCell = headerRow.getCell(0);
+            assertEquals(
+                    String.format("к Договору № %s от", partyModel.getMerchantContractId()),
+                    merchantContractIdCell.getStringCellValue()
+            );
+            Cell merchantContractCreatedAtCell = headerRow.getCell(3);
+            assertEquals("dd\\.mm\\.yyyy", merchantContractCreatedAtCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    partyModel.getMerchantContractCreatedAt(),
+                    merchantContractCreatedAtCell.getDateCellValue()
+            );
 
-        Cell merchantNameCell = sheet.getRow(5).getCell(4);
-        assertEquals(partyModel.getMerchantName(), merchantNameCell.getStringCellValue());
+            Cell merchantNameCell = sheet.getRow(5).getCell(4);
+            assertEquals(partyModel.getMerchantName(), merchantNameCell.getStringCellValue());
 
-        Cell merchantIdCell = sheet.getRow(7).getCell(4);
-        assertEquals(partyModel.getMerchantId(), merchantIdCell.getStringCellValue());
+            Cell merchantIdCell = sheet.getRow(7).getCell(4);
+            assertEquals(partyModel.getMerchantId(), merchantIdCell.getStringCellValue());
 
-        Row dateRow = sheet.getRow(14);
-        Cell fromTimeCell = dateRow.getCell(1);
-        assertEquals(
-                "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
-                fromTimeCell.getCellStyle().getDataFormatString()
-        );
-        assertEquals(Date.from(fromTime), fromTimeCell.getDateCellValue());
-        Cell toTimeCell = dateRow.getCell(3);
-        assertEquals(
-                "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
-                toTimeCell.getCellStyle().getDataFormatString()
-        );
-        assertEquals(Date.from(toTime), toTimeCell.getDateCellValue());
+            Row dateRow = sheet.getRow(14);
+            Cell fromTimeCell = dateRow.getCell(1);
+            assertEquals(
+                    "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
+                    fromTimeCell.getCellStyle().getDataFormatString()
+            );
+            assertEquals(Date.from(fromTime), fromTimeCell.getDateCellValue());
+            Cell toTimeCell = dateRow.getCell(3);
+            assertEquals(
+                    "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
+                    toTimeCell.getCellStyle().getDataFormatString()
+            );
+            assertEquals(Date.from(toTime), toTimeCell.getDateCellValue());
 
-        Cell openingBalanceCell = sheet.getRow(23).getCell(3);
-        assertEquals("#,##0.00", openingBalanceCell.getCellStyle().getDataFormatString());
-        assertEquals(
-                BigDecimal.valueOf(shopAccountingModel.getOpeningBalance()),
-                BigDecimal.valueOf(openingBalanceCell.getNumericCellValue())
-        );
+            Cell openingBalanceCell = sheet.getRow(23).getCell(3);
+            assertEquals("#,##0.00", openingBalanceCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    BigDecimal.valueOf(shopAccountingModel.getOpeningBalance()),
+                    BigDecimal.valueOf(openingBalanceCell.getNumericCellValue())
+            );
 
-        Cell closingBalanceCell = sheet.getRow(29).getCell(3);
-        assertEquals("#,##0.00", closingBalanceCell.getCellStyle().getDataFormatString());
-        assertEquals(
-                BigDecimal.valueOf(shopAccountingModel.getClosingBalance()),
-                BigDecimal.valueOf(closingBalanceCell.getNumericCellValue())
-        );
+            Cell closingBalanceCell = sheet.getRow(29).getCell(3);
+            assertEquals("#,##0.00", closingBalanceCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    BigDecimal.valueOf(shopAccountingModel.getClosingBalance()),
+                    BigDecimal.valueOf(closingBalanceCell.getNumericCellValue())
+            );
 
-        Cell fundsAcquiredCell = sheet.getRow(17).getCell(3);
-        assertEquals("#,##0.00", fundsAcquiredCell.getCellStyle().getDataFormatString());
-        assertEquals(
-                BigDecimal.valueOf(shopAccountingModel.getFundsAcquired()),
-                BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue())
-        );
-        assertEquals(
-                BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue()),
-                BigDecimal.valueOf(sheet.getRow(24).getCell(3).getNumericCellValue())
-        );
+            Cell fundsAcquiredCell = sheet.getRow(17).getCell(3);
+            assertEquals("#,##0.00", fundsAcquiredCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    BigDecimal.valueOf(shopAccountingModel.getFundsAcquired()),
+                    BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue())
+            );
+            assertEquals(
+                    BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue()),
+                    BigDecimal.valueOf(sheet.getRow(24).getCell(3).getNumericCellValue())
+            );
 
-        Cell feeChargedCell = sheet.getRow(19).getCell(3);
-        assertEquals("#,##0.00", feeChargedCell.getCellStyle().getDataFormatString());
-        assertEquals(
-                BigDecimal.valueOf(shopAccountingModel.getFeeCharged()),
-                BigDecimal.valueOf(feeChargedCell.getNumericCellValue())
-        );
-        assertEquals(
-                BigDecimal.valueOf(feeChargedCell.getNumericCellValue()),
-                BigDecimal.valueOf(sheet.getRow(25).getCell(3).getNumericCellValue())
-        );
-
-        Files.delete(tempFile);
+            Cell feeChargedCell = sheet.getRow(19).getCell(3);
+            assertEquals("#,##0.00", feeChargedCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    BigDecimal.valueOf(shopAccountingModel.getFeeCharged()),
+                    BigDecimal.valueOf(feeChargedCell.getNumericCellValue())
+            );
+            assertEquals(
+                    BigDecimal.valueOf(feeChargedCell.getNumericCellValue()),
+                    BigDecimal.valueOf(sheet.getRow(25).getCell(3).getNumericCellValue())
+            );
+        } finally {
+            Files.delete(tempFile);
+        }
     }
 
 }

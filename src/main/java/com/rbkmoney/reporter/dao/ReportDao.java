@@ -2,7 +2,7 @@ package com.rbkmoney.reporter.dao;
 
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.File;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import org.jooq.DSLContext;
 
@@ -15,13 +15,13 @@ public interface ReportDao {
 
     Report getReport(String partyId, String shopId, long reportId);
 
-    List<File> getReportFiles(long reportId);
+    List<FileMeta> getReportFiles(long reportId);
 
     void changeReportStatus(long reportId, ReportStatus status);
 
-    File getFile(String fileId);
+    FileMeta getFile(String fileId);
 
-    String attachFile(long reportId, File file);
+    String attachFile(long reportId, FileMeta file);
 
     List<Report> getPendingReportsByType(ReportType reportType);
 

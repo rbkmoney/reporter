@@ -4,7 +4,7 @@
 package com.rbkmoney.reporter.domain;
 
 
-import com.rbkmoney.reporter.domain.tables.File;
+import com.rbkmoney.reporter.domain.tables.FileMeta;
 import com.rbkmoney.reporter.domain.tables.Report;
 
 import javax.annotation.Generated;
@@ -24,9 +24,9 @@ import javax.annotation.Generated;
 public class Tables {
 
     /**
-     * The table <code>rpt.file</code>.
+     * The table <code>rpt.file_meta</code>.
      */
-    public static final File FILE = com.rbkmoney.reporter.domain.tables.File.FILE;
+    public static final FileMeta FILE_META = com.rbkmoney.reporter.domain.tables.FileMeta.FILE_META;
 
     /**
      * The table <code>rpt.report</code>.
