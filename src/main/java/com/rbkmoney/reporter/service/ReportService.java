@@ -96,7 +96,7 @@ public class ReportService {
             throw new FileNotFoundException("File with id '%s' not found", fileId);
         }
 
-        return storageService.getFileUrl(file.getId(), file.getBucketId(), expiresAt);
+        return storageService.getFileUrl(file.getFileId(), file.getBucketId(), expiresAt);
     }
 
     public void finishedReportTask(Report report, FileMeta... files) {

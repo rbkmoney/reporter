@@ -32,7 +32,7 @@ public class DamselUtil {
 
     public static FileMeta toDamselFile(com.rbkmoney.reporter.domain.tables.pojos.FileMeta file) {
         FileMeta fileMeta = new FileMeta();
-        fileMeta.setFileId(file.getId());
+        fileMeta.setFileId(file.getFileId());
         fileMeta.setFilename(file.getFilename());
         Signature signature = new Signature();
         signature.setMd5(file.getMd5());

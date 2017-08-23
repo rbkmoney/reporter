@@ -22,11 +22,11 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class FileMeta implements Serializable {
 
-    private static final long serialVersionUID = -1045843052;
+    private static final long serialVersionUID = -2043244136;
 
-    private String id;
-    private Long   reportId;
+    private String fileId;
     private String bucketId;
+    private Long   reportId;
     private String filename;
     private String md5;
     private String sha256;
@@ -34,44 +34,36 @@ public class FileMeta implements Serializable {
     public FileMeta() {}
 
     public FileMeta(FileMeta value) {
-        this.id = value.id;
-        this.reportId = value.reportId;
+        this.fileId = value.fileId;
         this.bucketId = value.bucketId;
+        this.reportId = value.reportId;
         this.filename = value.filename;
         this.md5 = value.md5;
         this.sha256 = value.sha256;
     }
 
     public FileMeta(
-        String id,
-        Long   reportId,
+        String fileId,
         String bucketId,
+        Long   reportId,
         String filename,
         String md5,
         String sha256
     ) {
-        this.id = id;
-        this.reportId = reportId;
+        this.fileId = fileId;
         this.bucketId = bucketId;
+        this.reportId = reportId;
         this.filename = filename;
         this.md5 = md5;
         this.sha256 = sha256;
     }
 
-    public String getId() {
-        return this.id;
+    public String getFileId() {
+        return this.fileId;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Long getReportId() {
-        return this.reportId;
-    }
-
-    public void setReportId(Long reportId) {
-        this.reportId = reportId;
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
     }
 
     public String getBucketId() {
@@ -80,6 +72,14 @@ public class FileMeta implements Serializable {
 
     public void setBucketId(String bucketId) {
         this.bucketId = bucketId;
+    }
+
+    public Long getReportId() {
+        return this.reportId;
+    }
+
+    public void setReportId(Long reportId) {
+        this.reportId = reportId;
     }
 
     public String getFilename() {
@@ -115,23 +115,23 @@ public class FileMeta implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         final FileMeta other = (FileMeta) obj;
-        if (id == null) {
-            if (other.id != null)
+        if (fileId == null) {
+            if (other.fileId != null)
                 return false;
         }
-        else if (!id.equals(other.id))
-            return false;
-        if (reportId == null) {
-            if (other.reportId != null)
-                return false;
-        }
-        else if (!reportId.equals(other.reportId))
+        else if (!fileId.equals(other.fileId))
             return false;
         if (bucketId == null) {
             if (other.bucketId != null)
                 return false;
         }
         else if (!bucketId.equals(other.bucketId))
+            return false;
+        if (reportId == null) {
+            if (other.reportId != null)
+                return false;
+        }
+        else if (!reportId.equals(other.reportId))
             return false;
         if (filename == null) {
             if (other.filename != null)
@@ -158,9 +158,9 @@ public class FileMeta implements Serializable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((reportId == null) ? 0 : reportId.hashCode());
+        result = prime * result + ((fileId == null) ? 0 : fileId.hashCode());
         result = prime * result + ((bucketId == null) ? 0 : bucketId.hashCode());
+        result = prime * result + ((reportId == null) ? 0 : reportId.hashCode());
         result = prime * result + ((filename == null) ? 0 : filename.hashCode());
         result = prime * result + ((md5 == null) ? 0 : md5.hashCode());
         result = prime * result + ((sha256 == null) ? 0 : sha256.hashCode());
@@ -171,9 +171,9 @@ public class FileMeta implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder("FileMeta (");
 
-        sb.append(id);
-        sb.append(", ").append(reportId);
+        sb.append(fileId);
         sb.append(", ").append(bucketId);
+        sb.append(", ").append(reportId);
         sb.append(", ").append(filename);
         sb.append(", ").append(md5);
         sb.append(", ").append(sha256);

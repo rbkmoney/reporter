@@ -73,7 +73,7 @@ public class ReportDaoImpl implements ReportDao {
     public FileMeta getFile(String fileId) {
         FileMetaRecord fileMetaRecord = dslContext
                 .selectFrom(FILE_META)
-                .where(FILE_META.ID.eq(fileId))
+                .where(FILE_META.FILE_ID.eq(fileId))
                 .fetchOne();
         if (Objects.nonNull(fileMetaRecord)) {
             return fileMetaRecord.into(FileMeta.class);
@@ -84,16 +84,16 @@ public class ReportDaoImpl implements ReportDao {
     @Override
     public String attachFile(long reportId, FileMeta file) {
         Record record = dslContext.insertInto(FILE_META)
-                .set(FILE_META.ID, file.getId())
+                .set(FILE_META.FILE_ID, file.getFileId())
                 .set(FILE_META.REPORT_ID, reportId)
                 .set(FILE_META.BUCKET_ID, file.getBucketId())
                 .set(FILE_META.FILENAME, file.getFilename())
                 .set(FILE_META.MD5, file.getMd5())
                 .set(FILE_META.SHA256, file.getSha256())
-                .returning(FILE_META.ID)
+                .returning(FILE_META.FILE_ID)
                 .fetchOne();
 
-        return record.get(FILE_META.ID);
+        return record.get(FILE_META.FILE_ID);
     }
 
     @Override

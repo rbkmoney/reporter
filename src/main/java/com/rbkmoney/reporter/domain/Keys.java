@@ -40,7 +40,7 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<FileMetaRecord> FILE_PKEY = UniqueKeys0.FILE_PKEY;
+    public static final UniqueKey<FileMetaRecord> FILE_META_PKEY = UniqueKeys0.FILE_META_PKEY;
     public static final UniqueKey<ReportRecord> REPORT_PKEY = UniqueKeys0.REPORT_PKEY;
 
     // -------------------------------------------------------------------------
@@ -57,7 +57,7 @@ public class Keys {
     }
 
     private static class UniqueKeys0 extends AbstractKeys {
-        public static final UniqueKey<FileMetaRecord> FILE_PKEY = createUniqueKey(FileMeta.FILE_META, "file_pkey", FileMeta.FILE_META.ID);
+        public static final UniqueKey<FileMetaRecord> FILE_META_PKEY = createUniqueKey(FileMeta.FILE_META, "file_meta_pkey", FileMeta.FILE_META.BUCKET_ID, FileMeta.FILE_META.FILE_ID);
         public static final UniqueKey<ReportRecord> REPORT_PKEY = createUniqueKey(Report.REPORT, "report_pkey", Report.REPORT.ID);
     }
 }

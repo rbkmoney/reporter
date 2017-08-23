@@ -34,7 +34,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class FileMeta extends TableImpl<FileMetaRecord> {
 
-    private static final long serialVersionUID = -40968170;
+    private static final long serialVersionUID = 2127237141;
 
     /**
      * The reference instance of <code>rpt.file_meta</code>
@@ -50,19 +50,19 @@ public class FileMeta extends TableImpl<FileMetaRecord> {
     }
 
     /**
-     * The column <code>rpt.file_meta.id</code>.
+     * The column <code>rpt.file_meta.file_id</code>.
      */
-    public final TableField<FileMetaRecord, String> ID = createField("id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
-
-    /**
-     * The column <code>rpt.file_meta.report_id</code>.
-     */
-    public final TableField<FileMetaRecord, Long> REPORT_ID = createField("report_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
+    public final TableField<FileMetaRecord, String> FILE_ID = createField("file_id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * The column <code>rpt.file_meta.bucket_id</code>.
      */
     public final TableField<FileMetaRecord, String> BUCKET_ID = createField("bucket_id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
+
+    /**
+     * The column <code>rpt.file_meta.report_id</code>.
+     */
+    public final TableField<FileMetaRecord, Long> REPORT_ID = createField("report_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
      * The column <code>rpt.file_meta.filename</code>.
@@ -114,7 +114,7 @@ public class FileMeta extends TableImpl<FileMetaRecord> {
      */
     @Override
     public UniqueKey<FileMetaRecord> getPrimaryKey() {
-        return Keys.FILE_PKEY;
+        return Keys.FILE_META_PKEY;
     }
 
     /**
@@ -122,7 +122,7 @@ public class FileMeta extends TableImpl<FileMetaRecord> {
      */
     @Override
     public List<UniqueKey<FileMetaRecord>> getKeys() {
-        return Arrays.<UniqueKey<FileMetaRecord>>asList(Keys.FILE_PKEY);
+        return Arrays.<UniqueKey<FileMetaRecord>>asList(Keys.FILE_META_PKEY);
     }
 
     /**

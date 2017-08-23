@@ -16,13 +16,13 @@ CREATE TABLE rpt.report (
 );
 
 CREATE TABLE rpt.file_meta (
-  id        CHARACTER VARYING NOT NULL,
-  report_id BIGINT            NOT NULL,
+  file_id   CHARACTER VARYING NOT NULL,
   bucket_id CHARACTER VARYING NOT NULL,
+  report_id BIGINT            NOT NULL,
   filename  CHARACTER VARYING NOT NULL,
   md5       CHARACTER VARYING NOT NULL,
   sha256    CHARACTER VARYING NOT NULL,
-  CONSTRAINT file_pkey PRIMARY KEY (id)
+  CONSTRAINT file_meta_pkey PRIMARY KEY (bucket_id, file_id)
 );
 
 

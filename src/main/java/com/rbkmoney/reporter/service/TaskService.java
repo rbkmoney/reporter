@@ -32,9 +32,6 @@ public class TaskService {
     @Autowired
     private StorageService storageService;
 
-    @Value("${storage.bucketName}")
-    private String bucketName;
-
     @Scheduled(fixedDelay = 500)
     public void processProvisionOfServicePendingTasks() {
         List<Report> reports = reportService.getPendingReportsByType(ReportType.provision_of_service);
@@ -70,14 +67,8 @@ public class TaskService {
                             Files.newOutputStream(reportFile)
                     );
 
-                    FileMeta reportFileModel = storageService.saveFile(
-                            //TODO without id here
-                            UUID.randomUUID().toString(),
-                            //TODO without bucket name here
-                            bucketName,
-                            reportFile.getFileName().toString(),
-                            Files.newInputStream(reportFile)
-                    );
+                    FileMeta reportFileModel = storageService.saveFile(reportFile);
+
                     reportService.finishedReportTask(report, reportFileModel);
 
                 } finally {

@@ -16,4 +16,5 @@ spring:
       idle-timeout: 30000
 storage:
   endpoint: localhost
+  signingRegion: RU
   bucketName: "reports"

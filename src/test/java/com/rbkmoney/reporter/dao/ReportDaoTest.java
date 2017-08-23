@@ -75,7 +75,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
         String fileId = reportDao.attachFile(reportId, file);
         FileMeta currentFile = reportDao.getFile(fileId);
 
-        assertEquals(file.getId(), currentFile.getId());
+        assertEquals(file.getFileId(), currentFile.getFileId());
         assertEquals(reportId, currentFile.getReportId());
         assertEquals(file.getBucketId(), currentFile.getBucketId());
         assertEquals(file.getFilename(), currentFile.getFilename());
@@ -87,7 +87,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
 
         currentFile = files.get(0);
 
-        assertEquals(file.getId(), currentFile.getId());
+        assertEquals(file.getFileId(), currentFile.getFileId());
         assertEquals(reportId, currentFile.getReportId());
         assertEquals(file.getBucketId(), currentFile.getBucketId());
         assertEquals(file.getFilename(), currentFile.getFilename());
