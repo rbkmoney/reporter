@@ -4,6 +4,8 @@ partyManagement:
   url: http://localhost:8022/repo
 magista:
   url: http://localhost:8022/stat
+signer:
+  url: http://localhost:8022/signer
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource

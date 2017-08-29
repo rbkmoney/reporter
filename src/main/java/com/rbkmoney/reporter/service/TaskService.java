@@ -1,83 +1,28 @@
 package com.rbkmoney.reporter.service;
 
-import com.rbkmoney.reporter.ReportType;
-import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import com.rbkmoney.reporter.model.PartyModel;
-import com.rbkmoney.reporter.model.ShopAccountingModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class TaskService {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     private ReportService reportService;
 
-    @Autowired
-    private PartyService partyService;
-
-    @Autowired
-    private StatisticService statisticService;
-
-    @Autowired
-    private StorageService storageService;
-
     @Scheduled(fixedDelay = 500)
-    public void processProvisionOfServicePendingTasks() {
-        List<Report> reports = reportService.getPendingReportsByType(ReportType.provision_of_service);
+    public void processPendingReports() {
+        List<Report> reports = reportService.getPendingReports();
+        log.debug("Trying to process {} pending reports", reports.size());
         for (Report report : reports) {
-            Instant fromTime = report.getFromTime().toInstant(ZoneOffset.UTC);
-            Instant toTime = report.getToTime().toInstant(ZoneOffset.UTC);
-            Instant createdAt = report.getCreatedAt().toInstant(ZoneOffset.UTC);
-
-            report.getToTime().toInstant(ZoneOffset.UTC);
-
-            PartyModel partyModel = partyService.getPartyRepresentation(
-                    report.getPartyId(),
-                    report.getPartyShopId(),
-                    createdAt
-            );
-
-            ShopAccountingModel shopAccountingModel = statisticService.getShopAccounting(
-                    report.getPartyId(),
-                    report.getPartyShopId(),
-                    fromTime,
-                    toTime
-            );
-
-            try {
-                Path reportFile = Files.createTempFile("provision_of_service_", "_report.xlsx");
-
-                try {
-                    reportService.generateProvisionOfServiceReport(
-                            partyModel,
-                            shopAccountingModel,
-                            fromTime,
-                            toTime,
-                            Files.newOutputStream(reportFile)
-                    );
-
-                    FileMeta reportFileModel = storageService.saveFile(reportFile);
-
-                    reportService.finishedReportTask(report, reportFileModel);
-
-                } finally {
-                    Files.delete(reportFile);
-                }
-
-            } catch (Throwable ex) {
-
-            }
+            reportService.generateReport(report);
         }
     }
 

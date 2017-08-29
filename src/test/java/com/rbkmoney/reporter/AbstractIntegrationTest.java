@@ -10,7 +10,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 
@@ -47,6 +46,7 @@ public class AbstractIntegrationTest {
             );
         }
     }
+
     @Value("${local.server.port}")
     protected int port;
 

@@ -17,7 +17,7 @@
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
-        <damsel.version>1.180-d0f6d1e</damsel.version>
+        <damsel.version>1.189-07c5f5c</damsel.version>
         <shared.resources.version>0.2.1</shared.resources.version>
         <server.port>8022</server.port>
         <dockerfile.base.service.tag>f26fcc19d1941ab74f1c72dd8a408be17a769333</dockerfile.base.service.tag>

@@ -12,17 +12,19 @@ import com.rbkmoney.reporter.exception.ShopNotFoundException;
 import com.rbkmoney.reporter.model.PartyModel;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 import org.jxls.common.Context;
-import org.jxls.util.JxlsHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -32,16 +34,34 @@ import java.util.List;
 @Service
 public class ReportService {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     public static final ZoneId DEFAULT_TIMEZONE = ZoneId.of("Europe/Moscow");
 
-    @Autowired
-    ReportDao reportDao;
+    private final ReportDao reportDao;
+
+    private final PartyService partyService;
+
+    private final TemplateService templateService;
+
+    private final StorageService storageService;
+
+    private final SignService signService;
 
     @Autowired
-    private PartyService partyService;
-
-    @Autowired
-    private StorageService storageService;
+    public ReportService(
+            ReportDao reportDao,
+            PartyService partyService,
+            TemplateService templateService,
+            StorageService storageService,
+            SignService signService
+    ) {
+        this.reportDao = reportDao;
+        this.partyService = partyService;
+        this.templateService = templateService;
+        this.storageService = storageService;
+        this.signService = signService;
+    }
 
     public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) {
         return reportDao.getReportsByRange(
@@ -53,8 +73,8 @@ public class ReportService {
         );
     }
 
-    public List<Report> getPendingReportsByType(ReportType reportType) {
-        return reportDao.getPendingReportsByType(reportType);
+    public List<Report> getPendingReports() {
+        return reportDao.getPendingReports();
     }
 
     public List<FileMeta> getReportFiles(long reportId) {
@@ -69,11 +89,11 @@ public class ReportService {
         return report;
     }
 
-    public long generateReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
-        return generateReport(partyId, shopId, fromTime, toTime, reportType, DEFAULT_TIMEZONE, Instant.now());
+    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
+        return createReport(partyId, shopId, fromTime, toTime, reportType, DEFAULT_TIMEZONE, Instant.now());
     }
 
-    public long generateReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
+    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
         PartyModel partyModel = partyService.getPartyRepresentation(partyId, shopId, createdAt);
         if (partyModel == null) {
             throw new PartyNotFoundException("Party not found, partyId='%s'", partyId);
@@ -99,41 +119,47 @@ public class ReportService {
         return storageService.getFileUrl(file.getFileId(), file.getBucketId(), expiresAt);
     }
 
-    public void finishedReportTask(Report report, FileMeta... files) {
+    public void generateReport(Report report) {
+        log.debug("Trying to process report, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime());
+        try {
+            List<FileMeta> reportFiles = processSignAndUpload(report);
+            finishedReportTask(report.getId(), reportFiles);
+            log.info("Report has been successfully processed, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                    report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime());
+        } catch (Throwable throwable) {
+            log.error("The report has failed to process, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                    report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime(), throwable);
+        }
+    }
+
+    public void finishedReportTask(long reportId, List<FileMeta> reportFiles) {
         reportDao.getDSLContext().transaction(configuration -> {
-            for (FileMeta file : files) {
-                reportDao.attachFile(report.getId(), file);
+            for (FileMeta file : reportFiles) {
+                reportDao.attachFile(reportId, file);
             }
 
-            reportDao.changeReportStatus(report.getId(), ReportStatus.created);
+            reportDao.changeReportStatus(reportId, ReportStatus.created);
         });
     }
 
-    public void generateProvisionOfServiceReport(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, OutputStream outputStream) throws IOException {
-        Context context = new Context();
-        context.putVar("shopAccounting", shopAccountingModel);
-        context.putVar("partyRepresentation", partyModel);
-        context.putVar("fromTime", Date.from(fromTime));
-        context.putVar("toTime", Date.from(toTime));
+    public List<FileMeta> processSignAndUpload(Report report) throws IOException {
+        Path reportFile = Files.createTempFile(report.getType() + "_", "_report.xlsx");
+        try {
+            templateService.processReportTemplate(
+                    report,
+                    Files.newOutputStream(reportFile)
+            );
 
-        processTemplate(
-                context,
-                ReportType.provision_of_service,
-                outputStream
-        );
-    }
+            FileMeta reportFileModel = storageService.saveFile(reportFile);
 
-    public void processTemplate(Context context, ReportType reportType, OutputStream outputStream) throws IOException {
-        processTemplate(context, reportType.getTemplateResource().getInputStream(), outputStream);
-    }
+            byte[] sign = signService.sign(reportFile);
+            FileMeta signFileModel = storageService.saveFile(reportFile.getFileName().toString() + ".sign", sign);
 
-    public void processTemplate(Context context, InputStream inputStream, OutputStream outputStream) throws IOException {
-        JxlsHelper.getInstance()
-                .processTemplate(
-                        inputStream,
-                        outputStream,
-                        context
-                );
+            return Arrays.asList(reportFileModel, signFileModel);
+        } finally {
+            Files.delete(reportFile);
+        }
     }
 
 }

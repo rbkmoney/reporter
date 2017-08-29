@@ -19,7 +19,7 @@ import java.io.IOException;
  * Created by tolkonepiu on 10/07/2017.
  */
 @Configuration
-public class MagistaConfig {
+public class StatisticConfig {
 
     @Value("${magista.url}")
     private Resource resource;

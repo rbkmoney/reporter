@@ -11,6 +11,8 @@ import com.rbkmoney.reporter.exception.FileNotFoundException;
 import com.rbkmoney.reporter.exception.FileStorageException;
 import com.rbkmoney.reporter.service.StorageService;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,8 @@ import java.util.UUID;
 @Service
 public class S3StorageServiceImpl implements StorageService {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final TransferManager transferManager;
     private final AmazonS3 storageClient;
     private final String bucketName;
@@ -45,6 +49,7 @@ public class S3StorageServiceImpl implements StorageService {
     @PostConstruct
     public void init() {
         if (!storageClient.doesBucketExist(bucketName)) {
+            log.info("Create bucket in file storage, bucketId='{}'", bucketName);
             storageClient.createBucket(bucketName);
         }
     }
@@ -52,6 +57,7 @@ public class S3StorageServiceImpl implements StorageService {
     @Override
     public String getFileUrl(String fileId, String bucketId, Instant expiresIn) throws FileStorageException, FileNotFoundException {
         try {
+            log.debug("Trying to generate presigned url, fileId='{}', bucketId='{}', expiresAt='{}'", fileId, bucketId, expiresIn);
             URL url = storageClient.generatePresignedUrl(bucketId, fileId, Date.from(expiresIn));
             if (Objects.isNull(url)) {
                 throw new FileNotFoundException("Presigned url is null, fileId='%s', bucketId='%s'", fileId, bucketId);
@@ -82,14 +88,16 @@ public class S3StorageServiceImpl implements StorageService {
 
     @Override
     public FileMeta saveFile(String filename, InputStream inputStream) throws FileStorageException {
+        log.debug("Trying to upload file to storage, filename='{}', bucketId='{}'", filename, bucketName);
+
         try {
-            String fileKey;
+            String fileId;
             do {
-                fileKey = UUID.randomUUID().toString();
-            } while (storageClient.doesObjectExist(bucketName, fileKey));
+                fileId = UUID.randomUUID().toString();
+            } while (storageClient.doesObjectExist(bucketName, fileId));
 
             FileMeta fileMeta = createFileMeta(
-                    fileKey,
+                    fileId,
                     bucketName,
                     filename,
                     DigestUtils.md5Hex(inputStream),
@@ -99,18 +107,20 @@ public class S3StorageServiceImpl implements StorageService {
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentDisposition("attachment;filename=" + filename);
             Upload upload = transferManager.upload(
-                    new PutObjectRequest(bucketName, fileKey, inputStream, objectMetadata)
+                    new PutObjectRequest(bucketName, fileId, inputStream, objectMetadata)
             );
             try {
                 upload.waitForUploadResult();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            log.info("File have been successfully uploaded, fileId='{}', bucketId='{}', filename='{}', md5='{}', sha256='{}'",
+                    fileMeta.getFileId(), fileMeta.getBucketId(), fileMeta.getFilename(), fileMeta.getMd5(), fileMeta.getSha256());
 
             return fileMeta;
 
         } catch (IOException | AmazonClientException ex) {
-            throw new FileStorageException("Failed to save file in storage, filename='%s', bucketId='%s'", ex, filename, bucketName);
+            throw new FileStorageException("Failed to upload file to storage, filename='%s', bucketId='%s'", ex, filename, bucketName);
         }
     }
 

@@ -23,6 +23,8 @@ public interface ReportDao {
 
     String attachFile(long reportId, FileMeta file);
 
+    List<Report> getPendingReports();
+
     List<Report> getPendingReportsByType(ReportType reportType);
 
     List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime);

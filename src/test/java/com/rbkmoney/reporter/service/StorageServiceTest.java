@@ -14,9 +14,9 @@ public class StorageServiceTest extends AbstractIntegrationTest {
     StorageService storageService;
 
     @Test
-    public void saveAndGenerateUrlTest() throws IOException {
+    public void saveFileTest() throws IOException {
         FileMeta fileMeta = storageService.saveFile(Files.createTempFile("kek_", "_kek"));
-        System.out.println(fileMeta);
+        //TODO get file url
     }
 
 }

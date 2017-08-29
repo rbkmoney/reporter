@@ -64,7 +64,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
             Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
             Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
 
-            return reportService.generateReport(
+            return reportService.createReport(
                     reportRequest.getPartyId(),
                     reportRequest.getShopId(),
                     fromTime,

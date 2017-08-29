@@ -97,6 +97,13 @@ public class ReportDaoImpl implements ReportDao {
     }
 
     @Override
+    public List<Report> getPendingReports() {
+        return dslContext.selectFrom(REPORT)
+                .where(REPORT.STATUS.eq(ReportStatus.pending))
+                .fetch().into(Report.class);
+    }
+
+    @Override
     public List<Report> getPendingReportsByType(ReportType reportType) {
         return dslContext.selectFrom(REPORT)
                 .where(REPORT.STATUS.eq(ReportStatus.pending))

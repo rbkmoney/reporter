@@ -12,19 +12,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Instant;
 
 @Ignore
-public class ProvisionOfServiceTaskTest extends AbstractIntegrationTest {
+public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Autowired
     ReportService reportService;
 
-    @Test
+    @Test(timeout = 3000)
     public void generateReportTest() {
-        long reportId = reportService.generateReport("kek", "kek", Instant.now(), Instant.now(), ReportType.provision_of_service);
+        long reportId = reportService.createReport("kek", "kek", Instant.now(), Instant.now(), ReportType.provision_of_service);
 
-        Report report = reportService.getReport("kek", "kek", reportId);
-        while (report.getStatus() != ReportStatus.created) {
+        Report report;
+        do {
             report = reportService.getReport("kek", "kek", reportId);
-        }
+        } while (report.getStatus() != ReportStatus.created);
     }
 
 }

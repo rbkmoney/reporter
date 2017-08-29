@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 public class TemplateServiceTest extends AbstractIntegrationTest {
 
     @Autowired
-    private ReportService reportService;
+    private TemplateService templateService;
 
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException {
@@ -40,7 +40,7 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
         ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
 
         try {
-            reportService.generateProvisionOfServiceReport(
+            templateService.processProvisionOfServiceTemplate(
                     partyModel,
                     shopAccountingModel,
                     fromTime,
