@@ -5,17 +5,14 @@ import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import com.rbkmoney.reporter.exception.FileNotFoundException;
-import com.rbkmoney.reporter.exception.PartyNotFoundException;
-import com.rbkmoney.reporter.exception.ReportNotFoundException;
-import com.rbkmoney.reporter.exception.ShopNotFoundException;
+import com.rbkmoney.reporter.exception.*;
 import com.rbkmoney.reporter.model.PartyModel;
-import com.rbkmoney.reporter.model.ShopAccountingModel;
-import org.jxls.common.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -64,29 +60,46 @@ public class ReportService {
     }
 
     public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) {
-        return reportDao.getReportsByRange(
-                partyId,
-                shopId,
-                reportTypes,
-                LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
-                LocalDateTime.ofInstant(toTime, ZoneOffset.UTC)
-        );
+        try {
+            return reportDao.getReportsByRange(
+                    partyId,
+                    shopId,
+                    reportTypes,
+                    LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
+                    LocalDateTime.ofInstant(toTime, ZoneOffset.UTC)
+            );
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s'", ex,
+                    partyId, shopId, reportTypes, fromTime, toTime);
+        }
     }
 
     public List<Report> getPendingReports() {
-        return reportDao.getPendingReports();
+        try {
+            return reportDao.getPendingReports();
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to get pending reports", ex);
+        }
     }
 
     public List<FileMeta> getReportFiles(long reportId) {
-        return reportDao.getReportFiles(reportId);
+        try {
+            return reportDao.getReportFiles(reportId);
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to get report files from storage, reportId='%d'", ex, reportId);
+        }
     }
 
     public Report getReport(String partyId, String shopId, long reportId) throws ReportNotFoundException {
-        Report report = reportDao.getReport(partyId, shopId, reportId);
-        if (report == null) {
-            throw new ReportNotFoundException("Report not found, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId);
+        try {
+            Report report = reportDao.getReport(partyId, shopId, reportId);
+            if (report == null) {
+                throw new ReportNotFoundException("Report not found, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId);
+            }
+            return report;
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to get report from storage, partyId='%s', shopId='%s', reportId='%d'", ex, partyId, shopId, reportId);
         }
-        return report;
     }
 
     public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
@@ -99,19 +112,30 @@ public class ReportService {
             throw new PartyNotFoundException("Party not found, partyId='%s'", partyId);
         }
 
-        return reportDao.createReport(
-                partyId,
-                shopId,
-                LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
-                LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
-                reportType,
-                timezone.getId(),
-                LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
-        );
+        try {
+            return reportDao.createReport(
+                    partyId,
+                    shopId,
+                    LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
+                    LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
+                    reportType,
+                    timezone.getId(),
+                    LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
+            );
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to save report in storage, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', reportType='%s'", ex,
+                    partyId, shopId, fromTime, toTime, reportType);
+        }
     }
 
     public String generatePresignedUrl(String fileId, Instant expiresAt) throws FileNotFoundException {
-        FileMeta file = reportDao.getFile(fileId);
+        FileMeta file;
+        try {
+            file = reportDao.getFile(fileId);
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to get file meta, fileId='%s'", ex, fileId);
+        }
+
         if (file == null) {
             throw new FileNotFoundException("File with id '%s' not found", fileId);
         }
@@ -133,14 +157,17 @@ public class ReportService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public void finishedReportTask(long reportId, List<FileMeta> reportFiles) {
-        reportDao.getDSLContext().transaction(configuration -> {
+        try {
             for (FileMeta file : reportFiles) {
                 reportDao.attachFile(reportId, file);
             }
 
             reportDao.changeReportStatus(reportId, ReportStatus.created);
-        });
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to finish report task, reportId='%d'", reportId);
+        }
     }
 
     public List<FileMeta> processSignAndUpload(Report report) throws IOException {

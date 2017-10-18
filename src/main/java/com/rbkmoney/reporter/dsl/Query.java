@@ -10,12 +10,23 @@ public class Query {
     @JsonProperty("shop_accounting_report")
     private ShopAccountingQuery shopAccountingQuery;
 
+    @JsonProperty("payments")
+    private PaymentsQuery paymentsQuery;
+
     public ShopAccountingQuery getShopAccountingQuery() {
         return shopAccountingQuery;
     }
 
     public void setShopAccountingQuery(ShopAccountingQuery shopAccountingQuery) {
         this.shopAccountingQuery = shopAccountingQuery;
+    }
+
+    public PaymentsQuery getPaymentsQuery() {
+        return paymentsQuery;
+    }
+
+    public void setPaymentsQuery(PaymentsQuery paymentsQuery) {
+        this.paymentsQuery = paymentsQuery;
     }
 
     @Override
@@ -25,18 +36,23 @@ public class Query {
 
         Query query = (Query) o;
 
-        return shopAccountingQuery != null ? shopAccountingQuery.equals(query.shopAccountingQuery) : query.shopAccountingQuery == null;
+        if (shopAccountingQuery != null ? !shopAccountingQuery.equals(query.shopAccountingQuery) : query.shopAccountingQuery != null)
+            return false;
+        return paymentsQuery != null ? paymentsQuery.equals(query.paymentsQuery) : query.paymentsQuery == null;
     }
 
     @Override
     public int hashCode() {
-        return shopAccountingQuery != null ? shopAccountingQuery.hashCode() : 0;
+        int result = shopAccountingQuery != null ? shopAccountingQuery.hashCode() : 0;
+        result = 31 * result + (paymentsQuery != null ? paymentsQuery.hashCode() : 0);
+        return result;
     }
 
     @Override
     public String toString() {
         return "Query{" +
                 "shopAccountingQuery=" + shopAccountingQuery +
+                ", paymentsQuery=" + paymentsQuery +
                 '}';
     }
 }

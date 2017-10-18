@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.config;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -35,6 +36,7 @@ public class StatisticConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
                 .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())

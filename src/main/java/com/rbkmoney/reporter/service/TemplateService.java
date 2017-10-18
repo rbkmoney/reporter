@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.service;
 
+import com.rbkmoney.damsel.merch_stat.StatPayment;
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.ReportNotFoundException;
@@ -16,6 +17,7 @@ import java.io.OutputStream;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class TemplateService {
@@ -28,6 +30,15 @@ public class TemplateService {
     public TemplateService(PartyService partyService, StatisticService statisticService) {
         this.partyService = partyService;
         this.statisticService = statisticService;
+    }
+
+    public void processPaymentRegistryTemplate(List<StatPayment> payments, Instant fromTime, Instant toTime, OutputStream outputStream) throws IOException {
+        Context context = new Context();
+        context.putVar("payments", payments);
+        context.putVar("fromTime", Date.from(fromTime));
+        context.putVar("toTime", Date.from(toTime));
+
+        processTemplate(context, ReportType.payment_registry, outputStream);
     }
 
     public void processProvisionOfServiceTemplate(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, OutputStream outputStream) throws IOException {
@@ -64,6 +75,13 @@ public class TemplateService {
                 processProvisionOfServiceTemplate(partyModel, shopAccountingModel, fromTime, toTime, outputStream);
                 break;
             case payment_registry:
+                List<StatPayment> payments = statisticService.getPayments(
+                        report.getPartyId(),
+                        report.getPartyShopId(),
+                        fromTime,
+                        toTime
+                );
+                processPaymentRegistryTemplate(payments, fromTime, toTime, outputStream);
                 break;
             default:
                 throw new ReportNotFoundException("Unknown report type, reportType='%s'", reportType);

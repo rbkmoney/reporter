@@ -4,30 +4,28 @@ import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import org.jooq.DSLContext;
+import com.rbkmoney.reporter.exception.DaoException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ReportDao {
+public interface ReportDao extends GenericDao {
 
-    DSLContext getDSLContext();
+    Report getReport(String partyId, String shopId, long reportId) throws DaoException;
 
-    Report getReport(String partyId, String shopId, long reportId);
+    List<FileMeta> getReportFiles(long reportId) throws DaoException;
 
-    List<FileMeta> getReportFiles(long reportId);
+    void changeReportStatus(long reportId, ReportStatus status) throws DaoException;
 
-    void changeReportStatus(long reportId, ReportStatus status);
+    FileMeta getFile(String fileId) throws DaoException;
 
-    FileMeta getFile(String fileId);
+    String attachFile(long reportId, FileMeta file) throws DaoException;
 
-    String attachFile(long reportId, FileMeta file);
+    List<Report> getPendingReports() throws DaoException;
 
-    List<Report> getPendingReports();
+    List<Report> getPendingReportsByType(ReportType reportType) throws DaoException;
 
-    List<Report> getPendingReportsByType(ReportType reportType);
+    List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
 
-    List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime);
-
-    long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, String timezone, LocalDateTime createdAt);
+    long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, String timezone, LocalDateTime createdAt) throws DaoException;
 }

@@ -1,12 +1,9 @@
 package com.rbkmoney.reporter.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.merch_stat.MerchantStatisticsSrv;
-import com.rbkmoney.damsel.merch_stat.StatRequest;
-import com.rbkmoney.reporter.dsl.Query;
-import com.rbkmoney.reporter.dsl.ShopAccountingQuery;
-import com.rbkmoney.reporter.dsl.StatisticDsl;
+import com.rbkmoney.damsel.merch_stat.StatPayment;
+import com.rbkmoney.reporter.dsl.DslUtil;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 import com.rbkmoney.reporter.service.StatisticService;
 import org.apache.thrift.TException;
@@ -41,7 +38,7 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public List<ShopAccountingModel> getShopAccountings(Instant fromTime, Instant toTime) {
         try {
-            return merchantStatisticsSrv.getStatistics(createShopAccountingStatRequest(fromTime, toTime))
+            return merchantStatisticsSrv.getStatistics(DslUtil.createShopAccountingStatRequest(fromTime, toTime, objectMapper))
                     .getData()
                     .getRecords()
                     .stream()
@@ -52,18 +49,12 @@ public class StatisticServiceImpl implements StatisticService {
         }
     }
 
-    private StatRequest createShopAccountingStatRequest(Instant from, Instant to) {
-        StatisticDsl statisticDsl = new StatisticDsl();
-        Query query = new Query();
-        ShopAccountingQuery shopAccountingQuery = new ShopAccountingQuery();
-        shopAccountingQuery.setFromTime(from);
-        shopAccountingQuery.setToTime(to);
-        query.setShopAccountingQuery(shopAccountingQuery);
-        statisticDsl.setQuery(query);
-
+    @Override
+    public List<StatPayment> getPayments(String partyId, String shopId, Instant fromTime, Instant toTime) {
         try {
-            return new StatRequest(objectMapper.writeValueAsString(statisticDsl));
-        } catch (JsonProcessingException ex) {
+            return merchantStatisticsSrv.getPayments(DslUtil.createPaymentsRequest(partyId, shopId, fromTime, toTime, objectMapper))
+                    .getData().getPayments();
+        } catch (TException ex) {
             throw new RuntimeException(ex);
         }
     }

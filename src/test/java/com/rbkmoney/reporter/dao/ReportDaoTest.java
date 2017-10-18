@@ -5,6 +5,7 @@ import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.exception.DaoException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,7 +25,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
     ReportDao reportDao;
 
     @Test
-    public void insertAndGetReportTest() {
+    public void insertAndGetReportTest() throws DaoException {
         String partyId = random(String.class);
         String shopId = random(String.class);
         LocalDateTime fromTime = random(LocalDateTime.class);
@@ -52,7 +53,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void checkCreatedStatus() {
+    public void checkCreatedStatus() throws DaoException {
         String partyId = random(String.class);
         String shopId = random(String.class);
         LocalDateTime fromTime = random(LocalDateTime.class);
@@ -68,7 +69,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void attachFileTest() {
+    public void attachFileTest() throws DaoException {
         FileMeta file = random(FileMeta.class);
         Long reportId = random(Long.class);
 
