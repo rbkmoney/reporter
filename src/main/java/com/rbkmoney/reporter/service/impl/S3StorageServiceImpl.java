@@ -55,16 +55,17 @@ public class S3StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public String getFileUrl(String fileId, String bucketId, Instant expiresIn) throws FileStorageException, FileNotFoundException {
+    public URL getFileUrl(String fileId, String bucketId, Instant expiresIn) throws FileStorageException, FileNotFoundException {
         try {
-            log.debug("Trying to generate presigned url, fileId='{}', bucketId='{}', expiresAt='{}'", fileId, bucketId, expiresIn);
+            log.debug("Trying to generate presigned url, fileId='{}', bucketId='{}', expiresIn='{}'", fileId, bucketId, expiresIn);
             URL url = storageClient.generatePresignedUrl(bucketId, fileId, Date.from(expiresIn));
             if (Objects.isNull(url)) {
                 throw new FileNotFoundException("Presigned url is null, fileId='%s', bucketId='%s'", fileId, bucketId);
             }
-            return url.toString();
+            log.info("Presigned url have been successfully generated, url='{}', fileId='{}', bucketId='{}', expiresIn='{}'", url, fileId, bucketId, expiresIn);
+            return url;
         } catch (AmazonClientException ex) {
-            throw new FileStorageException("Failed to get presigned url from storage, fileId='%s', bucketId='%s'", ex, fileId, bucketId);
+            throw new FileStorageException("Failed to generate presigned url, fileId='%s', bucketId='%s', expiresIn='%s'", ex, fileId, bucketId, expiresIn);
         }
     }
 

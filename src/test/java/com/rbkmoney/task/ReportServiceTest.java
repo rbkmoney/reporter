@@ -19,7 +19,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     ReportService reportService;
 
     @Test
-    public void generateReportTest() {
+    public void generateProvisionOfServiceReportTest() {
         String partyId = random(String.class);
         String shopId = random(String.class);
         Instant fromTime = random(Instant.class);

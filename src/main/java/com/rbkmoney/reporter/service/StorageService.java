@@ -5,12 +5,13 @@ import com.rbkmoney.reporter.exception.FileNotFoundException;
 import com.rbkmoney.reporter.exception.FileStorageException;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Path;
 import java.time.Instant;
 
 public interface StorageService {
 
-    String getFileUrl(String fileId, String bucketId, Instant expiresIn) throws FileNotFoundException, FileStorageException;
+    URL getFileUrl(String fileId, String bucketId, Instant expiresIn) throws FileNotFoundException, FileStorageException;
 
     FileMeta saveFile(Path file) throws FileStorageException;
 

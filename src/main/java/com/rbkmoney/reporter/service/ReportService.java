@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -59,7 +60,7 @@ public class ReportService {
         this.signService = signService;
     }
 
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) {
+    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) throws StorageException {
         try {
             return reportDao.getReportsByRange(
                     partyId,
@@ -74,7 +75,7 @@ public class ReportService {
         }
     }
 
-    public List<Report> getPendingReports() {
+    public List<Report> getPendingReports() throws StorageException {
         try {
             return reportDao.getPendingReports();
         } catch (DaoException ex) {
@@ -82,7 +83,7 @@ public class ReportService {
         }
     }
 
-    public List<FileMeta> getReportFiles(long reportId) {
+    public List<FileMeta> getReportFiles(long reportId) throws StorageException {
         try {
             return reportDao.getReportFiles(reportId);
         } catch (DaoException ex) {
@@ -90,7 +91,7 @@ public class ReportService {
         }
     }
 
-    public Report getReport(String partyId, String shopId, long reportId) throws ReportNotFoundException {
+    public Report getReport(String partyId, String shopId, long reportId) throws ReportNotFoundException, StorageException {
         try {
             Report report = reportDao.getReport(partyId, shopId, reportId);
             if (report == null) {
@@ -128,7 +129,7 @@ public class ReportService {
         }
     }
 
-    public String generatePresignedUrl(String fileId, Instant expiresAt) throws FileNotFoundException {
+    public URL generatePresignedUrl(String fileId, Instant expiresIn) throws FileNotFoundException, StorageException {
         FileMeta file;
         try {
             file = reportDao.getFile(fileId);
@@ -140,7 +141,7 @@ public class ReportService {
             throw new FileNotFoundException("File with id '%s' not found", fileId);
         }
 
-        return storageService.getFileUrl(file.getFileId(), file.getBucketId(), expiresAt);
+        return storageService.getFileUrl(file.getFileId(), file.getBucketId(), expiresIn);
     }
 
     public void generateReport(Report report) {
@@ -158,7 +159,7 @@ public class ReportService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void finishedReportTask(long reportId, List<FileMeta> reportFiles) {
+    public void finishedReportTask(long reportId, List<FileMeta> reportFiles) throws StorageException {
         try {
             for (FileMeta file : reportFiles) {
                 reportDao.attachFile(reportId, file);

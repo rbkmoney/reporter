@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class DamselUtil {
 
-    public static Report toDamselReport(com.rbkmoney.reporter.domain.tables.pojos.Report report, List<com.rbkmoney.reporter.domain.tables.pojos.FileMeta> files) {
+    public static Report toDamselReport(com.rbkmoney.reporter.domain.tables.pojos.Report report, List<com.rbkmoney.reporter.domain.tables.pojos.FileMeta> files) throws IllegalArgumentException {
         Report dReport = new Report();
         dReport.setReportId(report.getId());
         dReport.setStatus(ReportStatus.valueOf(report.getStatus().getLiteral()));

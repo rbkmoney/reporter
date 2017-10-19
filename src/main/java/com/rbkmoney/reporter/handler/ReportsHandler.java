@@ -64,6 +64,10 @@ public class ReportsHandler implements ReportingSrv.Iface {
             Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
             Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
 
+            if (fromTime.compareTo(toTime) > 0) {
+                throw buildInvalidRequest("fromTime must be less that toTime");
+            }
+
             return reportService.createReport(
                     reportRequest.getPartyId(),
                     reportRequest.getShopId(),
@@ -96,7 +100,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
     public String generatePresignedUrl(String fileId, String expiresIn) throws FileNotFound, InvalidRequest, TException {
         try {
             Instant expiresInInstant = TypeUtil.stringToInstant(expiresIn);
-            return reportService.generatePresignedUrl(fileId, expiresInInstant);
+            return reportService.generatePresignedUrl(fileId, expiresInInstant).toString();
         } catch (FileNotFoundException ex) {
             throw new FileNotFound();
         } catch (IllegalArgumentException ex) {
