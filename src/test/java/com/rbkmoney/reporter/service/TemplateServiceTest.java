@@ -90,6 +90,20 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     BigDecimal.valueOf(openingBalanceCell.getNumericCellValue())
             );
 
+            Cell fundsPaidOutCell = sheet.getRow(26).getCell(3);
+            assertEquals("#,##0.00", fundsPaidOutCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    BigDecimal.valueOf(shopAccountingModel.getFundsPaidOut()),
+                    BigDecimal.valueOf(fundsPaidOutCell.getNumericCellValue())
+            );
+
+            Cell fundsRefundedCell = sheet.getRow(28).getCell(3);
+            assertEquals("#,##0.00", fundsRefundedCell.getCellStyle().getDataFormatString());
+            assertEquals(
+                    BigDecimal.valueOf(shopAccountingModel.getFundsRefunded()),
+                    BigDecimal.valueOf(fundsRefundedCell.getNumericCellValue())
+            );
+
             Cell closingBalanceCell = sheet.getRow(29).getCell(3);
             assertEquals("#,##0.00", closingBalanceCell.getCellStyle().getDataFormatString());
             assertEquals(
