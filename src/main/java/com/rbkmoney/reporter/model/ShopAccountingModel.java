@@ -24,6 +24,12 @@ public class ShopAccountingModel {
     private double openingBalance;
 
     @JsonDeserialize(using = CurrencyDeserializer.class)
+    private double fundsPaidOut;
+
+    @JsonDeserialize(using = CurrencyDeserializer.class)
+    private double fundsRefunded;
+
+    @JsonDeserialize(using = CurrencyDeserializer.class)
     private double closingBalance;
 
     public String getMerchantId() {
@@ -74,6 +80,22 @@ public class ShopAccountingModel {
         this.openingBalance = openingBalance;
     }
 
+    public double getFundsPaidOut() {
+        return fundsPaidOut;
+    }
+
+    public void setFundsPaidOut(double fundsPaidOut) {
+        this.fundsPaidOut = fundsPaidOut;
+    }
+
+    public double getFundsRefunded() {
+        return fundsRefunded;
+    }
+
+    public void setFundsRefunded(double fundsRefunded) {
+        this.fundsRefunded = fundsRefunded;
+    }
+
     public double getClosingBalance() {
         return closingBalance;
     }
@@ -92,6 +114,8 @@ public class ShopAccountingModel {
         if (Double.compare(that.fundsAcquired, fundsAcquired) != 0) return false;
         if (Double.compare(that.feeCharged, feeCharged) != 0) return false;
         if (Double.compare(that.openingBalance, openingBalance) != 0) return false;
+        if (Double.compare(that.fundsPaidOut, fundsPaidOut) != 0) return false;
+        if (Double.compare(that.fundsRefunded, fundsRefunded) != 0) return false;
         if (Double.compare(that.closingBalance, closingBalance) != 0) return false;
         if (merchantId != null ? !merchantId.equals(that.merchantId) : that.merchantId != null) return false;
         if (shopId != null ? !shopId.equals(that.shopId) : that.shopId != null) return false;
@@ -111,6 +135,10 @@ public class ShopAccountingModel {
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(openingBalance);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(fundsPaidOut);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(fundsRefunded);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
         temp = Double.doubleToLongBits(closingBalance);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
@@ -125,6 +153,8 @@ public class ShopAccountingModel {
                 ", fundsAcquired=" + fundsAcquired +
                 ", feeCharged=" + feeCharged +
                 ", openingBalance=" + openingBalance +
+                ", fundsPaidOut=" + fundsPaidOut +
+                ", fundsRefunded=" + fundsRefunded +
                 ", closingBalance=" + closingBalance +
                 '}';
     }
