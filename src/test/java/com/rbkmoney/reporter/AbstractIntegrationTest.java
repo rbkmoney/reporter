@@ -25,6 +25,7 @@ import org.testcontainers.containers.localstack.LocalStackContainer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -77,6 +78,7 @@ public class AbstractIntegrationTest {
     @Before
     public void setup() {
         given(statisticService.getShopAccounting(anyString(), anyString(), any(Instant.class), any(Instant.class))).willReturn(random(ShopAccountingModel.class));
+        given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
         given(partyService.getPartyRepresentation(anyString(), anyString(), any(Instant.class))).willReturn(random(PartyModel.class));
         given(signService.sign(any(Path.class)))
                 .willAnswer(
