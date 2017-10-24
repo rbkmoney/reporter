@@ -10,6 +10,7 @@ import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
@@ -83,7 +84,7 @@ public class AbstractIntegrationTest {
                 );
     }
 
-    @Value("${local.server.port}")
+    @LocalServerPort
     protected int port;
 
 }
