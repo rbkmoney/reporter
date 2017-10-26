@@ -24,6 +24,7 @@ public class StorageConfig {
         builder.setEndpointConfiguration(
                 new AwsClientBuilder.EndpointConfiguration(endpoint, signingRegion)
         );
+        builder.setPathStyleAccessEnabled(true);
         return builder.build();
     }
 
