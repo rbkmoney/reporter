@@ -1,5 +1,7 @@
 package com.rbkmoney.reporter.config;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -19,13 +21,21 @@ public class StorageConfig {
     String signingRegion;
 
     @Bean
-    AmazonS3 storageClient() {
+    public AmazonS3 storageClient(ClientConfiguration clientConfiguration) {
         AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
         builder.setEndpointConfiguration(
                 new AwsClientBuilder.EndpointConfiguration(endpoint, signingRegion)
         );
         builder.setPathStyleAccessEnabled(true);
+        builder.setClientConfiguration(clientConfiguration);
         return builder.build();
+    }
+
+    @Bean
+    public ClientConfiguration clientConfiguration() {
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setProtocol(Protocol.HTTP);
+        return clientConfiguration;
     }
 
     @Bean
