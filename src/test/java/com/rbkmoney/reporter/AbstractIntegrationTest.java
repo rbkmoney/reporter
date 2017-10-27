@@ -14,6 +14,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.LogMessageWaitStrategy;
 
+import java.time.Duration;
+
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
@@ -41,6 +43,7 @@ public class AbstractIntegrationTest {
             .waitingFor(
                     new LogMessageWaitStrategy()
                             .withRegEx(".*\\/entrypoint.sh: SUCCESS\n")
+                            .withStartupTimeout(Duration.ofSeconds(120))
             );
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
