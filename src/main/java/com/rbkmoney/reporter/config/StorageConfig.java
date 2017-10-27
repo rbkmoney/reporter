@@ -24,10 +24,10 @@ public class StorageConfig {
     @Value("${storage.signingRegion}")
     String signingRegion;
 
-    @Value("${storage.accessKey}")
+    @Value("${storage.accessKey:}")
     String accessKey;
 
-    @Value("${storage.secretKey}")
+    @Value("${storage.secretKey:}")
     String secretKey;
 
     @Bean
