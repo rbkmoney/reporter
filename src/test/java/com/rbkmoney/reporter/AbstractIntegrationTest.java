@@ -43,7 +43,7 @@ public class AbstractIntegrationTest {
             .waitingFor(
                     new LogMessageWaitStrategy()
                             .withRegEx(".*\\/entrypoint.sh: SUCCESS\n")
-                            .withStartupTimeout(Duration.ofSeconds(120))
+                            .withStartupTimeout(Duration.ofMinutes(5))
             );
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
