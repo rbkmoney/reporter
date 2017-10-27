@@ -8,15 +8,15 @@
     </root>
 
     <logger name="org.springframework.jdbc.core.JdbcTemplate">
-        <level value="trace"/>
+        <level value="info"/>
     </logger>
 
     <logger name="org.springframework.jdbc.core.StatementCreatorUtils">
-        <level value="trace"/>
+        <level value="info"/>
     </logger>
 
     <logger name="org.springframework.jdbc.support.JdbcAccessor">
-        <level value="trace"/>
+        <level value="info"/>
     </logger>
 
     <logger name="com.amazonaws">
