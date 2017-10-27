@@ -20,6 +20,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.LogMessageWaitStrategy;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +55,11 @@ public class AbstractIntegrationTest {
             .withEnv("CEPH_DEMO_ACCESS_KEY", AWS_ACCESS_KEY)
             .withEnv("CEPH_DEMO_SECRET_KEY", AWS_SECRET_KEY)
             .withEnv("CEPH_DEMO_BUCKET", BUCKET_NAME)
-            .withExposedPorts(80);
+            .withExposedPorts(80)
+            .waitingFor(
+                    new LogMessageWaitStrategy()
+                            .withRegEx(".*\\/entrypoint.sh: SUCCESS\n")
+            );
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
