@@ -133,7 +133,7 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     BigDecimal.valueOf(sheet.getRow(25).getCell(3).getNumericCellValue())
             );
         } finally {
-            Files.delete(tempFile);
+            Files.deleteIfExists(tempFile);
         }
     }
 

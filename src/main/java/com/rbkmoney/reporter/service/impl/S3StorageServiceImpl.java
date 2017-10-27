@@ -71,8 +71,8 @@ public class S3StorageServiceImpl implements StorageService {
 
     @Override
     public FileMeta saveFile(Path file) throws FileStorageException {
-        try (InputStream inputStream = Files.newInputStream(file)) {
-            return saveFile(file.getFileName().toString(), inputStream);
+        try {
+            return saveFile(file.getFileName().toString(), Files.readAllBytes(file));
         } catch (IOException ex) {
             throw new FileStorageException("Failed to save path in storage, filename='%s', bucketId='%s'", ex, file.getFileName().toString(), bucketName);
         }
@@ -80,15 +80,6 @@ public class S3StorageServiceImpl implements StorageService {
 
     @Override
     public FileMeta saveFile(String filename, byte[] bytes) throws FileStorageException {
-        try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
-            return saveFile(filename, inputStream);
-        } catch (IOException ex) {
-            throw new FileStorageException("Failed to save byte array in storage, filename='%s', bucketId='%s'", ex, filename, bucketName);
-        }
-    }
-
-    @Override
-    public FileMeta saveFile(String filename, InputStream inputStream) throws FileStorageException {
         log.debug("Trying to upload file to storage, filename='{}', bucketId='{}'", filename, bucketName);
 
         try {
@@ -101,14 +92,14 @@ public class S3StorageServiceImpl implements StorageService {
                     fileId,
                     bucketName,
                     filename,
-                    DigestUtils.md5Hex(inputStream),
-                    DigestUtils.sha256Hex(inputStream)
+                    DigestUtils.md5Hex(bytes),
+                    DigestUtils.sha256Hex(bytes)
             );
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentDisposition("attachment;filename=" + filename);
             Upload upload = transferManager.upload(
-                    new PutObjectRequest(bucketName, fileId, inputStream, objectMetadata)
+                    new PutObjectRequest(bucketName, fileId, new ByteArrayInputStream(bytes), objectMetadata)
             );
             try {
                 upload.waitForUploadResult();
@@ -120,7 +111,7 @@ public class S3StorageServiceImpl implements StorageService {
 
             return fileMeta;
 
-        } catch (IOException | AmazonClientException ex) {
+        } catch (AmazonClientException ex) {
             throw new FileStorageException("Failed to upload file to storage, filename='%s', bucketId='%s'", ex, filename, bucketName);
         }
     }

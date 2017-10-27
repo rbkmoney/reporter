@@ -184,7 +184,7 @@ public class ReportService {
 
             return Arrays.asList(reportFileModel, signFileModel);
         } finally {
-            Files.delete(reportFile);
+            Files.deleteIfExists(reportFile);
         }
     }
 

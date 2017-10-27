@@ -81,3 +81,6 @@ env.list
 
 # Excel
 ~$*
+
+# Test containers
+.testcontainers*
