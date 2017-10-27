@@ -66,7 +66,7 @@ public class AbstractIntegrationTest {
                     "flyway.url=" + postgres.getJdbcUrl(),
                     "flyway.user=" + postgres.getUsername(),
                     "flyway.password=" + postgres.getPassword(),
-                    "storage.endpoint=localhost:" + cephContainer.getMappedPort(80),
+                    "storage.endpoint=" + cephContainer.getContainerIpAddress() + ":" + cephContainer.getMappedPort(80),
                     "storage.signingRegion=RU",
                     "storage.bucketName=" + BUCKET_NAME,
                     "storage.accessKey=" + AWS_ACCESS_KEY,
