@@ -11,8 +11,11 @@ import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,10 +29,12 @@ import static com.rbkmoney.reporter.util.DamselUtil.buildInvalidRequest;
 public class ReportsHandler implements ReportingSrv.Iface {
 
     private final ReportService reportService;
+    private final String urlEndpoint;
 
     @Autowired
-    public ReportsHandler(ReportService reportService) {
+    public ReportsHandler(ReportService reportService, @Value("${storage.urlEndpoint}") String urlEndpoint) {
         this.reportService = reportService;
+        this.urlEndpoint = urlEndpoint;
     }
 
     @Override
@@ -100,7 +105,13 @@ public class ReportsHandler implements ReportingSrv.Iface {
     public String generatePresignedUrl(String fileId, String expiresIn) throws FileNotFound, InvalidRequest, TException {
         try {
             Instant expiresInInstant = TypeUtil.stringToInstant(expiresIn);
-            return reportService.generatePresignedUrl(fileId, expiresInInstant).toString();
+            URL url = reportService.generatePresignedUrl(fileId, expiresInInstant);
+            try {
+                url = new URL(url.getProtocol(), urlEndpoint, url.getPort(), url.getFile());
+            } catch (MalformedURLException e) {
+                throw new TException(String.format("Failed to change host on generated url, url='{}', fileId='{}', expiresIn='{}'", url, fileId, expiresIn));
+            }
+            return url.toString();
         } catch (FileNotFoundException ex) {
             throw new FileNotFound();
         } catch (IllegalArgumentException ex) {
