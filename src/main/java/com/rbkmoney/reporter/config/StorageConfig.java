@@ -34,7 +34,7 @@ public class StorageConfig {
     public AmazonS3 storageClient(AWSCredentialsProviderChain credentialsProviderChain, ClientConfiguration clientConfiguration) {
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(credentialsProviderChain)
-                .withPayloadSigningEnabled(true)
+                .withPathStyleAccessEnabled(true)
                 .withEndpointConfiguration(
                         new AwsClientBuilder.EndpointConfiguration(endpoint, signingRegion)
                 )
