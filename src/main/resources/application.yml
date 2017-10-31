@@ -20,7 +20,7 @@ storage:
   endpoint: localhost
   signingRegion: RU
   bucketName: "reports"
-  urlEndpoint: "example.org"
+  urlEndpoint: "https://example.org"
 scheduler:
   cron: "0 0 0 2 * *"
   timezone: Europe/Moscow
