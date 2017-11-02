@@ -16,7 +16,7 @@ public class SignConfig {
     private Resource resource;
 
     @Bean
-    public SignerSrv.Iface signerSrv() throws IOException {
+    public SignerSrv.Iface signerClient() throws IOException {
         return new THSpawnClientBuilder()
                 .withAddress(resource.getURI())
                 .build(SignerSrv.Iface.class);

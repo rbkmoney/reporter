@@ -2,14 +2,6 @@ package com.rbkmoney.reporter.exception;
 
 public class ShopNotFoundException extends RuntimeException {
 
-    public ShopNotFoundException(String message, Object... args) {
-        this(String.format(message, args));
-    }
-
-    public ShopNotFoundException(String message, Throwable cause, Object... args) {
-        this(String.format(message, args), cause);
-    }
-
     public ShopNotFoundException(String message) {
         super(message);
     }

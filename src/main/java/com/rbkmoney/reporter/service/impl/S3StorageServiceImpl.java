@@ -59,12 +59,12 @@ public class S3StorageServiceImpl implements StorageService {
             log.debug("Trying to generate presigned url, fileId='{}', bucketId='{}', expiresIn='{}'", fileId, bucketId, expiresIn);
             URL url = storageClient.generatePresignedUrl(bucketId, fileId, Date.from(expiresIn));
             if (Objects.isNull(url)) {
-                throw new FileNotFoundException("Presigned url is null, fileId='%s', bucketId='%s'", fileId, bucketId);
+                throw new FileNotFoundException(String.format("Presigned url is null, fileId='%s', bucketId='%s'", fileId, bucketId));
             }
             log.info("Presigned url have been successfully generated, url='{}', fileId='{}', bucketId='{}', expiresIn='{}'", url, fileId, bucketId, expiresIn);
             return url;
         } catch (AmazonClientException ex) {
-            throw new FileStorageException("Failed to generate presigned url, fileId='%s', bucketId='%s', expiresIn='%s'", ex, fileId, bucketId, expiresIn);
+            throw new FileStorageException(String.format("Failed to generate presigned url, fileId='%s', bucketId='%s', expiresIn='%s'", fileId, bucketId, expiresIn), ex);
         }
     }
 
@@ -73,7 +73,7 @@ public class S3StorageServiceImpl implements StorageService {
         try {
             return saveFile(file.getFileName().toString(), Files.readAllBytes(file));
         } catch (IOException ex) {
-            throw new FileStorageException("Failed to save path in storage, filename='%s', bucketId='%s'", ex, file.getFileName().toString(), bucketName);
+            throw new FileStorageException(String.format("Failed to save path in storage, filename='%s', bucketId='%s'", file.getFileName().toString(), bucketName), ex);
         }
     }
 
@@ -111,7 +111,7 @@ public class S3StorageServiceImpl implements StorageService {
             return fileMeta;
 
         } catch (AmazonClientException ex) {
-            throw new FileStorageException("Failed to upload file to storage, filename='%s', bucketId='%s'", ex, filename, bucketName);
+            throw new FileStorageException(String.format("Failed to upload file to storage, filename='%s', bucketId='%s'", filename, bucketName), ex);
         }
     }
 

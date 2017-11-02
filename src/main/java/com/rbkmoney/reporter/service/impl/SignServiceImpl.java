@@ -17,11 +17,11 @@ import java.nio.file.Path;
 @Service
 public class SignServiceImpl implements SignService {
 
-    private final SignerSrv.Iface signerSrv;
+    private final SignerSrv.Iface signerClient;
 
     @Autowired
-    public SignServiceImpl(SignerSrv.Iface signerSrv) {
-        this.signerSrv = signerSrv;
+    public SignServiceImpl(SignerSrv.Iface signerClient) {
+        this.signerClient = signerClient;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class SignServiceImpl implements SignService {
     @Override
     public byte[] sign(byte[] byteArray) {
         try {
-            return signerSrv.sign(ByteBuffer.wrap(byteArray)).array();
+            return signerClient.sign(ByteBuffer.wrap(byteArray)).array();
         } catch (TException e) {
             throw new SignException("Failed to sign file");
         }
@@ -47,7 +47,7 @@ public class SignServiceImpl implements SignService {
         try {
             return sign(Files.readAllBytes(path));
         } catch (IOException e) {
-            throw new SignException("Failed to read bytes from path, path='%s'", path.toString());
+            throw new SignException(String.format("Failed to read bytes from path, path='%s'", path.toString()));
         }
     }
 }

@@ -17,13 +17,13 @@ import java.util.stream.Collectors;
 @Service
 public class StatisticServiceImpl implements StatisticService {
 
-    private final MerchantStatisticsSrv.Iface merchantStatisticsSrv;
+    private final MerchantStatisticsSrv.Iface merchantStatisticsClient;
 
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public StatisticServiceImpl(MerchantStatisticsSrv.Iface merchantStatisticsSrv, ObjectMapper objectMapper) {
-        this.merchantStatisticsSrv = merchantStatisticsSrv;
+    public StatisticServiceImpl(MerchantStatisticsSrv.Iface merchantStatisticsClient, ObjectMapper objectMapper) {
+        this.merchantStatisticsClient = merchantStatisticsClient;
         this.objectMapper = objectMapper;
     }
 
@@ -38,7 +38,7 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public List<ShopAccountingModel> getShopAccountings(Instant fromTime, Instant toTime) {
         try {
-            return merchantStatisticsSrv.getStatistics(DslUtil.createShopAccountingStatRequest(fromTime, toTime, objectMapper))
+            return merchantStatisticsClient.getStatistics(DslUtil.createShopAccountingStatRequest(fromTime, toTime, objectMapper))
                     .getData()
                     .getRecords()
                     .stream()
@@ -52,7 +52,7 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public List<StatPayment> getPayments(String partyId, String shopId, Instant fromTime, Instant toTime) {
         try {
-            return merchantStatisticsSrv.getPayments(DslUtil.createPaymentsRequest(partyId, shopId, fromTime, toTime, objectMapper))
+            return merchantStatisticsClient.getPayments(DslUtil.createPaymentsRequest(partyId, shopId, fromTime, toTime, objectMapper))
                     .getData().getPayments();
         } catch (TException ex) {
             throw new RuntimeException(ex);

@@ -19,7 +19,7 @@ public class PartyManagementConfig {
     Resource resource;
 
     @Bean
-    public PartyManagementSrv.Iface partyManagementSrv() throws IOException {
+    public PartyManagementSrv.Iface partyManagementClient() throws IOException {
         return new THSpawnClientBuilder()
                 .withAddress(resource.getURI()).build(PartyManagementSrv.Iface.class);
     }

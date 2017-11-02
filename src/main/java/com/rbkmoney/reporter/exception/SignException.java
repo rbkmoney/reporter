@@ -2,14 +2,6 @@ package com.rbkmoney.reporter.exception;
 
 public class SignException extends RuntimeException {
 
-    public SignException(String message, Object... args) {
-        this(String.format(message, args));
-    }
-
-    public SignException(String message, Throwable cause, Object... args) {
-        this(String.format(message, args), cause);
-    }
-
     public SignException(String message) {
         super(message);
     }

@@ -2,14 +2,6 @@ package com.rbkmoney.reporter.exception;
 
 public class FileStorageException extends RuntimeException {
 
-    public FileStorageException(String message, Object... args) {
-        this(String.format(message, args));
-    }
-
-    public FileStorageException(String message, Throwable cause, Object... args) {
-        this(String.format(message, args), cause);
-    }
-
     public FileStorageException(String message) {
         super(message);
     }

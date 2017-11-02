@@ -26,7 +26,7 @@ public class StatisticConfig {
     private Resource resource;
 
     @Bean
-    public MerchantStatisticsSrv.Iface merchantStatisticsSrv() throws IOException {
+    public MerchantStatisticsSrv.Iface merchantStatisticsClient() throws IOException {
         return new THSpawnClientBuilder()
                 .withAddress(resource.getURI())
                 .build(MerchantStatisticsSrv.Iface.class);

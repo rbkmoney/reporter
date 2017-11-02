@@ -15,9 +15,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+
+import static com.rbkmoney.reporter.util.TimeUtil.toZoneSameLocal;
 
 @Service
 public class TemplateService {
@@ -41,12 +45,12 @@ public class TemplateService {
         processTemplate(context, ReportType.payment_registry, outputStream);
     }
 
-    public void processProvisionOfServiceTemplate(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, OutputStream outputStream) throws IOException {
+    public void processProvisionOfServiceTemplate(PartyModel partyModel, ShopAccountingModel shopAccountingModel, Instant fromTime, Instant toTime, ZoneId zoneId, OutputStream outputStream) throws IOException {
         Context context = new Context();
         context.putVar("shopAccounting", shopAccountingModel);
         context.putVar("partyRepresentation", partyModel);
-        context.putVar("fromTime", Date.from(fromTime));
-        context.putVar("toTime", Date.from(toTime));
+        context.putVar("fromTime", Date.from(toZoneSameLocal(fromTime, zoneId)));
+        context.putVar("toTime", Date.from(toZoneSameLocal(toTime, zoneId)));
 
         processTemplate(context, ReportType.provision_of_service, outputStream);
     }
@@ -72,7 +76,7 @@ public class TemplateService {
                         fromTime,
                         toTime
                 );
-                processProvisionOfServiceTemplate(partyModel, shopAccountingModel, fromTime, toTime, outputStream);
+                processProvisionOfServiceTemplate(partyModel, shopAccountingModel, fromTime, toTime, ZoneId.of(report.getTimezone()), outputStream);
                 break;
             case payment_registry:
                 List<StatPayment> payments = statisticService.getPayments(
@@ -84,7 +88,7 @@ public class TemplateService {
                 processPaymentRegistryTemplate(payments, fromTime, toTime, outputStream);
                 break;
             default:
-                throw new ReportNotFoundException("Unknown report type, reportType='%s'", reportType);
+                throw new ReportNotFoundException(String.format("Unknown report type, reportType='%s'", reportType));
         }
     }
 

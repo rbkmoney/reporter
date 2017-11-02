@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -45,6 +46,7 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     shopAccountingModel,
                     fromTime,
                     toTime,
+                    ZoneId.of("Europe/Moscow"),
                     Files.newOutputStream(tempFile));
 
             Workbook wb = new XSSFWorkbook(Files.newInputStream(tempFile));

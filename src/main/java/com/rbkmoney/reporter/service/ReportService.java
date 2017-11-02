@@ -10,7 +10,6 @@ import com.rbkmoney.reporter.model.PartyModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +18,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,8 +70,8 @@ public class ReportService {
                     LocalDateTime.ofInstant(toTime, ZoneOffset.UTC)
             );
         } catch (DaoException ex) {
-            throw new StorageException("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s'", ex,
-                    partyId, shopId, reportTypes, fromTime, toTime);
+            throw new StorageException(String.format("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s'",
+                    partyId, shopId, reportTypes, fromTime, toTime), ex);
         }
     }
 
@@ -85,7 +87,7 @@ public class ReportService {
         try {
             return reportDao.getReportFiles(reportId);
         } catch (DaoException ex) {
-            throw new StorageException("Failed to get report files from storage, reportId='%d'", ex, reportId);
+            throw new StorageException(String.format("Failed to get report files from storage, reportId='%d'", reportId), ex);
         }
     }
 
@@ -93,11 +95,11 @@ public class ReportService {
         try {
             Report report = reportDao.getReport(partyId, shopId, reportId);
             if (report == null) {
-                throw new ReportNotFoundException("Report not found, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId);
+                throw new ReportNotFoundException(String.format("Report not found, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId));
             }
             return report;
         } catch (DaoException ex) {
-            throw new StorageException("Failed to get report from storage, partyId='%s', shopId='%s', reportId='%d'", ex, partyId, shopId, reportId);
+            throw new StorageException(String.format("Failed to get report from storage, partyId='%s', shopId='%s', reportId='%d'", partyId, shopId, reportId), ex);
         }
     }
 
@@ -108,7 +110,7 @@ public class ReportService {
     public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
         PartyModel partyModel = partyService.getPartyRepresentation(partyId, shopId, createdAt);
         if (partyModel == null) {
-            throw new PartyNotFoundException("Party not found, partyId='%s'", partyId);
+            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId));
         }
 
         try {
@@ -122,8 +124,8 @@ public class ReportService {
                     LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
             );
         } catch (DaoException ex) {
-            throw new StorageException("Failed to save report in storage, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', reportType='%s'", ex,
-                    partyId, shopId, fromTime, toTime, reportType);
+            throw new StorageException(String.format("Failed to save report in storage, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', reportType='%s'",
+                    partyId, shopId, fromTime, toTime, reportType), ex);
         }
     }
 
@@ -132,11 +134,11 @@ public class ReportService {
         try {
             file = reportDao.getFile(fileId);
         } catch (DaoException ex) {
-            throw new StorageException("Failed to get file meta, fileId='%s'", ex, fileId);
+            throw new StorageException(String.format("Failed to get file meta, fileId='%s'", fileId), ex);
         }
 
         if (file == null) {
-            throw new FileNotFoundException("File with id '%s' not found", fileId);
+            throw new FileNotFoundException(String.format("File with id '%s' not found", fileId));
         }
 
         return storageService.getFileUrl(file.getFileId(), file.getBucketId(), expiresIn);
@@ -165,7 +167,7 @@ public class ReportService {
 
             reportDao.changeReportStatus(reportId, ReportStatus.created);
         } catch (DaoException ex) {
-            throw new StorageException("Failed to finish report task, reportId='%d'", reportId);
+            throw new StorageException(String.format("Failed to finish report task, reportId='%d'", reportId));
         }
     }
 

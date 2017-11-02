@@ -22,17 +22,17 @@ public class PartyServiceImpl implements PartyService {
 
     private final UserInfo userInfo = new UserInfo("admin", UserType.internal_user(new InternalUser()));
 
-    private final PartyManagementSrv.Iface partyManagementSrv;
+    private final PartyManagementSrv.Iface partyManagementClient;
 
     @Autowired
-    public PartyServiceImpl(PartyManagementSrv.Iface partyManagementSrv) {
-        this.partyManagementSrv = partyManagementSrv;
+    public PartyServiceImpl(PartyManagementSrv.Iface partyManagementClient) {
+        this.partyManagementClient = partyManagementClient;
     }
 
     @Override
     public PartyModel getPartyRepresentation(String partyId, String shopId, Instant timestamp) throws PartyNotFoundException, ShopNotFoundException {
         try {
-            Party party = partyManagementSrv.checkout(userInfo, partyId, TypeUtil.temporalToString(timestamp));
+            Party party = partyManagementClient.checkout(userInfo, partyId, TypeUtil.temporalToString(timestamp));
 
             PartyModel partyModel = new PartyModel();
             partyModel.setMerchantId(partyId);
@@ -40,13 +40,13 @@ public class PartyServiceImpl implements PartyService {
             Shop shop = party.getShops().get(shopId);
 
             if (shop == null) {
-                throw new ShopNotFoundException("Shop not found, shopId='%s', partyId='%s', time='%s'", shopId, partyId, timestamp);
+                throw new ShopNotFoundException(String.format("Shop not found, shopId='%s', partyId='%s', time='%s'", shopId, partyId, timestamp));
             }
 
             String contractId = shop.getContractId();
             Contract contract = party.getContracts().get(contractId);
             if (contract == null) {
-                throw new ShopNotFoundException("Contract on shop not found, contractId='%s', shopId='%s', partyId='%s', time='%s'", contractId, shopId, partyId, timestamp);
+                throw new ShopNotFoundException(String.format("Contract on shop not found, contractId='%s', shopId='%s', partyId='%s', time='%s'", contractId, shopId, partyId, timestamp));
             }
 
             partyModel.setMerchantContractId(contractId);
@@ -69,9 +69,9 @@ public class PartyServiceImpl implements PartyService {
 
             return partyModel;
         } catch (PartyNotFound ex) {
-            throw new PartyNotFoundException("Party not found, partyId='%s'", ex, partyId);
+            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
         } catch (PartyNotExistsYet ex) {
-            throw new PartyNotFoundException("Party not exists at this time, partyId='%s', timestamp='%s'", ex, partyId, timestamp);
+            throw new PartyNotFoundException(String.format("Party not exists at this time, partyId='%s', timestamp='%s'", partyId, timestamp), ex);
         } catch (TException ex) {
             throw new RuntimeException("Exception with get party from hg", ex);
         }
