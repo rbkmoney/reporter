@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Date;
 
+import static com.rbkmoney.reporter.util.TimeUtil.toZoneSameLocal;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 
@@ -39,6 +40,7 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
         Instant toTime = random(Instant.class);
         PartyModel partyModel = random(PartyModel.class);
         ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
+        ZoneId zoneId = ZoneId.of("Europe/Moscow");
 
         try {
             templateService.processProvisionOfServiceTemplate(
@@ -46,7 +48,7 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     shopAccountingModel,
                     fromTime,
                     toTime,
-                    ZoneId.of("Europe/Moscow"),
+                    zoneId,
                     Files.newOutputStream(tempFile));
 
             Workbook wb = new XSSFWorkbook(Files.newInputStream(tempFile));
@@ -77,13 +79,13 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
                     fromTimeCell.getCellStyle().getDataFormatString()
             );
-            assertEquals(Date.from(fromTime), fromTimeCell.getDateCellValue());
+            assertEquals(Date.from(toZoneSameLocal(fromTime, zoneId)), fromTimeCell.getDateCellValue());
             Cell toTimeCell = dateRow.getCell(3);
             assertEquals(
                     "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
                     toTimeCell.getCellStyle().getDataFormatString()
             );
-            assertEquals(Date.from(toTime), toTimeCell.getDateCellValue());
+            assertEquals(Date.from(toZoneSameLocal(toTime, zoneId)), toTimeCell.getDateCellValue());
 
             Cell openingBalanceCell = sheet.getRow(23).getCell(3);
             assertEquals("#,##0.00", openingBalanceCell.getCellStyle().getDataFormatString());
