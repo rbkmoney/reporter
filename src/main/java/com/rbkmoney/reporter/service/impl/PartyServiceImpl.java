@@ -48,7 +48,7 @@ public class PartyServiceImpl implements PartyService {
 
             LegalAgreement legalAgreement = contract.getLegalAgreement();
             partyModel.setMerchantContractId(legalAgreement.getLegalAgreementId());
-            partyModel.setMerchantContractCreatedAt(
+            partyModel.setMerchantContractSignedAt(
                     Date.from(TypeUtil.stringToInstant(legalAgreement.getSignedAt()))
             );
 

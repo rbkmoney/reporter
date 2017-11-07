@@ -60,11 +60,11 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     String.format("к Договору № %s от", partyModel.getMerchantContractId()),
                     merchantContractIdCell.getStringCellValue()
             );
-            Cell merchantContractCreatedAtCell = headerRow.getCell(3);
-            assertEquals("dd\\.mm\\.yyyy", merchantContractCreatedAtCell.getCellStyle().getDataFormatString());
+            Cell merchantContractSignedAtCell = headerRow.getCell(3);
+            assertEquals("dd\\.mm\\.yyyy", merchantContractSignedAtCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    partyModel.getMerchantContractCreatedAt(),
-                    merchantContractCreatedAtCell.getDateCellValue()
+                    partyModel.getMerchantContractSignedAt(),
+                    merchantContractSignedAtCell.getDateCellValue()
             );
 
             Cell merchantNameCell = sheet.getRow(5).getCell(4);
