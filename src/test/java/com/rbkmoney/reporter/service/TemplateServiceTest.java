@@ -76,13 +76,13 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
             Row dateRow = sheet.getRow(14);
             Cell fromTimeCell = dateRow.getCell(1);
             assertEquals(
-                    "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
+                    "dd\\.mm\\.yyyy",
                     fromTimeCell.getCellStyle().getDataFormatString()
             );
             assertEquals(Date.from(toZoneSameLocal(fromTime, zoneId)), fromTimeCell.getDateCellValue());
             Cell toTimeCell = dateRow.getCell(3);
             assertEquals(
-                    "[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@",
+                    "dd\\.mm\\.yyyy",
                     toTimeCell.getCellStyle().getDataFormatString()
             );
             assertEquals(Date.from(toZoneSameLocal(toTime, zoneId)), toTimeCell.getDateCellValue());
