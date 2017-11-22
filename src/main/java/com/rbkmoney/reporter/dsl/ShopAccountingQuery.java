@@ -3,6 +3,7 @@ package com.rbkmoney.reporter.dsl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Instant;
+import java.util.Collection;
 
 /**
  * Created by tolkonepiu on 14/07/2017.
@@ -14,6 +15,9 @@ public class ShopAccountingQuery {
 
     @JsonProperty("to_time")
     Instant toTime;
+
+    @JsonProperty("shop_category_ids")
+    Collection<Integer> shopCategoryIds;
 
     public Instant getFromTime() {
         return fromTime;
@@ -31,6 +35,14 @@ public class ShopAccountingQuery {
         this.toTime = toTime;
     }
 
+    public Collection<Integer> getShopCategoryIds() {
+        return shopCategoryIds;
+    }
+
+    public void setShopCategoryIds(Collection<Integer> shopCategoryIds) {
+        this.shopCategoryIds = shopCategoryIds;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -39,13 +51,15 @@ public class ShopAccountingQuery {
         ShopAccountingQuery that = (ShopAccountingQuery) o;
 
         if (fromTime != null ? !fromTime.equals(that.fromTime) : that.fromTime != null) return false;
-        return toTime != null ? toTime.equals(that.toTime) : that.toTime == null;
+        if (toTime != null ? !toTime.equals(that.toTime) : that.toTime != null) return false;
+        return shopCategoryIds != null ? shopCategoryIds.equals(that.shopCategoryIds) : that.shopCategoryIds == null;
     }
 
     @Override
     public int hashCode() {
         int result = fromTime != null ? fromTime.hashCode() : 0;
         result = 31 * result + (toTime != null ? toTime.hashCode() : 0);
+        result = 31 * result + (shopCategoryIds != null ? shopCategoryIds.hashCode() : 0);
         return result;
     }
 
@@ -54,6 +68,7 @@ public class ShopAccountingQuery {
         return "ShopAccountingQuery{" +
                 "fromTime=" + fromTime +
                 ", toTime=" + toTime +
+                ", shopCategoryIds=" + shopCategoryIds +
                 '}';
     }
 }
