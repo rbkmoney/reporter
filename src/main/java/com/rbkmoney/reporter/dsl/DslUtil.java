@@ -37,7 +37,7 @@ public class DslUtil {
         ShopAccountingQuery shopAccountingQuery = new ShopAccountingQuery();
         shopAccountingQuery.setFromTime(from);
         shopAccountingQuery.setToTime(to);
-        shopAccountingQuery.setShopCategoryIds(shopCategoryIds);
+        shopAccountingQuery.setWithoutShopCategoryIds(shopCategoryIds);
         query.setShopAccountingQuery(shopAccountingQuery);
         statisticDsl.setQuery(query);
 

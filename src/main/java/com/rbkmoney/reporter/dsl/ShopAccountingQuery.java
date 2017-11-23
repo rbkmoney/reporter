@@ -16,8 +16,8 @@ public class ShopAccountingQuery {
     @JsonProperty("to_time")
     Instant toTime;
 
-    @JsonProperty("shop_category_ids")
-    Collection<Integer> shopCategoryIds;
+    @JsonProperty("without_shop_category_ids")
+    Collection<Integer> withoutShopCategoryIds;
 
     public Instant getFromTime() {
         return fromTime;
@@ -35,12 +35,12 @@ public class ShopAccountingQuery {
         this.toTime = toTime;
     }
 
-    public Collection<Integer> getShopCategoryIds() {
-        return shopCategoryIds;
+    public Collection<Integer> getWithoutShopCategoryIds() {
+        return withoutShopCategoryIds;
     }
 
-    public void setShopCategoryIds(Collection<Integer> shopCategoryIds) {
-        this.shopCategoryIds = shopCategoryIds;
+    public void setWithoutShopCategoryIds(Collection<Integer> withoutShopCategoryIds) {
+        this.withoutShopCategoryIds = withoutShopCategoryIds;
     }
 
     @Override
@@ -52,14 +52,14 @@ public class ShopAccountingQuery {
 
         if (fromTime != null ? !fromTime.equals(that.fromTime) : that.fromTime != null) return false;
         if (toTime != null ? !toTime.equals(that.toTime) : that.toTime != null) return false;
-        return shopCategoryIds != null ? shopCategoryIds.equals(that.shopCategoryIds) : that.shopCategoryIds == null;
+        return withoutShopCategoryIds != null ? withoutShopCategoryIds.equals(that.withoutShopCategoryIds) : that.withoutShopCategoryIds == null;
     }
 
     @Override
     public int hashCode() {
         int result = fromTime != null ? fromTime.hashCode() : 0;
         result = 31 * result + (toTime != null ? toTime.hashCode() : 0);
-        result = 31 * result + (shopCategoryIds != null ? shopCategoryIds.hashCode() : 0);
+        result = 31 * result + (withoutShopCategoryIds != null ? withoutShopCategoryIds.hashCode() : 0);
         return result;
     }
 
@@ -68,7 +68,7 @@ public class ShopAccountingQuery {
         return "ShopAccountingQuery{" +
                 "fromTime=" + fromTime +
                 ", toTime=" + toTime +
-                ", shopCategoryIds=" + shopCategoryIds +
+                ", withoutShopCategoryIds=" + withoutShopCategoryIds +
                 '}';
     }
 }
