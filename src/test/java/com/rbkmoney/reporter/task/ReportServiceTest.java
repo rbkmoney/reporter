@@ -56,7 +56,10 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException {
         given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
-        given(partyService.getPartyRepresentation(anyString(), anyString(), any(Instant.class))).willReturn(random(PartyModel.class));
+
+        PartyModel partyModel = random(PartyModel.class);
+        partyModel.setShopCategoryType(CategoryType.live);
+        given(partyService.getPartyRepresentation(anyString(), anyString(), any(Instant.class))).willReturn(partyModel);
         given(signService.sign(any(Path.class)))
                 .willAnswer(
                         (Answer<byte[]>) invocation -> Base64.getEncoder().encode(Files.readAllBytes(invocation.getArgumentAt(0, Path.class)))

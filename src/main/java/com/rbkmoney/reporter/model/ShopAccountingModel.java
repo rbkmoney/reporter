@@ -22,27 +22,27 @@ public class ShopAccountingModel {
     @NotNull
     private String currencyCode;
 
-    @Min(0)
+    @DecimalMin("0")
     @JsonDeserialize(using = CurrencyDeserializer.class)
     private double fundsAcquired;
 
-    @Min(0)
+    @DecimalMin("0")
     @JsonDeserialize(using = CurrencyDeserializer.class)
     private double feeCharged;
 
-    @Min(0)
+    @DecimalMin("0")
     @JsonDeserialize(using = CurrencyDeserializer.class)
     private double openingBalance;
 
-    @Min(0)
+    @DecimalMin("0")
     @JsonDeserialize(using = CurrencyDeserializer.class)
     private double fundsPaidOut;
 
-    @Min(0)
+    @DecimalMin("0")
     @JsonDeserialize(using = CurrencyDeserializer.class)
     private double fundsRefunded;
 
-    @Min(0)
+    @DecimalMin("0")
     @JsonDeserialize(using = CurrencyDeserializer.class)
     private double closingBalance;
 
