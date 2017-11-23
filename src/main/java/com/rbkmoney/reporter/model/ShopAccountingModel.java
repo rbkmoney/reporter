@@ -3,8 +3,10 @@ package com.rbkmoney.reporter.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.rbkmoney.reporter.serializer.CurrencyDeserializer;
 
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 /**
  * Created by tolkonepiu on 17/07/2017.
