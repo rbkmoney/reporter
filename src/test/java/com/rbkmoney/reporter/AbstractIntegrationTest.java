@@ -45,7 +45,7 @@ public class AbstractIntegrationTest {
                     new HttpWaitStrategy()
                             .forPath("/api/v0.1/health")
                             .forStatusCode(200)
-                            .withStartupTimeout(Duration.ofMinutes(5))
+                            .withStartupTimeout(Duration.ofMinutes(10))
             );
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
