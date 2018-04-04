@@ -204,7 +204,7 @@ public class TemplateServiceTest extends AbstractIntegrationTest {
                     zoneId,
                     Files.newOutputStream(tempFile));
         } finally {
-              Files.deleteIfExists(tempFile);
+            Files.deleteIfExists(tempFile);
         }
     }
 
