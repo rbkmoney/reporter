@@ -1,6 +1,8 @@
 package com.rbkmoney.reporter.task;
 
-import com.rbkmoney.damsel.domain.CategoryType;
+import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.AbstractIntegrationTest;
 import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
@@ -13,6 +15,7 @@ import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.service.SignService;
 import com.rbkmoney.reporter.service.StatisticService;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.thrift.TException;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
@@ -30,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -46,32 +50,49 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
     @MockBean
     private StatisticService statisticService;
-
-    @MockBean
-    private PartyService partyService;
-
     @MockBean
     private SignService signService;
 
+    @MockBean
+    private PartyManagementSrv.Iface partyManagementClient;
+
     @Test
-    public void generateProvisionOfServiceReportTest() throws IOException {
+    public void generateProvisionOfServiceReportTest() throws IOException, TException {
         given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
 
-        PartyModel partyModel = random(PartyModel.class);
-        partyModel.setShopCategoryType(CategoryType.live);
-        given(partyService.getPartyRepresentation(anyString(), anyString(), any(Instant.class))).willReturn(partyModel);
+        String partyId = random(String.class);
+        String shopId = random(String.class);
+        String contractId = random(String.class);
+        Instant fromTime = random(Instant.class);
+        Instant toTime = random(Instant.class);
+
+        Party party = new Party();
+        party.setId(partyId);
+        Shop shop = new Shop();
+        shop.setContractId(contractId);
+        Contract contract = new Contract();
+        contract.setId(contractId);
+        RussianLegalEntity russianLegalEntity = new RussianLegalEntity();
+        russianLegalEntity.setRegisteredName(random(String.class));
+        russianLegalEntity.setRepresentativePosition(random(String.class));
+        russianLegalEntity.setRepresentativeFullName(random(String.class));
+        contract.setContractor(Contractor.legal_entity(LegalEntity.russian_legal_entity(russianLegalEntity)));
+        contract.setLegalAgreement(new LegalAgreement(TypeUtil.temporalToString(Instant.now()), random(String.class)));
+        party.setShops(Collections.singletonMap(shopId, shop));
+        party.setContracts(Collections.singletonMap(contractId, contract));
+        given(partyManagementClient.checkout(any(), any(), any()))
+                .willReturn(party);
         given(signService.sign(any(Path.class)))
                 .willAnswer(
                         (Answer<byte[]>) invocation -> Base64.getEncoder().encode(Files.readAllBytes(invocation.getArgumentAt(0, Path.class)))
                 );
 
         ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
-        given(statisticService.getShopAccounting(anyString(), anyString(), any(Instant.class), any(Instant.class))).willReturn(shopAccountingModel);
+        given(statisticService.getShopAccounting(anyString(), anyString(), anyString(), any(Instant.class)))
+                .willReturn(shopAccountingModel);
+        given(statisticService.getShopAccounting(anyString(), anyString(), anyString(), any(), any(Instant.class)))
+                .willReturn(shopAccountingModel);
 
-        String partyId = random(String.class);
-        String shopId = random(String.class);
-        Instant fromTime = random(Instant.class);
-        Instant toTime = random(Instant.class);
         ReportType reportType = ReportType.provision_of_service;
 
         long reportId = reportService.createReport(partyId, shopId, fromTime, toTime, reportType);
@@ -96,16 +117,6 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                 }
             }
         }
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testTryingToCreateReportForTestShop() {
-        PartyModel partyModel = random(PartyModel.class);
-        partyModel.setShopCategoryType(CategoryType.test);
-
-        given(partyService.getPartyRepresentation(anyString(), anyString(), any(Instant.class))).willReturn(partyModel);
-
-        reportService.createReport("test", "test", Instant.now(), Instant.now(), ReportType.provision_of_service);
     }
 
 }

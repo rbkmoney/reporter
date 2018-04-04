@@ -5,7 +5,6 @@ import com.rbkmoney.damsel.merch_stat.MerchantStatisticsSrv;
 import com.rbkmoney.damsel.merch_stat.StatPayment;
 import com.rbkmoney.reporter.dsl.DslUtil;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
-import com.rbkmoney.reporter.service.DomainConfigService;
 import com.rbkmoney.reporter.service.StatisticService;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,9 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class StatisticServiceImpl implements StatisticService {
@@ -37,24 +35,27 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public ShopAccountingModel getShopAccounting(String partyId, String shopId, Instant fromTime, Instant toTime) {
-        ShopAccountingModel shopAccounting = getShopAccountings(fromTime, toTime).stream().filter(
-                shopAccountingModel -> shopAccountingModel.getMerchantId().equals(partyId)
-                        && shopAccountingModel.getShopId().equals(shopId)
-        ).findFirst().orElse(new ShopAccountingModel());
-        validate(shopAccounting);
-        return shopAccounting;
+    public ShopAccountingModel getShopAccounting(String partyId, String contractId, String currencyCode, Instant toTime) {
+        return getShopAccounting(partyId, contractId, currencyCode, Optional.empty(), toTime);
     }
 
     @Override
-    public List<ShopAccountingModel> getShopAccountings(Instant fromTime, Instant toTime) {
+    public ShopAccountingModel getShopAccounting(String partyId, String contractId, String currencyCode, Instant fromTime, Instant toTime) {
+        return getShopAccounting(partyId, contractId, currencyCode, Optional.of(fromTime), toTime);
+    }
+
+    private ShopAccountingModel getShopAccounting(String partyId, String contractId, String currencyCode, Optional<Instant> fromTime, Instant toTime) {
         try {
-            return merchantStatisticsClient.getStatistics(DslUtil.createShopAccountingStatRequest(fromTime, toTime, objectMapper))
-                    .getData()
+            ShopAccountingModel shopAccounting = merchantStatisticsClient.getStatistics(
+                    DslUtil.createShopAccountingStatRequest(partyId, contractId, currencyCode, fromTime, toTime, objectMapper)
+            ).getData()
                     .getRecords()
                     .stream()
                     .map(record -> objectMapper.convertValue(record, ShopAccountingModel.class))
-                    .collect(Collectors.toList());
+                    .findFirst()
+                    .orElse(new ShopAccountingModel(partyId, contractId, currencyCode));
+            validate(shopAccounting);
+            return shopAccounting;
         } catch (TException ex) {
             throw new RuntimeException(ex);
         }

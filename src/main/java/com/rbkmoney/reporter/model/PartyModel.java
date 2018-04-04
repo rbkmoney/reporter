@@ -21,14 +21,6 @@ public class PartyModel {
 
     private String merchantRepresentativeFullName;
 
-    private String shopId;
-
-    private String shopName;
-
-    private String shopDescription;
-
-    private CategoryType shopCategoryType;
-
     public String getMerchantId() {
         return merchantId;
     }
@@ -77,77 +69,6 @@ public class PartyModel {
         this.merchantRepresentativeFullName = merchantRepresentativeFullName;
     }
 
-    public String getShopId() {
-        return shopId;
-    }
-
-    public void setShopId(String shopId) {
-        this.shopId = shopId;
-    }
-
-    public String getShopName() {
-        return shopName;
-    }
-
-    public void setShopName(String shopName) {
-        this.shopName = shopName;
-    }
-
-    public String getShopDescription() {
-        return shopDescription;
-    }
-
-    public void setShopDescription(String shopDescription) {
-        this.shopDescription = shopDescription;
-    }
-
-    public CategoryType getShopCategoryType() {
-        return shopCategoryType;
-    }
-
-    public void setShopCategoryType(CategoryType shopCategoryType) {
-        this.shopCategoryType = shopCategoryType;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        PartyModel that = (PartyModel) o;
-
-        if (merchantId != null ? !merchantId.equals(that.merchantId) : that.merchantId != null) return false;
-        if (merchantName != null ? !merchantName.equals(that.merchantName) : that.merchantName != null) return false;
-        if (merchantContractId != null ? !merchantContractId.equals(that.merchantContractId) : that.merchantContractId != null)
-            return false;
-        if (merchantContractSignedAt != null ? !merchantContractSignedAt.equals(that.merchantContractSignedAt) : that.merchantContractSignedAt != null)
-            return false;
-        if (merchantRepresentativePosition != null ? !merchantRepresentativePosition.equals(that.merchantRepresentativePosition) : that.merchantRepresentativePosition != null)
-            return false;
-        if (merchantRepresentativeFullName != null ? !merchantRepresentativeFullName.equals(that.merchantRepresentativeFullName) : that.merchantRepresentativeFullName != null)
-            return false;
-        if (shopId != null ? !shopId.equals(that.shopId) : that.shopId != null) return false;
-        if (shopName != null ? !shopName.equals(that.shopName) : that.shopName != null) return false;
-        if (shopDescription != null ? !shopDescription.equals(that.shopDescription) : that.shopDescription != null)
-            return false;
-        return shopCategoryType == that.shopCategoryType;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = merchantId != null ? merchantId.hashCode() : 0;
-        result = 31 * result + (merchantName != null ? merchantName.hashCode() : 0);
-        result = 31 * result + (merchantContractId != null ? merchantContractId.hashCode() : 0);
-        result = 31 * result + (merchantContractSignedAt != null ? merchantContractSignedAt.hashCode() : 0);
-        result = 31 * result + (merchantRepresentativePosition != null ? merchantRepresentativePosition.hashCode() : 0);
-        result = 31 * result + (merchantRepresentativeFullName != null ? merchantRepresentativeFullName.hashCode() : 0);
-        result = 31 * result + (shopId != null ? shopId.hashCode() : 0);
-        result = 31 * result + (shopName != null ? shopName.hashCode() : 0);
-        result = 31 * result + (shopDescription != null ? shopDescription.hashCode() : 0);
-        result = 31 * result + (shopCategoryType != null ? shopCategoryType.hashCode() : 0);
-        return result;
-    }
-
     @Override
     public String toString() {
         return "PartyModel{" +
@@ -157,10 +78,6 @@ public class PartyModel {
                 ", merchantContractSignedAt=" + merchantContractSignedAt +
                 ", merchantRepresentativePosition='" + merchantRepresentativePosition + '\'' +
                 ", merchantRepresentativeFullName='" + merchantRepresentativeFullName + '\'' +
-                ", shopId='" + shopId + '\'' +
-                ", shopName='" + shopName + '\'' +
-                ", shopDescription='" + shopDescription + '\'' +
-                ", shopCategoryType=" + shopCategoryType +
                 '}';
     }
 }
