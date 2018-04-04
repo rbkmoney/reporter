@@ -1,6 +1,9 @@
 package com.rbkmoney.reporter.service;
 
+import com.rbkmoney.damsel.merch_stat.InvoicePaymentRefundStatus;
+import com.rbkmoney.damsel.merch_stat.InvoicePaymentStatus;
 import com.rbkmoney.damsel.merch_stat.StatPayment;
+import com.rbkmoney.damsel.merch_stat.StatRefund;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 
 import java.time.Instant;
@@ -15,6 +18,10 @@ public interface StatisticService {
 
     List<ShopAccountingModel> getShopAccountings(Instant fromTime, Instant toTime);
 
-    List<StatPayment> getPayments(String partyId, String shopId, Instant fromTime, Instant toTime);
+    List<StatPayment> getPayments(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentStatus status);
+
+    StatPayment getPayment(String invoiceId, String paymentId, InvoicePaymentStatus status);
+
+    List<StatRefund> getRefunds(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status);
 
 }

@@ -3,6 +3,7 @@ package com.rbkmoney.reporter.service.impl;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.reporter.exception.ContractNotFoundException;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
 import com.rbkmoney.reporter.model.PartyModel;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class PartyServiceImpl implements PartyService {
@@ -42,6 +45,10 @@ public class PartyServiceImpl implements PartyService {
 
             if (shop == null) {
                 throw new ShopNotFoundException(String.format("Shop not found, shopId='%s', partyId='%s', time='%s'", shopId, partyId, timestamp));
+            }
+
+            if (shop.getLocation().isSetUrl()) {
+                partyModel.setShopUrl(shop.getLocation().getUrl());
             }
 
             partyModel.setShopId(shop.getId());
@@ -88,6 +95,27 @@ public class PartyServiceImpl implements PartyService {
         } catch (TException ex) {
             throw new RuntimeException("Exception with get party from hg", ex);
         }
+    }
+
+    @Override
+    public Map<String, String> getShopUrls(String partyId, String contractId, Instant timestamp) throws PartyNotFoundException, ContractNotFoundException {
+        Party party;
+        try {
+            party = partyManagementClient.checkout(userInfo, partyId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+        } catch (PartyNotFound ex) {
+            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
+        } catch (ContractNotFound ex) {
+            throw new ContractNotFoundException(String.format("Contract not found, contractId='%s'", contractId), ex);
+        } catch (TException ex) {
+            throw new RuntimeException("Exception with get party from hg", ex);
+        }
+        Map<String, String> shopUrls = new HashMap<>();
+        party.getShops().forEach((id, shop) -> {
+            if (shop.getLocation().isSetUrl()) {
+                shopUrls.put(id, shop.getLocation().getUrl());
+            }
+        });
+        return shopUrls;
     }
 
 }

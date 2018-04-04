@@ -55,7 +55,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException {
-        given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
+        given(statisticService.getPayments(anyString(), anyString(), any(), any(), any())).willReturn(new ArrayList<>());
 
         PartyModel partyModel = random(PartyModel.class);
         partyModel.setShopCategoryType(CategoryType.live);

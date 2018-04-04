@@ -29,6 +29,8 @@ public class PartyModel {
 
     private CategoryType shopCategoryType;
 
+    private String shopUrl;
+
     public String getMerchantId() {
         return merchantId;
     }
@@ -109,6 +111,14 @@ public class PartyModel {
         this.shopCategoryType = shopCategoryType;
     }
 
+    public String getShopUrl() {
+        return shopUrl;
+    }
+
+    public void setShopUrl(String shopUrl) {
+        this.shopUrl = shopUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -130,6 +140,9 @@ public class PartyModel {
         if (shopName != null ? !shopName.equals(that.shopName) : that.shopName != null) return false;
         if (shopDescription != null ? !shopDescription.equals(that.shopDescription) : that.shopDescription != null)
             return false;
+        if (shopUrl != null ? !shopUrl.equals(that.shopUrl) : that.shopUrl != null)
+            return false;
+
         return shopCategoryType == that.shopCategoryType;
     }
 
@@ -145,6 +158,7 @@ public class PartyModel {
         result = 31 * result + (shopName != null ? shopName.hashCode() : 0);
         result = 31 * result + (shopDescription != null ? shopDescription.hashCode() : 0);
         result = 31 * result + (shopCategoryType != null ? shopCategoryType.hashCode() : 0);
+        result = 31 * result + (shopUrl != null ? shopUrl.hashCode() : 0);
         return result;
     }
 
@@ -160,7 +174,8 @@ public class PartyModel {
                 ", shopId='" + shopId + '\'' +
                 ", shopName='" + shopName + '\'' +
                 ", shopDescription='" + shopDescription + '\'' +
-                ", shopCategoryType=" + shopCategoryType +
+                ", shopCategoryType=" + shopCategoryType + '\'' +
+                ", shopUrl=" + shopUrl +
                 '}';
     }
 }
