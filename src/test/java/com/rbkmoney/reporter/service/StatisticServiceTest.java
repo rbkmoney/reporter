@@ -32,7 +32,7 @@ public class StatisticServiceTest extends AbstractIntegrationTest {
     public void testValidate() throws TException {
         Map<String, String> statisticResponse = new HashMap<>();
         statisticResponse.put("merchant_id", "test");
-        statisticResponse.put("shop_id", "test");
+        statisticResponse.put("contract_id", "test");
         statisticResponse.put("currency_code", null);
         statisticResponse.put("funds_acquired", "-10");
         statisticResponse.put("fee_charged", "-1");
