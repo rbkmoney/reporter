@@ -36,7 +36,7 @@ public class StatisticConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
                 .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())

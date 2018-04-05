@@ -7,6 +7,7 @@ import com.rbkmoney.damsel.merch_stat.InvoicePaymentStatus;
 import com.rbkmoney.damsel.merch_stat.StatRequest;
 
 import java.time.Instant;
+import java.util.Optional;
 
 public class DslUtil {
 
@@ -65,10 +66,13 @@ public class DslUtil {
         }
     }
 
-    public static StatRequest createShopAccountingStatRequest(Instant from, Instant to, ObjectMapper objectMapper) {
+    public static StatRequest createShopAccountingStatRequest(String merchantId, String contractId, String currencyCode, Optional<Instant> from, Instant to, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         ShopAccountingQuery shopAccountingQuery = new ShopAccountingQuery();
+        shopAccountingQuery.setMerchantId(merchantId);
+        shopAccountingQuery.setContractId(contractId);
+        shopAccountingQuery.setCurrencyCode(currencyCode);
         shopAccountingQuery.setFromTime(from);
         shopAccountingQuery.setToTime(to);
         query.setShopAccountingQuery(shopAccountingQuery);
