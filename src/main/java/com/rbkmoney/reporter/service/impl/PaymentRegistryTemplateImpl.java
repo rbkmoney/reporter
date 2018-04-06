@@ -58,9 +58,8 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             Payment payment = new Payment();
             payment.setId(p.getInvoiceId() + "." + p.getId());
             payment.setCapturedAt(TimeUtil.toLocalizedDateTime(p.getStatus().getCaptured().getAt(), reportZoneId));
-            if (p.getPayer().isSetPaymentResource() && p.getPayer().getPaymentResource().getPaymentTool().isSetBankCard()) {
-                BankCard bankCard = p.getPayer().getPaymentResource().getPaymentTool().getBankCard();
-                payment.setCardNum(bankCard.getBin() + "****" + bankCard.getMaskedPan());
+            if (p.getPayer().isSetPaymentResource()) {
+                payment.setPaymentTool(p.getPayer().getPaymentResource().getPaymentTool().getSetField().getFieldName());
             }
             payment.setAmount(p.getAmount());
             payment.setPayoutAmount(p.getAmount() - p.getFee());
@@ -90,9 +89,8 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             refund.setPaymentId(r.getInvoiceId() + "." + r.getPaymentId());
             refund.setPaymentCapturedAt(statPayment.getStatus().getCaptured().getAt());
             refund.setSucceededAt(TimeUtil.toLocalizedDateTime(r.getStatus().getSucceeded().getAt(), reportZoneId));
-            if (statPayment.getPayer().isSetPaymentResource() && statPayment.getPayer().getPaymentResource().getPaymentTool().isSetBankCard()) {
-                BankCard bankCard = statPayment.getPayer().getPaymentResource().getPaymentTool().getBankCard();
-                refund.setCardNum(bankCard.getBin() + "****" + bankCard.getMaskedPan());
+            if (statPayment.getPayer().isSetPaymentResource()) {
+                refund.setPaymentTool(statPayment.getPayer().getPaymentResource().getPaymentTool().getSetField().getFieldName());
             }
             refund.setAmount(r.getAmount());
             if (statPayment.getPayer().isSetPaymentResource()) {

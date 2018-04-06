@@ -1,11 +1,9 @@
 package com.rbkmoney.reporter.model;
 
-import java.util.Date;
-
 public class Payment {
     private String id;
     private String capturedAt;
-    private String cardNum;
+    private String paymentTool;
     private Long amount;
     private Long payoutAmount;
     private String payerEmail;
@@ -28,12 +26,12 @@ public class Payment {
         this.capturedAt = capturedAt;
     }
 
-    public String getCardNum() {
-        return cardNum;
+    public String getPaymentTool() {
+        return paymentTool;
     }
 
-    public void setCardNum(String cardNum) {
-        this.cardNum = cardNum;
+    public void setPaymentTool(String paymentTool) {
+        this.paymentTool = paymentTool;
     }
 
     public Long getAmount() {

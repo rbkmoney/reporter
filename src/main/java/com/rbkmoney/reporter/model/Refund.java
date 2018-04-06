@@ -5,7 +5,7 @@ public class Refund {
     private String paymentId;
     private String paymentCapturedAt;
     private String succeededAt;
-    private String cardNum;
+    private String paymentTool;
     private Long amount;
     private String payerEmail;
     private String shopUrl;
@@ -43,12 +43,12 @@ public class Refund {
         this.succeededAt = succeededAt;
     }
 
-    public String getCardNum() {
-        return cardNum;
+    public String getPaymentTool() {
+        return paymentTool;
     }
 
-    public void setCardNum(String cardNum) {
-        this.cardNum = cardNum;
+    public void setPaymentTool(String paymentTool) {
+        this.paymentTool = paymentTool;
     }
 
     public Long getAmount() {
