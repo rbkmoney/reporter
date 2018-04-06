@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.merch_stat.InvoicePaymentRefundStatus;
 import com.rbkmoney.damsel.merch_stat.InvoicePaymentStatus;
+import com.rbkmoney.damsel.merch_stat.InvoiceStatus;
 import com.rbkmoney.damsel.merch_stat.StatRequest;
 
 import java.time.Instant;
@@ -23,6 +24,33 @@ public class DslUtil {
         query.setPaymentsQuery(paymentsQuery);
         query.setFrom(from);
         query.setSize(size);
+        statisticDsl.setQuery(query);
+
+        return createStatRequest(statisticDsl, objectMapper);
+    }
+
+    public static StatRequest createInvoicesRequest(String partyId, String contractId, Instant fromTime, Instant toTime, long from, int size, ObjectMapper objectMapper) {
+        StatisticDsl statisticDsl = new StatisticDsl();
+        Query query = new Query();
+        InvoicesQuery invoicesQuery = new InvoicesQuery();
+        invoicesQuery.setMerchantId(partyId);
+        invoicesQuery.setContractId(contractId);
+        invoicesQuery.setFromTime(fromTime);
+        invoicesQuery.setToTime(toTime);
+        query.setInvoicesQuery(invoicesQuery);
+        query.setFrom(from);
+        query.setSize(size);
+        statisticDsl.setQuery(query);
+
+        return createStatRequest(statisticDsl, objectMapper);
+    }
+
+    public static StatRequest createInvoiceRequest(String invoiceId, ObjectMapper objectMapper) {
+        StatisticDsl statisticDsl = new StatisticDsl();
+        Query query = new Query();
+        InvoicesQuery invoicesQuery = new InvoicesQuery();
+        invoicesQuery.setInvoiceId(invoiceId);
+        query.setInvoicesQuery(invoicesQuery);
         statisticDsl.setQuery(query);
 
         return createStatRequest(statisticDsl, objectMapper);

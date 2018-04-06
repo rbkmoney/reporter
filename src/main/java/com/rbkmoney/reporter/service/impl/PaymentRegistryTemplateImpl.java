@@ -41,6 +41,13 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         ZoneId reportZoneId = ZoneId.of(report.getTimezone());
         Map<String, String> shopUrls = partyService.getShopUrls(report.getPartyId(), report.getPartyContractId(), report.getCreatedAt().toInstant(ZoneOffset.UTC));
 
+        Map<String, String> purposes = statisticService.getInvoices(
+                report.getPartyId(),
+                report.getPartyContractId(),
+                report.getFromTime().toInstant(ZoneOffset.UTC),
+                report.getToTime().toInstant(ZoneOffset.UTC)
+        ).stream().collect(Collectors.toMap(StatInvoice::getId, StatInvoice::getProduct));
+
         List<Payment> paymentList = statisticService.getPayments(
                 report.getPartyId(),
                 report.getPartyContractId(),
@@ -56,13 +63,17 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
                 payment.setCardNum(bankCard.getBin() + "****" + bankCard.getMaskedPan());
             }
             payment.setAmount(p.getAmount());
-            //TODO
             payment.setPayoutAmount(p.getAmount() - p.getFee());
             if (p.getPayer().isSetPaymentResource()) {
                 payment.setPayerEmail(p.getPayer().getPaymentResource().getEmail());
             }
             payment.setShopUrl(shopUrls.get(p.getShopId()));
-            payment.setPurpose("TODO");
+            String purpose = purposes.get(p.getInvoiceId());
+            if (purpose == null) {
+                StatInvoice invoice = statisticService.getInvoice(p.getInvoiceId());
+                purpose = invoice.getProduct();
+            }
+            payment.setPurpose(purpose);
             return payment;
         }).collect(Collectors.toList());
 
@@ -88,7 +99,12 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
                 refund.setPayerEmail(statPayment.getPayer().getPaymentResource().getEmail());
             }
             refund.setShopUrl(shopUrls.get(r.getShopId()));
-            refund.setPaymentPurpose("TODO");
+            String purpose = purposes.get(r.getInvoiceId());
+            if (purpose == null) {
+                StatInvoice invoice = statisticService.getInvoice(r.getInvoiceId());
+                purpose = invoice.getProduct();
+            }
+            refund.setPaymentPurpose(purpose);
             return refund;
         }).collect(Collectors.toList());
 

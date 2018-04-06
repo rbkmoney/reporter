@@ -60,6 +60,7 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
         for (int i = 0; i < 3; ++i) {
             StatPayment payment = new StatPayment();
             payment.setId("id" + i);
+            payment.setInvoiceId("invoiceId" + i);
             payment.setStatus(InvoicePaymentStatus.captured(new InvoicePaymentCaptured("201" + i + "-03-22T06:12:27Z")));
             PaymentResourcePayer paymentResourcePayer = new PaymentResourcePayer(PaymentTool.bank_card(new BankCard("token", null, "424" + i, "56789" + i)), "sessionId");
             paymentResourcePayer.setEmail("abc" + i + "@mail.ru");
@@ -96,6 +97,22 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
 
         given(statisticService.getPayment(any(), any(), any()))
                 .willReturn(payment);
+
+        List<StatInvoice> invoices = new ArrayList<>();
+        StatInvoice i = new StatInvoice();
+        i.setId("invoiceId0");
+        i.setProduct("product0");
+        invoices.add(i);
+        i = new StatInvoice();
+        i.setId("invoiceId1");
+        i.setProduct("product1");
+        invoices.add(i);
+        i = new StatInvoice();
+        i.setId("invoiceId2");
+        i.setProduct("product2");
+        invoices.add(i);
+        given(statisticService.getInvoices(any(), any(), any(), any()))
+                .willReturn(invoices);
 
         Map<String, String> shops  = new HashMap<>();
         shops.put("shopId0", "http://0ch.ru/b");

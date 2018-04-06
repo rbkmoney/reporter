@@ -12,6 +12,9 @@ public class Query {
     @JsonProperty("shop_accounting_report")
     private ShopAccountingQuery shopAccountingQuery;
 
+    @JsonProperty("invoices")
+    private InvoicesQuery invoicesQuery;
+
     @JsonProperty("payments")
     private PaymentsQuery paymentsQuery;
 
@@ -28,6 +31,14 @@ public class Query {
 
     public void setShopAccountingQuery(ShopAccountingQuery shopAccountingQuery) {
         this.shopAccountingQuery = shopAccountingQuery;
+    }
+
+    public InvoicesQuery getInvoicesQuery() {
+        return invoicesQuery;
+    }
+
+    public void setInvoicesQuery(InvoicesQuery invoicesQuery) {
+        this.invoicesQuery = invoicesQuery;
     }
 
     public PaymentsQuery getPaymentsQuery() {
@@ -70,6 +81,7 @@ public class Query {
         return getFrom() == query.getFrom() &&
                 getSize() == query.getSize() &&
                 Objects.equals(getShopAccountingQuery(), query.getShopAccountingQuery()) &&
+                Objects.equals(getInvoicesQuery(), query.getInvoicesQuery()) &&
                 Objects.equals(getPaymentsQuery(), query.getPaymentsQuery()) &&
                 Objects.equals(getRefundsQuery(), query.getRefundsQuery());
     }
@@ -77,13 +89,14 @@ public class Query {
     @Override
     public int hashCode() {
 
-        return Objects.hash(getShopAccountingQuery(), getPaymentsQuery(), getRefundsQuery(), getFrom(), getSize());
+        return Objects.hash(getShopAccountingQuery(), getInvoicesQuery(), getPaymentsQuery(), getRefundsQuery(), getFrom(), getSize());
     }
 
     @Override
     public String toString() {
         return "Query{" +
                 "shopAccountingQuery=" + shopAccountingQuery +
+                ", invoicesQuery=" + invoicesQuery +
                 ", paymentsQuery=" + paymentsQuery +
                 ", refundsQuery=" + refundsQuery +
                 ", from=" + from +
