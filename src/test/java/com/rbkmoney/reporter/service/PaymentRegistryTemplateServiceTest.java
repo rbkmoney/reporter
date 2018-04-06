@@ -147,7 +147,7 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
             assertEquals(refundList.stream().mapToLong(StatRefund::getAmount).sum(), (long) refundsTotalSum.getNumericCellValue());
 
         } finally {
-        //    Files.deleteIfExists(tempFile);
+            Files.deleteIfExists(tempFile);
         }
     }
 
