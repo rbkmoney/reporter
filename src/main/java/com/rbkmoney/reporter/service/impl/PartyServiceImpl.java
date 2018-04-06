@@ -1,13 +1,13 @@
 package com.rbkmoney.reporter.service.impl;
 
-import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.domain.Contract;
+import com.rbkmoney.damsel.domain.Party;
+import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.exception.ContractNotFoundException;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
-import com.rbkmoney.reporter.model.PartyModel;
-import com.rbkmoney.reporter.service.DomainConfigService;
 import com.rbkmoney.reporter.service.PartyService;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -16,7 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class PartyServiceImpl implements PartyService {
@@ -123,6 +124,18 @@ public class PartyServiceImpl implements PartyService {
         }
         log.info("Contract has been found, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
         return contract;
+    }
+
+    @Override
+    public Map<String, String> getShopUrls(String partyId, String contractId, Instant timestamp) throws PartyNotFoundException, ContractNotFoundException {
+        Party party = getParty(partyId, timestamp);
+        Map<String, String> shopUrls = new HashMap<>();
+        party.getShops().forEach((id, shop) -> {
+            if (shop.getLocation().isSetUrl()) {
+                shopUrls.put(id, shop.getLocation().getUrl());
+            }
+        });
+        return shopUrls;
     }
 
 }

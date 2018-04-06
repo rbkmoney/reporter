@@ -8,9 +8,7 @@ import com.rbkmoney.reporter.ReportType;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import com.rbkmoney.reporter.model.PartyModel;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
-import com.rbkmoney.reporter.service.PartyService;
 import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.service.SignService;
 import com.rbkmoney.reporter.service.StatisticService;
@@ -59,7 +57,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException, TException, InterruptedException {
-        given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
+        given(statisticService.getPayments(anyString(), anyString(), any(), any(), any())).willReturn(new ArrayList<>());
 
         String partyId = random(String.class);
         String shopId = random(String.class);

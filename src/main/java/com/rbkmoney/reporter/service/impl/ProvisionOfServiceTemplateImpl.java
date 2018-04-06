@@ -38,8 +38,6 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
 
     public static final String DEFAULT_REPORT_CURRENCY_CODE = "RUB";
 
-    public static final DateTimeFormatter DEFAULT_REPORT_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
     private final StatisticService statisticService;
 
     private final PartyService partyService;
@@ -62,19 +60,15 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
             ZoneId reportZoneId = ZoneId.of(report.getTimezone());
             context.putVar("party_id", report.getPartyId());
             context.putVar("contract_id", report.getPartyContractId());
-            context.putVar("created_at", TimeUtil.toZoneSameLocal(report.getCreatedAt(), reportZoneId)
-                    .format(DEFAULT_REPORT_DATE_TIME_FORMAT));
-            context.putVar("from_time", TimeUtil.toZoneSameLocal(report.getFromTime(), reportZoneId)
-                    .format(DEFAULT_REPORT_DATE_TIME_FORMAT));
-            context.putVar("to_time", TimeUtil.toZoneSameLocal(report.getToTime().minusNanos(1), reportZoneId)
-                    .format(DEFAULT_REPORT_DATE_TIME_FORMAT));
+            context.putVar("created_at", TimeUtil.toLocalizedDate(report.getCreatedAt().toInstant(ZoneOffset.UTC), reportZoneId));
+            context.putVar("from_time", TimeUtil.toLocalizedDate(report.getFromTime().toInstant(ZoneOffset.UTC), reportZoneId));
+            context.putVar("to_time", TimeUtil.toLocalizedDate(report.getToTime().minusNanos(1).toInstant(ZoneOffset.UTC), reportZoneId));
 
             Contract contract = partyService.getContract(report.getPartyId(), report.getPartyContractId(), createdAt);
             if (contract.isSetLegalAgreement()) {
                 LegalAgreement legalAgreement = contract.getLegalAgreement();
                 context.putVar("legal_agreement_id", legalAgreement.getLegalAgreementId());
-                context.putVar("legal_agreement_signed_at", TypeUtil.stringToLocalDateTime(legalAgreement.getSignedAt())
-                        .format(DEFAULT_REPORT_DATE_TIME_FORMAT));
+                context.putVar("legal_agreement_signed_at", TimeUtil.toLocalizedDate(legalAgreement.getSignedAt(), reportZoneId));
             }
 
             if (contract.isSetContractor()

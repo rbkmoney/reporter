@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.service;
 
+
 import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.Party;
 import com.rbkmoney.damsel.domain.Shop;
@@ -9,6 +10,7 @@ import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * Created by tolkonepiu on 17/07/2017.
@@ -39,4 +41,5 @@ public interface PartyService {
 
     Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws ContractNotFoundException, PartyNotFoundException;
 
+    Map<String, String> getShopUrls(String partyId, String contractId, Instant timestamp) throws PartyNotFoundException, ContractNotFoundException;
 }

@@ -39,7 +39,7 @@ public class ReportService {
 
     private final PartyService partyService;
 
-    private final TemplateService templateService;
+    private final List<TemplateService> templateServices;
 
     private final StorageService storageService;
 
@@ -53,7 +53,7 @@ public class ReportService {
     public ReportService(
             ReportDao reportDao,
             PartyService partyService,
-            TemplateService templateService,
+            List<TemplateService> templateServices,
             StorageService storageService,
             SignService signService,
             @Value("${report.defaultTimeZone}") ZoneId defaultTimeZone,
@@ -61,7 +61,7 @@ public class ReportService {
     ) {
         this.reportDao = reportDao;
         this.partyService = partyService;
-        this.templateService = templateService;
+        this.templateServices = templateServices;
         this.storageService = storageService;
         this.signService = signService;
         this.defaultTimeZone = defaultTimeZone;
@@ -203,27 +203,29 @@ public class ReportService {
     }
 
     public List<FileMeta> processSignAndUpload(Report report) throws IOException {
-        Path reportFile = Files.createTempFile(report.getType() + "_", "_report.xlsx");
-        try {
-            templateService.processReportTemplate(
-                    report,
-                    Files.newOutputStream(reportFile)
-            );
+        List<FileMeta> files = new ArrayList<>();
+        for (TemplateService templateService : templateServices) {
+            if (templateService.accept(ReportType.valueOf(report.getType()))) {
+                Path reportFile = Files.createTempFile(report.getType() + "_", "_report.xlsx");
+                try {
+                    templateService.processReportTemplate(
+                            report,
+                            Files.newOutputStream(reportFile)
+                    );
+                    FileMeta reportFileModel = storageService.saveFile(reportFile);
+                    files.add(reportFileModel);
 
-            List<FileMeta> files = new ArrayList<>();
-            FileMeta reportFileModel = storageService.saveFile(reportFile);
-            files.add(reportFileModel);
-
-            if (report.getNeedSign()) {
-                byte[] sign = signService.sign(reportFile);
-                FileMeta signFileModel = storageService.saveFile(reportFile.getFileName().toString() + ".sgn", sign);
-                files.add(signFileModel);
+                    if (report.getNeedSign()) {
+                        byte[] sign = signService.sign(reportFile);
+                        FileMeta signFileModel = storageService.saveFile(reportFile.getFileName().toString() + ".sgn", sign);
+                        files.add(signFileModel);
+                    }
+                } finally {
+                    Files.deleteIfExists(reportFile);
+                }
             }
-
-            return files;
-        } finally {
-            Files.deleteIfExists(reportFile);
         }
+        return files;
     }
 
 }

@@ -105,8 +105,7 @@ public class ProvisionOfServiceTemplateServiceTest extends AbstractIntegrationTe
             );
             Cell merchantContractSignedAtCell = headerRow.getCell(3);
             assertEquals(
-                    TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
-                            .format(ProvisionOfServiceTemplateImpl.DEFAULT_REPORT_DATE_TIME_FORMAT),
+                    TimeUtil.toLocalizedDate(contract.getLegalAgreement().getSignedAt(), ZoneId.of(report.getTimezone())),
                     merchantContractSignedAtCell.getStringCellValue()
 
             );
@@ -120,14 +119,12 @@ public class ProvisionOfServiceTemplateServiceTest extends AbstractIntegrationTe
             Row dateRow = sheet.getRow(14);
             Cell fromTimeCell = dateRow.getCell(1);
             assertEquals(
-                    TimeUtil.toZoneSameLocal(report.getFromTime(), ZoneId.of(report.getTimezone()))
-                            .format(ProvisionOfServiceTemplateImpl.DEFAULT_REPORT_DATE_TIME_FORMAT),
+                    TimeUtil.toLocalizedDate(report.getFromTime().toInstant(ZoneOffset.UTC), ZoneId.of(report.getTimezone())),
                     fromTimeCell.getStringCellValue()
             );
             Cell toTimeCell = dateRow.getCell(3);
             assertEquals(
-                    TimeUtil.toZoneSameLocal(report.getToTime().minusNanos(1), ZoneId.of(report.getTimezone()))
-                            .format(ProvisionOfServiceTemplateImpl.DEFAULT_REPORT_DATE_TIME_FORMAT),
+                    TimeUtil.toLocalizedDate(report.getToTime().minusNanos(1).toInstant(ZoneOffset.UTC), ZoneId.of(report.getTimezone())),
                     toTimeCell.getStringCellValue()
             );
 
