@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
@@ -57,7 +58,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     private PartyManagementSrv.Iface partyManagementClient;
 
     @Test
-    public void generateProvisionOfServiceReportTest() throws IOException, TException {
+    public void generateProvisionOfServiceReportTest() throws IOException, TException, InterruptedException {
         given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
 
         String partyId = random(String.class);
@@ -98,10 +99,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         long reportId = reportService.createReport(partyId, shopId, fromTime, toTime, reportType);
 
         Report report;
+        int retryCount = 0;
         do {
+            TimeUnit.SECONDS.sleep(1L);
             report = reportService.getReport(partyId, shopId, reportId);
-        } while (report.getStatus() != ReportStatus.created);
+        } while (report.getStatus() != ReportStatus.created && retryCount <= 10);
 
+        assertEquals(ReportStatus.created, report.getStatus());
         List<FileMeta> reportFiles = reportService.getReportFiles(report.getId());
         assertEquals(2, reportFiles.size());
         for (FileMeta fileMeta : reportFiles) {

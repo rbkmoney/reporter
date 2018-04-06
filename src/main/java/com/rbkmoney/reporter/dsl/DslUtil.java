@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.merch_stat.StatRequest;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Optional;
 
 public class DslUtil {
