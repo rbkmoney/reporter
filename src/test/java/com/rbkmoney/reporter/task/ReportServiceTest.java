@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +57,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException, TException, InterruptedException {
-        given(statisticService.getPayments(anyString(), anyString(), any(), any())).willReturn(new ArrayList<>());
+        given(statisticService.getPayments(anyString(), anyString(), any(), any(), any())).willReturn(new ArrayList<>());
 
         String partyId = random(String.class);
         String shopId = random(String.class);
