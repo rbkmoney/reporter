@@ -71,15 +71,6 @@ public class ProvisionOfServiceTemplateServiceTest extends AbstractIntegrationTe
         given(partyManagementClient.checkout(any(), any(), any()))
                 .willReturn(party);
 
-        Map<String, String> posMap = new HashMap<>();
-        posMap.put("merchant_id", report.getPartyId());
-        posMap.put("contract_id", report.getPartyContractId());
-        posMap.put("currency_code", "RUB");
-        posMap.put("funds_acquired", "25345");
-        posMap.put("fee_charged", "234234");
-        posMap.put("funds_paid_out", "5435345");
-        posMap.put("funds_refunded", "2324234");
-
         ShopAccountingModel previousAccounting = random(ShopAccountingModel.class);
         given(statisticService.getShopAccounting(party.getId(), contract.getId(), "RUB", report.getFromTime().toInstant(ZoneOffset.UTC)))
                 .willReturn(previousAccounting);
