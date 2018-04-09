@@ -61,7 +61,9 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
             StatPayment payment = new StatPayment();
             payment.setId("id" + i);
             payment.setInvoiceId("invoiceId" + i);
-            payment.setStatus(InvoicePaymentStatus.captured(new InvoicePaymentCaptured("201" + i + "-03-22T06:12:27Z")));
+            InvoicePaymentCaptured invoicePaymentCaptured = new InvoicePaymentCaptured();
+            invoicePaymentCaptured.setAt("201" + i + "-03-22T06:12:27Z");
+            payment.setStatus(InvoicePaymentStatus.captured(invoicePaymentCaptured));
             PaymentResourcePayer paymentResourcePayer = new PaymentResourcePayer(PaymentTool.bank_card(new BankCard("token", null, "424" + i, "56789" + i)), "sessionId");
             paymentResourcePayer.setEmail("abc" + i + "@mail.ru");
             payment.setPayer(Payer.payment_resource(paymentResourcePayer));
@@ -90,7 +92,9 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
                 .willReturn(refundList);
 
         StatPayment payment = new StatPayment();
-        payment.setStatus(InvoicePaymentStatus.captured(new InvoicePaymentCaptured("2018-03-22T06:12:27Z")));
+        InvoicePaymentCaptured invoicePaymentCaptured = new InvoicePaymentCaptured();
+        invoicePaymentCaptured.setAt("2018-03-22T06:12:27Z");
+        payment.setStatus(InvoicePaymentStatus.captured(invoicePaymentCaptured));
         PaymentResourcePayer paymentResourcePayer = new PaymentResourcePayer(PaymentTool.bank_card(new BankCard("token", null, "4249", "567890")), "sessionId");
         paymentResourcePayer.setEmail("xyz@mail.ru");
         payment.setPayer(Payer.payment_resource(paymentResourcePayer));
