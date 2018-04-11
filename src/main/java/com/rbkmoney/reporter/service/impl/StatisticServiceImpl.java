@@ -116,14 +116,19 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public StatPayment getPayment(String invoiceId, String paymentId, InvoicePaymentStatus status) {
+    public StatPayment getPayment(String invoiceId, String paymentId) {
+        return getPayment(invoiceId, paymentId, Optional.empty());
+    }
+
+    @Override
+    public StatPayment getPayment(String invoiceId, String paymentId, Optional<InvoicePaymentStatus> status) {
         try {
             return merchantStatisticsClient.getPayments(DslUtil.createPaymentRequest(invoiceId, paymentId, status, objectMapper))
                     .getData()
                     .getPayments()
                     .stream()
                     .findFirst()
-                    .orElseThrow(() -> new PaymentNotFoundException(String.format("Payment with id={}.{} and status={} not found", invoiceId, paymentId, status.getSetField().getFieldName())));
+                    .orElseThrow(() -> new PaymentNotFoundException(String.format("Payment not found, invoiceId='%s', paymentId='%s', paymentStatus={}", invoiceId, paymentId, status)));
         } catch (TException ex) {
             throw new RuntimeException(ex);
         }
