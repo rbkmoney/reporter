@@ -84,8 +84,11 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             StatPayment statPayment = statisticService.getPayment(r.getInvoiceId(), r.getPaymentId());
             refund.setId(r.getId());
             refund.setPaymentId(r.getInvoiceId() + "." + r.getPaymentId());
+            //TODO captured_at only
             if (statPayment.getStatus().isSetCaptured()) {
-                refund.setPaymentCapturedAt(statPayment.getStatus().getCaptured().getAt());
+                refund.setPaymentCapturedAt(TimeUtil.toLocalizedDateTime(statPayment.getStatus().getCaptured().getAt(), reportZoneId));
+            } else {
+                refund.setPaymentCapturedAt(TimeUtil.toLocalizedDateTime(statPayment.getCreatedAt(), reportZoneId));
             }
             refund.setSucceededAt(TimeUtil.toLocalizedDateTime(r.getStatus().getSucceeded().getAt(), reportZoneId));
             if (statPayment.getPayer().isSetPaymentResource()) {
