@@ -73,7 +73,7 @@ public class StatisticServiceImpl implements StatisticService {
                     .getInvoices()
                     .stream()
                     .findFirst()
-                    .orElseThrow(() -> new InvoiceNotFoundException(String.format("Invoice with id={}  not found", invoiceId)));
+                    .orElseThrow(() -> new InvoiceNotFoundException(String.format("Invoice not found, invoiceId='%s'", invoiceId)));
         } catch (TException ex) {
             throw new RuntimeException(ex);
         }
@@ -128,7 +128,7 @@ public class StatisticServiceImpl implements StatisticService {
                     .getPayments()
                     .stream()
                     .findFirst()
-                    .orElseThrow(() -> new PaymentNotFoundException(String.format("Payment not found, invoiceId='%s', paymentId='%s', paymentStatus={}", invoiceId, paymentId, status)));
+                    .orElseThrow(() -> new PaymentNotFoundException(String.format("Payment not found, invoiceId='%s', paymentId='%s', paymentStatus='%s'", invoiceId, paymentId, status)));
         } catch (TException ex) {
             throw new RuntimeException(ex);
         }
