@@ -2,10 +2,12 @@ package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.Party;
+import com.rbkmoney.damsel.domain.PaymentInstitutionRef;
 import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.exception.ContractNotFoundException;
+import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
 import com.rbkmoney.reporter.service.PartyService;
@@ -124,6 +126,35 @@ public class PartyServiceImpl implements PartyService {
         }
         log.info("Contract has been found, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
         return contract;
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId) throws ContractNotFoundException, PartyNotFoundException {
+        return getPaymentInstitutionRef(partyId, contractId, Instant.now());
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, long partyRevision) throws ContractNotFoundException, PartyNotFoundException {
+        return getPaymentInstitutionRef(partyId, contractId, PartyRevisionParam.revision(partyRevision));
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, Instant timestamp) throws ContractNotFoundException, PartyNotFoundException {
+        return getPaymentInstitutionRef(partyId, contractId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws ContractNotFoundException, PartyNotFoundException {
+        log.debug("Trying to get paymentInstitutionRef, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
+        Contract contract = getContract(partyId, contractId, partyRevisionParam);
+
+        if (!contract.isSetPaymentInstitution()) {
+            throw new NotFoundException(String.format("PaymentInstitutionRef not found, partyId='%s', contractId='%s', partyRevisionParam='%s'", partyId, contractId, partyRevisionParam));
+        }
+
+        PaymentInstitutionRef paymentInstitutionRef = contract.getPaymentInstitution();
+        log.info("PaymentInstitutionRef has been found, partyId='{}', contractId='{}', paymentInstitutionRef='{}', partyRevisionParam='{}'", partyId, contractId, paymentInstitutionRef, partyRevisionParam);
+        return paymentInstitutionRef;
     }
 
     @Override

@@ -4,6 +4,7 @@
 package com.rbkmoney.reporter.domain;
 
 
+import com.rbkmoney.reporter.domain.tables.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.FileMeta;
 import com.rbkmoney.reporter.domain.tables.PosReportMeta;
 import com.rbkmoney.reporter.domain.tables.Report;
@@ -23,6 +24,11 @@ import javax.annotation.Generated;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
+
+    /**
+     * The table <code>rpt.contract_meta</code>.
+     */
+    public static final ContractMeta CONTRACT_META = com.rbkmoney.reporter.domain.tables.ContractMeta.CONTRACT_META;
 
     /**
      * The table <code>rpt.file_meta</code>.

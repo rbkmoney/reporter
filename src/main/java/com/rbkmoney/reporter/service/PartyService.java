@@ -3,6 +3,7 @@ package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.Party;
+import com.rbkmoney.damsel.domain.PaymentInstitutionRef;
 import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.payment_processing.PartyRevisionParam;
 import com.rbkmoney.reporter.exception.ContractNotFoundException;
@@ -40,6 +41,14 @@ public interface PartyService {
     Contract getContract(String partyId, String contractId, Instant timestamp) throws ContractNotFoundException, PartyNotFoundException;
 
     Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws ContractNotFoundException, PartyNotFoundException;
+
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId) throws ContractNotFoundException, PartyNotFoundException;
+
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, long partyRevision) throws ContractNotFoundException, PartyNotFoundException;
+
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, Instant timestamp) throws ContractNotFoundException, PartyNotFoundException;
+
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws ContractNotFoundException, PartyNotFoundException;
 
     Map<String, String> getShopUrls(String partyId, String contractId, Instant timestamp) throws PartyNotFoundException, ContractNotFoundException;
 }
