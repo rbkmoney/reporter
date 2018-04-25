@@ -43,7 +43,7 @@ public class ReportDaoTest extends AbstractIntegrationTest {
         assertEquals(shopId, report.getPartyContractId());
         assertEquals(fromTime, report.getFromTime());
         assertEquals(toTime, report.getToTime());
-        assertEquals(reportType.name(), report.getType());
+        assertEquals(reportType, report.getType());
         assertEquals(timezone, report.getTimezone());
         assertEquals(createdAt, report.getCreatedAt());
 
