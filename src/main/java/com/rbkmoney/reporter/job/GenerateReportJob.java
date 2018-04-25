@@ -1,16 +1,21 @@
 package com.rbkmoney.reporter.job;
 
+import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.exception.StorageException;
+import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.trigger.FreezeTimeCronTrigger;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
-import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
+import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 @Component
 public class GenerateReportJob implements Job {
@@ -21,6 +26,11 @@ public class GenerateReportJob implements Job {
 
     public static final String CONTRACT_ID = "contract_id";
 
+    public static final String REPORT_TYPE = "report_type";
+
+    @Autowired
+    private ReportService reportService;
+
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         JobDetail jobDetail = jobExecutionContext.getJobDetail();
@@ -29,12 +39,16 @@ public class GenerateReportJob implements Job {
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
         String partyId = jobDataMap.getString(PARTY_ID);
         String contractId = jobDataMap.getString(CONTRACT_ID);
+        ReportType reportType = TypeUtil.toEnumField(jobDataMap.getString(REPORT_TYPE), ReportType.class);
 
         log.info("Trying to create report for contract, partyId='{}', contractId='{}', trigger='{}', jobExecutionContext='{}'",
                 partyId, contractId, trigger, jobExecutionContext);
         try {
-            LocalDateTime toTime = toLocalDateTime(trigger.getCurrentCronTime().toInstant());
+            Instant toTime = trigger.getCurrentCronTime().toInstant();
+            Instant fromTime = YearMonth.from(toTime).minusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            ZoneId zoneId = trigger.getTimeZone().toZoneId();
 
+            reportService.createReport(partyId, contractId, fromTime, toTime, reportType, zoneId, jobExecutionContext.getFireTime().toInstant());
 
             log.info("Report for contract have been successfully created, partyId='{}', contractId='{}', trigger='{}', jobExecutionContext='{}'",
                     partyId, contractId, trigger, jobExecutionContext);

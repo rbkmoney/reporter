@@ -48,7 +48,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
                     reportRequest.getPartyId(),
                     reportRequest.getShopId(),
                     reportTypes.stream()
-                            .map(reportType -> com.rbkmoney.reporter.ReportType.valueOf(reportType.name()))
+                            .map(reportType -> TypeUtil.toEnumField(reportType.name(), com.rbkmoney.reporter.domain.enums.ReportType.class))
                             .collect(Collectors.toList()),
                     fromTime,
                     toTime
@@ -77,7 +77,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
                     reportRequest.getShopId(),
                     fromTime,
                     toTime,
-                    com.rbkmoney.reporter.ReportType.valueOf(reportType.name())
+                    TypeUtil.toEnumField(reportType.name(), com.rbkmoney.reporter.domain.enums.ReportType.class)
             );
         } catch (PartyNotFoundException ex) {
             throw new PartyNotFound();

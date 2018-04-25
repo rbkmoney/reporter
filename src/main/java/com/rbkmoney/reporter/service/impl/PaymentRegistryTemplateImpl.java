@@ -1,7 +1,8 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.merch_stat.*;
-import com.rbkmoney.reporter.ReportType;
+import com.rbkmoney.reporter.domain.enums.ReportType;
+import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.model.Payment;
 import com.rbkmoney.reporter.model.Refund;
@@ -12,13 +13,18 @@ import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
 import org.jxls.common.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -29,14 +35,28 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
 
     private final PartyService partyService;
 
+    private final Resource resource;
+
     @Autowired
-    public PaymentRegistryTemplateImpl(StatisticService statisticService, PartyService partyService) {
+    public PaymentRegistryTemplateImpl(
+            StatisticService statisticService,
+            PartyService partyService,
+            @Value("${report.type.pr.path|classpath:/templates/payment_registry.xlsx}") ClassPathResource resource
+    ) {
         this.statisticService = statisticService;
         this.partyService = partyService;
+        this.resource = resource;
     }
 
     @Override
-    public void processReportTemplate(Report report, OutputStream outputStream) throws IOException {
+    public boolean accept(ReportType reportType, ContractMeta contractMeta) {
+        return reportType == ReportType.payment_registry
+                || (contractMeta.getReportType() == ReportType.provision_of_service && contractMeta.getNeedReference());
+    }
+
+    @Override
+    public void processReportTemplate(Report report, ContractMeta contractMeta, OutputStream outputStream) throws
+            IOException {
         ZoneId reportZoneId = ZoneId.of(report.getTimezone());
         Map<String, String> shopUrls = partyService.getShopUrls(report.getPartyId(), report.getPartyContractId(), report.getCreatedAt().toInstant(ZoneOffset.UTC));
 
@@ -125,11 +145,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         context.putVar("totalPayoutAmnt", FormatUtil.formatCurrency(totalPayoutAmnt.longValue()));
         context.putVar("totalRefundAmnt", FormatUtil.formatCurrency(totalRefundAmnt.longValue()));
 
-        processTemplate(context, ReportType.payment_registry.getTemplateResource().getInputStream(), outputStream);
+        processTemplate(context, resource.getInputStream(), outputStream);
     }
 
-    @Override
-    public List<ReportType> getReportTypes() {
-        return Arrays.asList(ReportType.payment_registry);
-    }
 }

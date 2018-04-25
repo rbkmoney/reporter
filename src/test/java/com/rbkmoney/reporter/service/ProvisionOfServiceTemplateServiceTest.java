@@ -4,6 +4,7 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.AbstractIntegrationTest;
+import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 import com.rbkmoney.reporter.service.impl.ProvisionOfServiceTemplateImpl;
@@ -82,6 +83,7 @@ public class ProvisionOfServiceTemplateServiceTest extends AbstractIntegrationTe
         try {
             templateService.processReportTemplate(
                     report,
+                    random(ContractMeta.class, "lastClosingBalance"),
                     Files.newOutputStream(tempFile)
             );
 

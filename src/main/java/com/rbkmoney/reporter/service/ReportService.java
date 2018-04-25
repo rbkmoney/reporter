@@ -1,9 +1,11 @@
 package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.damsel.domain.Shop;
-import com.rbkmoney.reporter.ReportType;
+import com.rbkmoney.reporter.dao.ContractMetaDao;
+import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
+import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.*;
@@ -45,9 +47,9 @@ public class ReportService {
 
     private final SignService signService;
 
-    private final ZoneId defaultTimeZone;
+    private final ContractMetaDao contractMetaDao;
 
-    private final boolean needSign;
+    private final ZoneId defaultTimeZone;
 
     @Autowired
     public ReportService(
@@ -56,16 +58,16 @@ public class ReportService {
             List<TemplateService> templateServices,
             StorageService storageService,
             SignService signService,
-            @Value("${report.defaultTimeZone}") ZoneId defaultTimeZone,
-            @Value("${report.needSign}") boolean needSign
+            ContractMetaDao contractMetaDao,
+            @Value("${report.defaultTimeZone}") ZoneId defaultTimeZone
     ) {
         this.reportDao = reportDao;
         this.partyService = partyService;
         this.templateServices = templateServices;
         this.storageService = storageService;
         this.signService = signService;
+        this.contractMetaDao = contractMetaDao;
         this.defaultTimeZone = defaultTimeZone;
-        this.needSign = needSign;
     }
 
     public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) throws StorageException {
@@ -117,10 +119,10 @@ public class ReportService {
     }
 
     public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
-        return createReport(partyId, shopId, fromTime, toTime, reportType, defaultTimeZone, needSign, Instant.now());
+        return createReport(partyId, shopId, fromTime, toTime, reportType, defaultTimeZone, Instant.now());
     }
 
-    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, boolean needSign, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
+    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
         log.info("Trying to create report, partyId={}, shopId={}, reportType={}, fromTime={}, toTime={}",
                 partyId, shopId, reportType, fromTime, toTime);
 
@@ -134,7 +136,6 @@ public class ReportService {
                     LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
                     reportType,
                     timezone.getId(),
-                    needSign,
                     LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
             );
             log.info("Report has been successfully created, reportId={}, partyId={}, shopId={}, reportType={}, fromTime={}, toTime={}",
@@ -166,8 +167,14 @@ public class ReportService {
         log.info("Trying to process report, reportId='{}', reportType='{}', partyId='{}', contractId='{}', fromTime='{}', toTime='{}'",
                 report.getId(), report.getType(), report.getPartyId(), report.getPartyContractId(), report.getFromTime(), report.getToTime());
         try {
-            List<FileMeta> reportFiles = processSignAndUpload(report);
+            ContractMeta contractMeta = contractMetaDao.getExclusive(report.getPartyId(), report.getPartyContractId(), report.getType());
+            if (contractMeta == null) {
+                throw new NotFoundException(String.format("Failed to find meta data for contract, partyId='%s', contractId='%s', reportType='%s'",
+                        report.getPartyId(), report.getPartyContractId(), report.getType()));
+            }
+            List<FileMeta> reportFiles = processSignAndUpload(report, contractMeta);
             finishedReportTask(report.getId(), reportFiles);
+            contractMetaDao.updateLastReportCreatedAt(report.getPartyId(), report.getPartyContractId(), report.getType(), report.getCreatedAt());
             log.info("Report has been successfully processed, reportId='{}', reportType='{}', contractId='{}', shopId='{}', fromTime='{}', toTime='{}'",
                     report.getId(), report.getType(), report.getPartyId(), report.getPartyContractId(), report.getFromTime(), report.getToTime());
         } catch (ValidationException ex) {
@@ -202,20 +209,21 @@ public class ReportService {
         }
     }
 
-    public List<FileMeta> processSignAndUpload(Report report) throws IOException {
+    public List<FileMeta> processSignAndUpload(Report report, ContractMeta contractMeta) throws IOException {
         List<FileMeta> files = new ArrayList<>();
         for (TemplateService templateService : templateServices) {
-            if (templateService.accept(ReportType.valueOf(report.getType()))) {
+            if (templateService.accept(report.getType(), contractMeta)) {
                 Path reportFile = Files.createTempFile(report.getType() + "_", "_report.xlsx");
                 try {
                     templateService.processReportTemplate(
                             report,
+                            contractMeta,
                             Files.newOutputStream(reportFile)
                     );
                     FileMeta reportFileModel = storageService.saveFile(reportFile);
                     files.add(reportFileModel);
 
-                    if (report.getNeedSign()) {
+                    if (contractMeta.getNeedSign()) {
                         byte[] sign = signService.sign(reportFile);
                         FileMeta signFileModel = storageService.saveFile(reportFile.getFileName().toString() + ".sgn", sign);
                         files.add(signFileModel);

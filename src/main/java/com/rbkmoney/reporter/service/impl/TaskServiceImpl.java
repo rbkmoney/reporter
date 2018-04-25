@@ -1,9 +1,12 @@
 package com.rbkmoney.reporter.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.base.TimeSpan;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
+import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
@@ -79,10 +82,30 @@ public class TaskServiceImpl implements TaskService {
         CalendarRef calendarRef = paymentInstitution.getCalendar();
 
         try {
-            contractMetaDao.save(partyId, contractId, lastEventId, scheduleRef.getId(), calendarRef.getId());
-            createJob(partyId, contractId, calendarRef, scheduleRef);
-        log.info("Job have been successfully enabled, partyId='{}', contractId='{}', scheduleRef='{}', calendarRef='{}'",
-                partyId, contractId, scheduleRef, calendarRef);
+            ContractMeta contractMeta = new ContractMeta();
+            contractMeta.setPartyId(partyId);
+            contractMeta.setContractId(contractId);
+            contractMeta.setCalendarId(calendarRef.getId());
+            contractMeta.setLastEventId(lastEventId);
+            contractMeta.setScheduleId(scheduleRef.getId());
+            contractMeta.setReportType(ReportType.provision_of_service);
+            contractMeta.setNeedSign(needSign);
+
+            contractMeta.setNeedReference(needReference);
+            contractMeta.setRepresentativeFullName(signer.getFullName());
+            contractMeta.setRepresentativePosition(signer.getPosition());
+            contractMeta.setRepresentativeDocument(signer.getDocument().getSetField().getFieldName());
+            if (signer.getDocument().isSetPowerOfAttorney()) {
+                LegalAgreement legalAgreement = signer.getDocument().getPowerOfAttorney();
+                contractMeta.setLegalAgreementId(legalAgreement.getLegalAgreementId());
+                contractMeta.setLegalAgreementSignedAt(TypeUtil.stringToLocalDateTime(legalAgreement.getSignedAt()));
+                contractMeta.setLegalAgreementValidUntil(TypeUtil.stringToLocalDateTime(legalAgreement.getValidUntil()));
+            }
+
+            contractMetaDao.save(contractMeta);
+            createJob(partyId, contractId, contractMeta.getReportType(), calendarRef, scheduleRef);
+            log.info("Job have been successfully enabled, partyId='{}', contractId='{}', scheduleRef='{}', calendarRef='{}'",
+                    partyId, contractId, scheduleRef, calendarRef);
         } catch (DaoException ex) {
             throw new StorageException(
                     String.format(
@@ -91,8 +114,8 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private void createJob(String partyId, String contractId, CalendarRef calendarRef, BusinessScheduleRef scheduleRef) throws ScheduleProcessingException {
-        log.info("Trying to create job, partyId='{}', contractId='{}', calendarRef='{}', scheduleRef='{}'", partyId, contractId, calendarRef, scheduleRef);
+    private void createJob(String partyId, String contractId, ReportType reportType, CalendarRef calendarRef, BusinessScheduleRef scheduleRef) throws ScheduleProcessingException {
+        log.info("Trying to create job, partyId='{}', contractId='{}', reportType='{}', calendarRef='{}', scheduleRef='{}'", partyId, contractId, reportType, calendarRef, scheduleRef);
         try {
             BusinessSchedule schedule = domainConfigService.getBusinessSchedule(scheduleRef);
             Calendar calendar = domainConfigService.getCalendar(calendarRef);
@@ -103,10 +126,11 @@ public class TaskServiceImpl implements TaskService {
             log.info("New calendar was saved, calendarRef='{}', calendarId='{}'", calendarRef, calendarId);
 
             JobDetail jobDetail = JobBuilder.newJob(GenerateReportJob.class)
-                    .withIdentity(buildJobKey(partyId, contractId, calendarRef.getId(), scheduleRef.getId()))
+                    .withIdentity(buildJobKey(partyId, contractId, reportType, calendarRef.getId(), scheduleRef.getId()))
                     .withDescription(schedule.getDescription())
                     .usingJobData(GenerateReportJob.PARTY_ID, partyId)
                     .usingJobData(GenerateReportJob.CONTRACT_ID, contractId)
+                    .usingJobData(GenerateReportJob.REPORT_TYPE, reportType.name())
                     .build();
 
             TimeSpan timeSpan = schedule.getPolicy().getAssetsFreezeFor();
@@ -115,7 +139,7 @@ public class TaskServiceImpl implements TaskService {
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
                 Trigger trigger = TriggerBuilder.newTrigger()
-                        .withIdentity(buildTriggerKey(partyId, contractId, calendarRef.getId(), scheduleRef.getId(), triggerId))
+                        .withIdentity(buildTriggerKey(partyId, contractId, reportType, calendarRef.getId(), scheduleRef.getId(), triggerId))
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)
                         .withSchedule(
@@ -144,12 +168,31 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void deregisterProvisionOfServiceJob(String partyId, String contractId) throws ScheduleProcessingException, StorageException {
+        log.info("Trying to deregister provision of service job, partyId='{}', contractId='{}'", partyId, contractId);
+        ReportType reportType = ReportType.provision_of_service;
         try {
-            log.info("Trying to deregister job, partyId='{}', contractId='{}'", partyId, contractId);
-            ContractMeta contractMeta = contractMetaDao.get(partyId, contractId);
-            contractMetaDao.disableContract(partyId, contractId);
+            ContractMeta contractMeta = contractMetaDao.get(partyId, contractId, reportType);
+            contractMetaDao.disableContract(partyId, contractId, reportType);
+            removeJob(contractMeta);
+            log.info("Provision of service job have been successfully disabled, partyId='{}', contractId='{}', scheduleId='{}', calendarId='{}'",
+                    partyId, contractId, contractMeta.getScheduleId(), contractMeta.getCalendarId());
+        } catch (DaoException ex) {
+            throw new StorageException(
+                    String.format("Failed to disable provision of service job on storage, partyId='%s', contractId='%s'",
+                            partyId, contractId), ex);
+        }
+    }
+
+    private void removeJob(ContractMeta contractMeta) {
+        try {
             if (contractMeta.getCalendarId() != null && contractMeta.getScheduleId() != null) {
-                JobKey jobKey = buildJobKey(partyId, contractId, contractMeta.getCalendarId(), contractMeta.getScheduleId());
+                JobKey jobKey = buildJobKey(
+                        contractMeta.getPartyId(),
+                        contractMeta.getContractId(),
+                        contractMeta.getReportType(),
+                        contractMeta.getCalendarId(),
+                        contractMeta.getScheduleId()
+                );
                 List<TriggerKey> triggerKeys = scheduler.getTriggersOfJob(jobKey).stream()
                         .map(trigger -> trigger.getKey())
                         .collect(Collectors.toList());
@@ -157,16 +200,10 @@ public class TaskServiceImpl implements TaskService {
                 scheduler.unscheduleJobs(triggerKeys);
                 scheduler.deleteJob(jobKey);
             }
-            log.info("Job have been successfully disabled, partyId='{}', contractId='{}', scheduleId='{}', calendarId='{}'",
-                    partyId, contractId, contractMeta.getScheduleId(), contractMeta.getCalendarId());
-        } catch (DaoException ex) {
-            throw new StorageException(
-                    String.format("Failed to disable job on storage, partyId='%s', contractId='%s'",
-                            partyId, contractId), ex);
         } catch (SchedulerException ex) {
             throw new ScheduleProcessingException(
-                    String.format("Failed to disable job, partyId='%s', contractId='%s'",
-                            partyId, contractId), ex);
+                    String.format("Failed to disable job, contractMeta='%s'",
+                            contractMeta), ex);
         }
     }
 
@@ -180,16 +217,16 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private JobKey buildJobKey(String partyId, String contractId, int calendarId, int scheduleId) {
+    private JobKey buildJobKey(String partyId, String contractId, ReportType reportType, int calendarId, int scheduleId) {
         return JobKey.jobKey(
-                String.format("job-%s-%s", partyId, contractId),
+                String.format("job-%s-%s-%s", partyId, contractId, reportType),
                 buildGroupKey(calendarId, scheduleId)
         );
     }
 
-    private TriggerKey buildTriggerKey(String partyId, String contractId, int calendarId, int scheduleId, int triggerId) {
+    private TriggerKey buildTriggerKey(String partyId, String contractId, ReportType reportType, int calendarId, int scheduleId, int triggerId) {
         return TriggerKey.triggerKey(
-                String.format("trigger-%s-%s-%d", partyId, contractId, triggerId),
+                String.format("trigger-%s-%s-%s-%d", partyId, contractId, reportType, triggerId),
                 buildGroupKey(calendarId, scheduleId)
         );
     }

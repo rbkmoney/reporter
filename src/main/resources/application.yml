@@ -27,7 +27,6 @@ spring:
       idle-timeout: 30000
 report:
   defaultTimeZone: Europe/Moscow
-  needSign: true
 storage:
   endpoint: localhost
   signingRegion: RU

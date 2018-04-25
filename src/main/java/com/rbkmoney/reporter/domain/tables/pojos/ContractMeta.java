@@ -4,6 +4,8 @@
 package com.rbkmoney.reporter.domain.tables.pojos;
 
 
+import com.rbkmoney.reporter.domain.enums.ReportType;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -23,44 +25,84 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ContractMeta implements Serializable {
 
-    private static final long serialVersionUID = 901145374;
+    private static final long serialVersionUID = 1956905968;
 
     private String        partyId;
     private String        contractId;
+    private ReportType    reportType;
     private LocalDateTime wtime;
     private Long          lastEventId;
+    private Boolean       needSign;
     private Integer       scheduleId;
     private Integer       calendarId;
     private LocalDateTime lastReportCreatedAt;
+    private Long          lastClosingBalance;
+    private Boolean       needReference;
+    private String        representativePosition;
+    private String        representativeFullName;
+    private String        representativeDocument;
+    private String        legalAgreementId;
+    private LocalDateTime legalAgreementSignedAt;
+    private LocalDateTime legalAgreementValidUntil;
 
     public ContractMeta() {}
 
     public ContractMeta(ContractMeta value) {
         this.partyId = value.partyId;
         this.contractId = value.contractId;
+        this.reportType = value.reportType;
         this.wtime = value.wtime;
         this.lastEventId = value.lastEventId;
+        this.needSign = value.needSign;
         this.scheduleId = value.scheduleId;
         this.calendarId = value.calendarId;
         this.lastReportCreatedAt = value.lastReportCreatedAt;
+        this.lastClosingBalance = value.lastClosingBalance;
+        this.needReference = value.needReference;
+        this.representativePosition = value.representativePosition;
+        this.representativeFullName = value.representativeFullName;
+        this.representativeDocument = value.representativeDocument;
+        this.legalAgreementId = value.legalAgreementId;
+        this.legalAgreementSignedAt = value.legalAgreementSignedAt;
+        this.legalAgreementValidUntil = value.legalAgreementValidUntil;
     }
 
     public ContractMeta(
         String        partyId,
         String        contractId,
+        ReportType    reportType,
         LocalDateTime wtime,
         Long          lastEventId,
+        Boolean       needSign,
         Integer       scheduleId,
         Integer       calendarId,
-        LocalDateTime lastReportCreatedAt
+        LocalDateTime lastReportCreatedAt,
+        Long          lastClosingBalance,
+        Boolean       needReference,
+        String        representativePosition,
+        String        representativeFullName,
+        String        representativeDocument,
+        String        legalAgreementId,
+        LocalDateTime legalAgreementSignedAt,
+        LocalDateTime legalAgreementValidUntil
     ) {
         this.partyId = partyId;
         this.contractId = contractId;
+        this.reportType = reportType;
         this.wtime = wtime;
         this.lastEventId = lastEventId;
+        this.needSign = needSign;
         this.scheduleId = scheduleId;
         this.calendarId = calendarId;
         this.lastReportCreatedAt = lastReportCreatedAt;
+        this.lastClosingBalance = lastClosingBalance;
+        this.needReference = needReference;
+        this.representativePosition = representativePosition;
+        this.representativeFullName = representativeFullName;
+        this.representativeDocument = representativeDocument;
+        this.legalAgreementId = legalAgreementId;
+        this.legalAgreementSignedAt = legalAgreementSignedAt;
+        this.legalAgreementValidUntil = legalAgreementValidUntil;
     }
 
     public String getPartyId() {
@@ -79,6 +121,14 @@ public class ContractMeta implements Serializable {
         this.contractId = contractId;
     }
 
+    public ReportType getReportType() {
+        return this.reportType;
+    }
+
+    public void setReportType(ReportType reportType) {
+        this.reportType = reportType;
+    }
+
     public LocalDateTime getWtime() {
         return this.wtime;
     }
@@ -93,6 +143,14 @@ public class ContractMeta implements Serializable {
 
     public void setLastEventId(Long lastEventId) {
         this.lastEventId = lastEventId;
+    }
+
+    public Boolean getNeedSign() {
+        return this.needSign;
+    }
+
+    public void setNeedSign(Boolean needSign) {
+        this.needSign = needSign;
     }
 
     public Integer getScheduleId() {
@@ -119,6 +177,70 @@ public class ContractMeta implements Serializable {
         this.lastReportCreatedAt = lastReportCreatedAt;
     }
 
+    public Long getLastClosingBalance() {
+        return this.lastClosingBalance;
+    }
+
+    public void setLastClosingBalance(Long lastClosingBalance) {
+        this.lastClosingBalance = lastClosingBalance;
+    }
+
+    public Boolean getNeedReference() {
+        return this.needReference;
+    }
+
+    public void setNeedReference(Boolean needReference) {
+        this.needReference = needReference;
+    }
+
+    public String getRepresentativePosition() {
+        return this.representativePosition;
+    }
+
+    public void setRepresentativePosition(String representativePosition) {
+        this.representativePosition = representativePosition;
+    }
+
+    public String getRepresentativeFullName() {
+        return this.representativeFullName;
+    }
+
+    public void setRepresentativeFullName(String representativeFullName) {
+        this.representativeFullName = representativeFullName;
+    }
+
+    public String getRepresentativeDocument() {
+        return this.representativeDocument;
+    }
+
+    public void setRepresentativeDocument(String representativeDocument) {
+        this.representativeDocument = representativeDocument;
+    }
+
+    public String getLegalAgreementId() {
+        return this.legalAgreementId;
+    }
+
+    public void setLegalAgreementId(String legalAgreementId) {
+        this.legalAgreementId = legalAgreementId;
+    }
+
+    public LocalDateTime getLegalAgreementSignedAt() {
+        return this.legalAgreementSignedAt;
+    }
+
+    public void setLegalAgreementSignedAt(LocalDateTime legalAgreementSignedAt) {
+        this.legalAgreementSignedAt = legalAgreementSignedAt;
+    }
+
+    public LocalDateTime getLegalAgreementValidUntil() {
+        return this.legalAgreementValidUntil;
+    }
+
+    public void setLegalAgreementValidUntil(LocalDateTime legalAgreementValidUntil) {
+        this.legalAgreementValidUntil = legalAgreementValidUntil;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -140,6 +262,12 @@ public class ContractMeta implements Serializable {
         }
         else if (!contractId.equals(other.contractId))
             return false;
+        if (reportType == null) {
+            if (other.reportType != null)
+                return false;
+        }
+        else if (!reportType.equals(other.reportType))
+            return false;
         if (wtime == null) {
             if (other.wtime != null)
                 return false;
@@ -151,6 +279,12 @@ public class ContractMeta implements Serializable {
                 return false;
         }
         else if (!lastEventId.equals(other.lastEventId))
+            return false;
+        if (needSign == null) {
+            if (other.needSign != null)
+                return false;
+        }
+        else if (!needSign.equals(other.needSign))
             return false;
         if (scheduleId == null) {
             if (other.scheduleId != null)
@@ -170,6 +304,54 @@ public class ContractMeta implements Serializable {
         }
         else if (!lastReportCreatedAt.equals(other.lastReportCreatedAt))
             return false;
+        if (lastClosingBalance == null) {
+            if (other.lastClosingBalance != null)
+                return false;
+        }
+        else if (!lastClosingBalance.equals(other.lastClosingBalance))
+            return false;
+        if (needReference == null) {
+            if (other.needReference != null)
+                return false;
+        }
+        else if (!needReference.equals(other.needReference))
+            return false;
+        if (representativePosition == null) {
+            if (other.representativePosition != null)
+                return false;
+        }
+        else if (!representativePosition.equals(other.representativePosition))
+            return false;
+        if (representativeFullName == null) {
+            if (other.representativeFullName != null)
+                return false;
+        }
+        else if (!representativeFullName.equals(other.representativeFullName))
+            return false;
+        if (representativeDocument == null) {
+            if (other.representativeDocument != null)
+                return false;
+        }
+        else if (!representativeDocument.equals(other.representativeDocument))
+            return false;
+        if (legalAgreementId == null) {
+            if (other.legalAgreementId != null)
+                return false;
+        }
+        else if (!legalAgreementId.equals(other.legalAgreementId))
+            return false;
+        if (legalAgreementSignedAt == null) {
+            if (other.legalAgreementSignedAt != null)
+                return false;
+        }
+        else if (!legalAgreementSignedAt.equals(other.legalAgreementSignedAt))
+            return false;
+        if (legalAgreementValidUntil == null) {
+            if (other.legalAgreementValidUntil != null)
+                return false;
+        }
+        else if (!legalAgreementValidUntil.equals(other.legalAgreementValidUntil))
+            return false;
         return true;
     }
 
@@ -179,11 +361,21 @@ public class ContractMeta implements Serializable {
         int result = 1;
         result = prime * result + ((this.partyId == null) ? 0 : this.partyId.hashCode());
         result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
+        result = prime * result + ((this.reportType == null) ? 0 : this.reportType.hashCode());
         result = prime * result + ((this.wtime == null) ? 0 : this.wtime.hashCode());
         result = prime * result + ((this.lastEventId == null) ? 0 : this.lastEventId.hashCode());
+        result = prime * result + ((this.needSign == null) ? 0 : this.needSign.hashCode());
         result = prime * result + ((this.scheduleId == null) ? 0 : this.scheduleId.hashCode());
         result = prime * result + ((this.calendarId == null) ? 0 : this.calendarId.hashCode());
         result = prime * result + ((this.lastReportCreatedAt == null) ? 0 : this.lastReportCreatedAt.hashCode());
+        result = prime * result + ((this.lastClosingBalance == null) ? 0 : this.lastClosingBalance.hashCode());
+        result = prime * result + ((this.needReference == null) ? 0 : this.needReference.hashCode());
+        result = prime * result + ((this.representativePosition == null) ? 0 : this.representativePosition.hashCode());
+        result = prime * result + ((this.representativeFullName == null) ? 0 : this.representativeFullName.hashCode());
+        result = prime * result + ((this.representativeDocument == null) ? 0 : this.representativeDocument.hashCode());
+        result = prime * result + ((this.legalAgreementId == null) ? 0 : this.legalAgreementId.hashCode());
+        result = prime * result + ((this.legalAgreementSignedAt == null) ? 0 : this.legalAgreementSignedAt.hashCode());
+        result = prime * result + ((this.legalAgreementValidUntil == null) ? 0 : this.legalAgreementValidUntil.hashCode());
         return result;
     }
 
@@ -193,11 +385,21 @@ public class ContractMeta implements Serializable {
 
         sb.append(partyId);
         sb.append(", ").append(contractId);
+        sb.append(", ").append(reportType);
         sb.append(", ").append(wtime);
         sb.append(", ").append(lastEventId);
+        sb.append(", ").append(needSign);
         sb.append(", ").append(scheduleId);
         sb.append(", ").append(calendarId);
         sb.append(", ").append(lastReportCreatedAt);
+        sb.append(", ").append(lastClosingBalance);
+        sb.append(", ").append(needReference);
+        sb.append(", ").append(representativePosition);
+        sb.append(", ").append(representativeFullName);
+        sb.append(", ").append(representativeDocument);
+        sb.append(", ").append(legalAgreementId);
+        sb.append(", ").append(legalAgreementSignedAt);
+        sb.append(", ").append(legalAgreementValidUntil);
 
         sb.append(")");
         return sb.toString();

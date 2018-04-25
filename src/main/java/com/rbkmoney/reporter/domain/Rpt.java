@@ -6,7 +6,6 @@ package com.rbkmoney.reporter.domain;
 
 import com.rbkmoney.reporter.domain.tables.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.FileMeta;
-import com.rbkmoney.reporter.domain.tables.PosReportMeta;
 import com.rbkmoney.reporter.domain.tables.Report;
 
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Rpt extends SchemaImpl {
 
-    private static final long serialVersionUID = -98425569;
+    private static final long serialVersionUID = 1826854448;
 
     /**
      * The reference instance of <code>rpt</code>
@@ -50,11 +49,6 @@ public class Rpt extends SchemaImpl {
      * The table <code>rpt.file_meta</code>.
      */
     public final FileMeta FILE_META = com.rbkmoney.reporter.domain.tables.FileMeta.FILE_META;
-
-    /**
-     * The table <code>rpt.pos_report_meta</code>.
-     */
-    public final PosReportMeta POS_REPORT_META = com.rbkmoney.reporter.domain.tables.PosReportMeta.POS_REPORT_META;
 
     /**
      * The table <code>rpt.report</code>.
@@ -100,7 +94,6 @@ public class Rpt extends SchemaImpl {
         return Arrays.<Table<?>>asList(
             ContractMeta.CONTRACT_META,
             FileMeta.FILE_META,
-            PosReportMeta.POS_REPORT_META,
             Report.REPORT);
     }
 }

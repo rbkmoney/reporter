@@ -6,6 +6,7 @@ package com.rbkmoney.reporter.domain.tables;
 
 import com.rbkmoney.reporter.domain.Keys;
 import com.rbkmoney.reporter.domain.Rpt;
+import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.records.ContractMetaRecord;
 
 import java.time.LocalDateTime;
@@ -35,7 +36,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ContractMeta extends TableImpl<ContractMetaRecord> {
 
-    private static final long serialVersionUID = -467079460;
+    private static final long serialVersionUID = 1789249781;
 
     /**
      * The reference instance of <code>rpt.contract_meta</code>
@@ -61,6 +62,11 @@ public class ContractMeta extends TableImpl<ContractMetaRecord> {
     public final TableField<ContractMetaRecord, String> CONTRACT_ID = createField("contract_id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
+     * The column <code>rpt.contract_meta.report_type</code>.
+     */
+    public final TableField<ContractMetaRecord, ReportType> REPORT_TYPE = createField("report_type", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.reporter.domain.enums.ReportType.class), this, "");
+
+    /**
      * The column <code>rpt.contract_meta.wtime</code>.
      */
     public final TableField<ContractMetaRecord, LocalDateTime> WTIME = createField("wtime", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
@@ -69,6 +75,11 @@ public class ContractMeta extends TableImpl<ContractMetaRecord> {
      * The column <code>rpt.contract_meta.last_event_id</code>.
      */
     public final TableField<ContractMetaRecord, Long> LAST_EVENT_ID = createField("last_event_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.need_sign</code>.
+     */
+    public final TableField<ContractMetaRecord, Boolean> NEED_SIGN = createField("need_sign", org.jooq.impl.SQLDataType.BOOLEAN.nullable(false).defaultValue(org.jooq.impl.DSL.field("false", org.jooq.impl.SQLDataType.BOOLEAN)), this, "");
 
     /**
      * The column <code>rpt.contract_meta.schedule_id</code>.
@@ -84,6 +95,46 @@ public class ContractMeta extends TableImpl<ContractMetaRecord> {
      * The column <code>rpt.contract_meta.last_report_created_at</code>.
      */
     public final TableField<ContractMetaRecord, LocalDateTime> LAST_REPORT_CREATED_AT = createField("last_report_created_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.last_closing_balance</code>.
+     */
+    public final TableField<ContractMetaRecord, Long> LAST_CLOSING_BALANCE = createField("last_closing_balance", org.jooq.impl.SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.need_reference</code>.
+     */
+    public final TableField<ContractMetaRecord, Boolean> NEED_REFERENCE = createField("need_reference", org.jooq.impl.SQLDataType.BOOLEAN.defaultValue(org.jooq.impl.DSL.field("false", org.jooq.impl.SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.representative_position</code>.
+     */
+    public final TableField<ContractMetaRecord, String> REPRESENTATIVE_POSITION = createField("representative_position", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.representative_full_name</code>.
+     */
+    public final TableField<ContractMetaRecord, String> REPRESENTATIVE_FULL_NAME = createField("representative_full_name", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.representative_document</code>.
+     */
+    public final TableField<ContractMetaRecord, String> REPRESENTATIVE_DOCUMENT = createField("representative_document", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.legal_agreement_id</code>.
+     */
+    public final TableField<ContractMetaRecord, String> LEGAL_AGREEMENT_ID = createField("legal_agreement_id", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.legal_agreement_signed_at</code>.
+     */
+    public final TableField<ContractMetaRecord, LocalDateTime> LEGAL_AGREEMENT_SIGNED_AT = createField("legal_agreement_signed_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
+
+    /**
+     * The column <code>rpt.contract_meta.legal_agreement_valid_until</code>.
+     */
+    public final TableField<ContractMetaRecord, LocalDateTime> LEGAL_AGREEMENT_VALID_UNTIL = createField("legal_agreement_valid_until", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
      * Create a <code>rpt.contract_meta</code> table reference

@@ -2,9 +2,11 @@ package com.rbkmoney.reporter.dao.impl;
 
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
+import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.jooq.Query;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -36,38 +38,33 @@ public class ContractMetaDaoImpl extends AbstractGenericDao implements ContractM
     }
 
     @Override
-    public void save(String partyId, String contractId, long eventId, int calendarId, int schedulerId) throws DaoException {
+    public void save(ContractMeta contractMeta) throws DaoException {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
         Query query = getDslContext().insertInto(CONTRACT_META)
-                .set(CONTRACT_META.PARTY_ID, partyId)
-                .set(CONTRACT_META.CONTRACT_ID, contractId)
-                .set(CONTRACT_META.LAST_EVENT_ID, eventId)
-                .set(CONTRACT_META.CALENDAR_ID, calendarId)
-                .set(CONTRACT_META.SCHEDULE_ID, schedulerId)
+                .set(getDslContext().newRecord(CONTRACT_META, contractMeta))
                 .set(CONTRACT_META.WTIME, now)
                 .onDuplicateKeyUpdate()
-                .set(CONTRACT_META.LAST_EVENT_ID, eventId)
-                .set(CONTRACT_META.CALENDAR_ID, calendarId)
-                .set(CONTRACT_META.SCHEDULE_ID, schedulerId)
+                .set(getDslContext().newRecord(CONTRACT_META, contractMeta))
                 .set(CONTRACT_META.WTIME, now);
-
         executeOne(query);
     }
 
     @Override
-    public ContractMeta get(String partyId, String contractId) throws DaoException {
+    public ContractMeta get(String partyId, String contractId, ReportType reportType) throws DaoException {
         Query query = getDslContext().selectFrom(CONTRACT_META)
                 .where(CONTRACT_META.PARTY_ID.eq(partyId)
-                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId)));
+                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId))
+                        .and(CONTRACT_META.REPORT_TYPE.eq(reportType)));
         return fetchOne(query, contractMetaRowMapper);
     }
 
     @Override
-    public ContractMeta getExclusive(String partyId, String contractId) throws DaoException {
+    public ContractMeta getExclusive(String partyId, String contractId, ReportType reportType) throws DaoException {
         Query query = getDslContext().selectFrom(CONTRACT_META)
                 .where(CONTRACT_META.PARTY_ID.eq(partyId)
-                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId)))
+                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId))
+                        .and(CONTRACT_META.REPORT_TYPE.eq(reportType)))
                 .forUpdate();
 
         return fetchOne(query, contractMetaRowMapper);
@@ -94,24 +91,38 @@ public class ContractMetaDaoImpl extends AbstractGenericDao implements ContractM
     }
 
     @Override
-    public void disableContract(String partyId, String contractId) throws DaoException {
-        Query query = getDslContext().update(CONTRACT_META)
-                .set(CONTRACT_META.CALENDAR_ID, (Integer) null)
-                .set(CONTRACT_META.SCHEDULE_ID, (Integer) null)
+    public void saveLastClosingBalance(String partyId, String contractId, ReportType reportType, long lastClosingBalance) throws DaoException {
+        Query query = getDslContext()
+                .update(CONTRACT_META)
+                .set(CONTRACT_META.LAST_CLOSING_BALANCE, lastClosingBalance)
                 .where(CONTRACT_META.PARTY_ID.eq(partyId)
-                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId)));
+                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId))
+                        .and(CONTRACT_META.REPORT_TYPE.eq(reportType)));
 
         executeOne(query);
     }
 
     @Override
-    public void updateLastReportCreatedAt(String partyId, String contractId, LocalDateTime reportCreatedAt) throws DaoException {
+    public void disableContract(String partyId, String contractId, ReportType reportType) throws DaoException {
+        Query query = getDslContext().update(CONTRACT_META)
+                .set(CONTRACT_META.CALENDAR_ID, (Integer) null)
+                .set(CONTRACT_META.SCHEDULE_ID, (Integer) null)
+                .where(CONTRACT_META.PARTY_ID.eq(partyId)
+                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId))
+                        .and(CONTRACT_META.REPORT_TYPE.eq(reportType)));
+
+        executeOne(query);
+    }
+
+    @Override
+    public void updateLastReportCreatedAt(String partyId, String contractId, ReportType reportType, LocalDateTime reportCreatedAt) throws DaoException {
         Query query = getDslContext()
                 .update(CONTRACT_META)
                 .set(CONTRACT_META.LAST_REPORT_CREATED_AT, reportCreatedAt)
                 .where(
                         CONTRACT_META.PARTY_ID.eq(partyId)
                                 .and(CONTRACT_META.CONTRACT_ID.eq(contractId))
+                                .and(CONTRACT_META.REPORT_TYPE.eq(reportType))
                 );
         executeOne(query);
     }
