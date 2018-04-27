@@ -1,6 +1,5 @@
 package com.rbkmoney.reporter.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.base.TimeSpan;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
@@ -64,6 +63,47 @@ public class TaskServiceImpl implements TaskService {
         this.reportService = reportService;
         this.partyService = partyService;
         this.domainConfigService = domainConfigService;
+    }
+
+    @Scheduled(fixedDelay = 60 * 1000)
+    public void syncJobs() {
+        try {
+            log.info("Starting synchronization of jobs...");
+            List<ContractMeta> activeContracts = contractMetaDao.getAllActiveContracts();
+            if (activeContracts.isEmpty()) {
+                log.info("No active contracts found, nothing to do");
+                return;
+            }
+
+            for (ContractMeta contractMeta : activeContracts) {
+                JobKey jobKey = buildJobKey(contractMeta.getPartyId(), contractMeta.getContractId(), contractMeta.getReportType(), contractMeta.getScheduleId(), contractMeta.getCalendarId());
+                List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+                if (triggers.isEmpty() || !triggers.stream().allMatch(this::isTriggerOnNormalState)) {
+                    if (scheduler.checkExists(jobKey)) {
+                        log.warn("Inactive job found, please check it manually. Job will be restored, contractMeta='{}'", contractMeta);
+                    }
+                    createJob(
+                            contractMeta.getPartyId(),
+                            contractMeta.getContractId(),
+                            contractMeta.getReportType(),
+                            new CalendarRef(contractMeta.getCalendarId()),
+                            new BusinessScheduleRef(contractMeta.getScheduleId())
+                    );
+                }
+            }
+        } catch (DaoException | SchedulerException ex) {
+            throw new ScheduleProcessingException("Failed to sync jobs", ex);
+        } finally {
+            log.info("End synchronization of jobs");
+        }
+    }
+
+    private boolean isTriggerOnNormalState(Trigger trigger) {
+        try {
+            return scheduler.getTriggerState(trigger.getKey()) == Trigger.TriggerState.NORMAL;
+        } catch (SchedulerException ex) {
+            throw new ScheduleProcessingException(String.format("Failed to get trigger state, triggerKey='%s'", trigger.getKey()), ex);
+        }
     }
 
     @Override

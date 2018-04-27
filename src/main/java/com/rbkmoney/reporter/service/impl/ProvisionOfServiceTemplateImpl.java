@@ -41,20 +41,16 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
 
     private final PartyService partyService;
 
-    private final ContractMetaDao contractMetaDao;
-
     private final Resource resource;
 
     @Autowired
     public ProvisionOfServiceTemplateImpl(
             StatisticService statisticService,
             PartyService partyService,
-            ContractMetaDao contractMetaDao,
             @Value("${report.type.pos.path|classpath:templates/provision_of_service_act.xlsx}") ClassPathResource resource
     ) {
         this.statisticService = statisticService;
         this.partyService = partyService;
-        this.contractMetaDao = contractMetaDao;
         this.resource = resource;
     }
 
@@ -107,7 +103,6 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
         context.putVar("funds_refunded", FormatUtil.formatCurrency(shopAccountingModel.getFundsRefunded()));
 
         long openingBalance;
-        long closingBalance;
         if (contractMeta.getLastClosingBalance() == null) {
             ShopAccountingModel previousPeriod = statisticService.getShopAccounting(
                     report.getPartyId(),
@@ -116,16 +111,10 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
                     report.getFromTime().toInstant(ZoneOffset.UTC)
             );
             openingBalance = previousPeriod.getAvailableFunds();
-            closingBalance = openingBalance + shopAccountingModel.getAvailableFunds();
         } else {
             openingBalance = contractMeta.getLastClosingBalance();
-            closingBalance = openingBalance + shopAccountingModel.getAvailableFunds();
-            try {
-                contractMetaDao.saveLastClosingBalance(report.getPartyId(), report.getPartyContractId(), report.getType(), closingBalance);
-            } catch (DaoException ex) {
-                throw new StorageException(String.format("Failed to save contract meta, partyId='%s', contractId='%s'", report.getPartyId(), report.getPartyContractId()), ex);
-            }
         }
+        long closingBalance = openingBalance + shopAccountingModel.getAvailableFunds();
         context.putVar("opening_balance", FormatUtil.formatCurrency(openingBalance));
         context.putVar("closing_balance", FormatUtil.formatCurrency(closingBalance));
 
