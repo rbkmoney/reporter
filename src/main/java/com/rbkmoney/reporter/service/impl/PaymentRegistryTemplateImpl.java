@@ -35,17 +35,21 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
 
     private final PartyService partyService;
 
-    private final Resource resource;
+    private final Resource paymentRegistry;
+
+    private final Resource paymentRegistryWithoutRefunds;
 
     @Autowired
     public PaymentRegistryTemplateImpl(
             StatisticService statisticService,
             PartyService partyService,
-            @Value("${report.type.pr.path|classpath:/templates/payment_registry.xlsx}") ClassPathResource resource
+            @Value("${report.type.pr.path|classpath:/templates/payment_registry.xlsx}") ClassPathResource paymentRegistry,
+            @Value("${report.type.prwr.path|classpath:/templates/payment_registry_wo_refunds.xlsx}") ClassPathResource paymentRegistryWithoutRefunds
     ) {
         this.statisticService = statisticService;
         this.partyService = partyService;
-        this.resource = resource;
+        this.paymentRegistry = paymentRegistry;
+        this.paymentRegistryWithoutRefunds = paymentRegistryWithoutRefunds;
     }
 
     @Override
@@ -138,14 +142,18 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
 
         Context context = new Context();
         context.putVar("payments", paymentList);
-        context.putVar("refunds", refundList);
         context.putVar("fromTime", TimeUtil.toLocalizedDate(report.getFromTime().toInstant(ZoneOffset.UTC), reportZoneId));
         context.putVar("toTime", TimeUtil.toLocalizedDate(report.getToTime().minusNanos(1).toInstant(ZoneOffset.UTC), reportZoneId));
         context.putVar("totalAmnt", FormatUtil.formatCurrency(totalAmnt.longValue()));
         context.putVar("totalPayoutAmnt", FormatUtil.formatCurrency(totalPayoutAmnt.longValue()));
-        context.putVar("totalRefundAmnt", FormatUtil.formatCurrency(totalRefundAmnt.longValue()));
 
-        processTemplate(context, resource.getInputStream(), outputStream);
+        if (refundList.size() > 0) {
+            context.putVar("refunds", refundList);
+            context.putVar("totalRefundAmnt", FormatUtil.formatCurrency(totalRefundAmnt.longValue()));
+            processTemplate(context, paymentRegistry.getInputStream(), outputStream);
+        } else {
+            processTemplate(context, paymentRegistryWithoutRefunds.getInputStream(), outputStream);
+        }
     }
 
 }
