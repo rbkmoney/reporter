@@ -81,11 +81,11 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
             refundList.add(refund);
         }
 
-        given(statisticService.getPayments(any(), any(), any(), any(), any()))
-                .willReturn(paymentList);
+        given(statisticService.getPaymentsIterator(any(), any(), any(), any(), any()))
+                .willReturn(paymentList.iterator());
 
-        given(statisticService.getRefunds(any(), any(), any(), any(), any()))
-                .willReturn(refundList);
+        given(statisticService.getRefundsIterator(any(), any(), any(), any(), any()))
+                .willReturn(refundList.iterator());
 
         StatPayment payment = new StatPayment();
         InvoicePaymentCaptured invoicePaymentCaptured = new InvoicePaymentCaptured();
@@ -98,21 +98,13 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
         given(statisticService.getPayment(any(), any()))
                 .willReturn(payment);
 
-        List<StatInvoice> invoices = new ArrayList<>();
-        StatInvoice i = new StatInvoice();
-        i.setId("invoiceId0");
-        i.setProduct("product0");
-        invoices.add(i);
-        i = new StatInvoice();
-        i.setId("invoiceId1");
-        i.setProduct("product1");
-        invoices.add(i);
-        i = new StatInvoice();
-        i.setId("invoiceId2");
-        i.setProduct("product2");
-        invoices.add(i);
-        given(statisticService.getInvoices(any(), any(), any(), any()))
-                .willReturn(invoices);
+        Map<String, String> purposes = new HashMap<>();
+        purposes.put("invoiceId0", "product0");
+        purposes.put("invoiceId1", "product1");
+        purposes.put("invoiceId2", "product2");
+
+        given(statisticService.getPurposes(any(), any(), any(), any()))
+                .willReturn(purposes);
 
         Map<String, String> shops = new HashMap<>();
         shops.put("shopId0", "http://0ch.ru/b");
@@ -149,7 +141,7 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
             assertTrue(FormatUtil.formatCurrency(expectedRefundSum) - refundsTotalSum.getNumericCellValue() < 0.00001);
 
         } finally {
-            Files.deleteIfExists(tempFile);
+         //   Files.deleteIfExists(tempFile);
         }
     }
 
