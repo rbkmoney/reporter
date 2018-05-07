@@ -17,6 +17,8 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
+import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
+
 @Component
 public class GenerateReportJob implements Job {
 
@@ -45,7 +47,7 @@ public class GenerateReportJob implements Job {
                 partyId, contractId, trigger, jobExecutionContext);
         try {
             Instant toTime = trigger.getCurrentCronTime().toInstant();
-            Instant fromTime = YearMonth.from(toTime).minusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant fromTime = YearMonth.from(toLocalDateTime(toTime)).minusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
             ZoneId zoneId = trigger.getTimeZone().toZoneId();
 
             reportService.createReport(partyId, contractId, fromTime, toTime, reportType, zoneId, jobExecutionContext.getFireTime().toInstant());
