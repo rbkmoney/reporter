@@ -36,7 +36,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ContractMeta extends TableImpl<ContractMetaRecord> {
 
-    private static final long serialVersionUID = 1789249781;
+    private static final long serialVersionUID = 122198568;
 
     /**
      * The reference instance of <code>rpt.contract_meta</code>
@@ -77,11 +77,6 @@ public class ContractMeta extends TableImpl<ContractMetaRecord> {
     public final TableField<ContractMetaRecord, Long> LAST_EVENT_ID = createField("last_event_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>rpt.contract_meta.need_sign</code>.
-     */
-    public final TableField<ContractMetaRecord, Boolean> NEED_SIGN = createField("need_sign", org.jooq.impl.SQLDataType.BOOLEAN.nullable(false).defaultValue(org.jooq.impl.DSL.field("false", org.jooq.impl.SQLDataType.BOOLEAN)), this, "");
-
-    /**
      * The column <code>rpt.contract_meta.schedule_id</code>.
      */
     public final TableField<ContractMetaRecord, Integer> SCHEDULE_ID = createField("schedule_id", org.jooq.impl.SQLDataType.INTEGER, this, "");
@@ -100,11 +95,6 @@ public class ContractMeta extends TableImpl<ContractMetaRecord> {
      * The column <code>rpt.contract_meta.last_closing_balance</code>.
      */
     public final TableField<ContractMetaRecord, Long> LAST_CLOSING_BALANCE = createField("last_closing_balance", org.jooq.impl.SQLDataType.BIGINT, this, "");
-
-    /**
-     * The column <code>rpt.contract_meta.need_reference</code>.
-     */
-    public final TableField<ContractMetaRecord, Boolean> NEED_REFERENCE = createField("need_reference", org.jooq.impl.SQLDataType.BOOLEAN.defaultValue(org.jooq.impl.DSL.field("false", org.jooq.impl.SQLDataType.BOOLEAN)), this, "");
 
     /**
      * The column <code>rpt.contract_meta.representative_position</code>.

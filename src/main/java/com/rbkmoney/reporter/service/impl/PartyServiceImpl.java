@@ -4,6 +4,7 @@ import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.Party;
 import com.rbkmoney.damsel.domain.PaymentInstitutionRef;
 import com.rbkmoney.damsel.domain.Shop;
+import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.exception.ContractNotFoundException;
@@ -167,6 +168,36 @@ public class PartyServiceImpl implements PartyService {
             }
         });
         return shopUrls;
+    }
+
+    @Override
+    public Value getMetaData(String partyId, String namespace) throws NotFoundException {
+        try {
+            return partyManagementClient.getMetaData(userInfo, partyId, namespace);
+        } catch (PartyMetaNamespaceNotFound ex) {
+            return null;
+        } catch (PartyNotFound ex) {
+            throw new NotFoundException(
+                    String.format("Party not found, partyId='%s', namespace='%s'", partyId, namespace),
+                    ex
+            );
+        } catch (TException ex) {
+            throw new RuntimeException(
+                    String.format("Failed to get namespace, partyId='%s', namespace='%s'", partyId, namespace), ex
+            );
+        }
+    }
+
+    @Override
+    public boolean needReference(String partyId, String contractId) throws NotFoundException {
+        Value value = getMetaData(partyId, String.format("%s.reports.need_reference", contractId));
+        return value != null && value.isSetB() && value.getB();
+    }
+
+    @Override
+    public boolean needSign(String partyId, String contractId) throws NotFoundException {
+        Value value = getMetaData(partyId, String.format("%s.reports.need_sign", contractId));
+        return value != null && value.isSetB() && value.getB();
     }
 
 }

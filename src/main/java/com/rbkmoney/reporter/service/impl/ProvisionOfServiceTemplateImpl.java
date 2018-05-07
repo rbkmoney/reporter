@@ -3,12 +3,9 @@ package com.rbkmoney.reporter.service.impl;
 import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.LegalAgreement;
 import com.rbkmoney.damsel.domain.RussianLegalEntity;
-import com.rbkmoney.reporter.dao.ContractMetaDao;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.exception.StorageException;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 import com.rbkmoney.reporter.service.PartyService;
 import com.rbkmoney.reporter.service.StatisticService;
@@ -16,8 +13,6 @@ import com.rbkmoney.reporter.service.TemplateService;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
 import org.jxls.common.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -32,8 +27,6 @@ import java.time.ZoneOffset;
 
 @Component
 public class ProvisionOfServiceTemplateImpl implements TemplateService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public static final String DEFAULT_REPORT_CURRENCY_CODE = "RUB";
 

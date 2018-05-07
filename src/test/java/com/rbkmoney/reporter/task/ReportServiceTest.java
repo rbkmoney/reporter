@@ -5,6 +5,7 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
 import com.rbkmoney.damsel.domain_config.VersionedObject;
+import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.AbstractIntegrationTest;
@@ -92,6 +93,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         party.setContracts(Collections.singletonMap(contractId, contract));
         given(partyManagementClient.checkout(any(), any(), any()))
                 .willReturn(party);
+        given(partyManagementClient.getMetaData(any(), any(), any()))
+                .willReturn(Value.b(true));
         given(signService.sign(any(Path.class)))
                 .willAnswer(
                         (Answer<byte[]>) invocation -> Base64.getEncoder().encode(Files.readAllBytes(invocation.getArgumentAt(0, Path.class)))

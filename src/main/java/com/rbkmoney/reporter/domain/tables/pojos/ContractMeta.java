@@ -25,19 +25,17 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ContractMeta implements Serializable {
 
-    private static final long serialVersionUID = 1956905968;
+    private static final long serialVersionUID = 461645780;
 
     private String        partyId;
     private String        contractId;
     private ReportType    reportType;
     private LocalDateTime wtime;
     private Long          lastEventId;
-    private Boolean       needSign;
     private Integer       scheduleId;
     private Integer       calendarId;
     private LocalDateTime lastReportCreatedAt;
     private Long          lastClosingBalance;
-    private Boolean       needReference;
     private String        representativePosition;
     private String        representativeFullName;
     private String        representativeDocument;
@@ -53,12 +51,10 @@ public class ContractMeta implements Serializable {
         this.reportType = value.reportType;
         this.wtime = value.wtime;
         this.lastEventId = value.lastEventId;
-        this.needSign = value.needSign;
         this.scheduleId = value.scheduleId;
         this.calendarId = value.calendarId;
         this.lastReportCreatedAt = value.lastReportCreatedAt;
         this.lastClosingBalance = value.lastClosingBalance;
-        this.needReference = value.needReference;
         this.representativePosition = value.representativePosition;
         this.representativeFullName = value.representativeFullName;
         this.representativeDocument = value.representativeDocument;
@@ -73,12 +69,10 @@ public class ContractMeta implements Serializable {
         ReportType    reportType,
         LocalDateTime wtime,
         Long          lastEventId,
-        Boolean       needSign,
         Integer       scheduleId,
         Integer       calendarId,
         LocalDateTime lastReportCreatedAt,
         Long          lastClosingBalance,
-        Boolean       needReference,
         String        representativePosition,
         String        representativeFullName,
         String        representativeDocument,
@@ -91,12 +85,10 @@ public class ContractMeta implements Serializable {
         this.reportType = reportType;
         this.wtime = wtime;
         this.lastEventId = lastEventId;
-        this.needSign = needSign;
         this.scheduleId = scheduleId;
         this.calendarId = calendarId;
         this.lastReportCreatedAt = lastReportCreatedAt;
         this.lastClosingBalance = lastClosingBalance;
-        this.needReference = needReference;
         this.representativePosition = representativePosition;
         this.representativeFullName = representativeFullName;
         this.representativeDocument = representativeDocument;
@@ -145,14 +137,6 @@ public class ContractMeta implements Serializable {
         this.lastEventId = lastEventId;
     }
 
-    public Boolean getNeedSign() {
-        return this.needSign;
-    }
-
-    public void setNeedSign(Boolean needSign) {
-        this.needSign = needSign;
-    }
-
     public Integer getScheduleId() {
         return this.scheduleId;
     }
@@ -183,14 +167,6 @@ public class ContractMeta implements Serializable {
 
     public void setLastClosingBalance(Long lastClosingBalance) {
         this.lastClosingBalance = lastClosingBalance;
-    }
-
-    public Boolean getNeedReference() {
-        return this.needReference;
-    }
-
-    public void setNeedReference(Boolean needReference) {
-        this.needReference = needReference;
     }
 
     public String getRepresentativePosition() {
@@ -280,12 +256,6 @@ public class ContractMeta implements Serializable {
         }
         else if (!lastEventId.equals(other.lastEventId))
             return false;
-        if (needSign == null) {
-            if (other.needSign != null)
-                return false;
-        }
-        else if (!needSign.equals(other.needSign))
-            return false;
         if (scheduleId == null) {
             if (other.scheduleId != null)
                 return false;
@@ -309,12 +279,6 @@ public class ContractMeta implements Serializable {
                 return false;
         }
         else if (!lastClosingBalance.equals(other.lastClosingBalance))
-            return false;
-        if (needReference == null) {
-            if (other.needReference != null)
-                return false;
-        }
-        else if (!needReference.equals(other.needReference))
             return false;
         if (representativePosition == null) {
             if (other.representativePosition != null)
@@ -364,12 +328,10 @@ public class ContractMeta implements Serializable {
         result = prime * result + ((this.reportType == null) ? 0 : this.reportType.hashCode());
         result = prime * result + ((this.wtime == null) ? 0 : this.wtime.hashCode());
         result = prime * result + ((this.lastEventId == null) ? 0 : this.lastEventId.hashCode());
-        result = prime * result + ((this.needSign == null) ? 0 : this.needSign.hashCode());
         result = prime * result + ((this.scheduleId == null) ? 0 : this.scheduleId.hashCode());
         result = prime * result + ((this.calendarId == null) ? 0 : this.calendarId.hashCode());
         result = prime * result + ((this.lastReportCreatedAt == null) ? 0 : this.lastReportCreatedAt.hashCode());
         result = prime * result + ((this.lastClosingBalance == null) ? 0 : this.lastClosingBalance.hashCode());
-        result = prime * result + ((this.needReference == null) ? 0 : this.needReference.hashCode());
         result = prime * result + ((this.representativePosition == null) ? 0 : this.representativePosition.hashCode());
         result = prime * result + ((this.representativeFullName == null) ? 0 : this.representativeFullName.hashCode());
         result = prime * result + ((this.representativeDocument == null) ? 0 : this.representativeDocument.hashCode());
@@ -388,12 +350,10 @@ public class ContractMeta implements Serializable {
         sb.append(", ").append(reportType);
         sb.append(", ").append(wtime);
         sb.append(", ").append(lastEventId);
-        sb.append(", ").append(needSign);
         sb.append(", ").append(scheduleId);
         sb.append(", ").append(calendarId);
         sb.append(", ").append(lastReportCreatedAt);
         sb.append(", ").append(lastClosingBalance);
-        sb.append(", ").append(needReference);
         sb.append(", ").append(representativePosition);
         sb.append(", ").append(representativeFullName);
         sb.append(", ").append(representativeDocument);

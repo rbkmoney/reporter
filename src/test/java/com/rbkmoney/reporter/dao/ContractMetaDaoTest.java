@@ -34,7 +34,6 @@ public class ContractMetaDaoTest extends AbstractIntegrationTest {
         assertEquals(contractMeta.getScheduleId(), contractMeta2.getScheduleId());
         assertEquals(contractMeta.getLastEventId(), contractMeta2.getLastEventId());
         assertEquals(contractMeta.getCalendarId(), contractMeta2.getCalendarId());
-        assertEquals(contractMeta.getNeedSign(), contractMeta2.getNeedSign());
 
         assertEquals(contractMeta.getLastEventId(), contractMetaDao.getLastEventId());
 
@@ -53,8 +52,6 @@ public class ContractMetaDaoTest extends AbstractIntegrationTest {
         assertEquals(contractMeta.getScheduleId(), contractMeta2.getScheduleId());
         assertEquals(contractMeta.getLastEventId(), contractMeta2.getLastEventId());
         assertEquals(contractMeta.getCalendarId(), contractMeta2.getCalendarId());
-        assertEquals(contractMeta.getNeedSign(), contractMeta2.getNeedSign());
-
     }
 
 }

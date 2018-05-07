@@ -129,9 +129,7 @@ public class TaskServiceImpl implements TaskService {
             contractMeta.setLastEventId(lastEventId);
             contractMeta.setScheduleId(scheduleRef.getId());
             contractMeta.setReportType(ReportType.provision_of_service);
-            contractMeta.setNeedSign(needSign);
 
-            contractMeta.setNeedReference(needReference);
             contractMeta.setRepresentativeFullName(signer.getFullName());
             contractMeta.setRepresentativePosition(signer.getPosition());
             contractMeta.setRepresentativeDocument(signer.getDocument().getSetField().getFieldName());

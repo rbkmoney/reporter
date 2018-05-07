@@ -210,6 +210,7 @@ public class ReportService {
     }
 
     public List<FileMeta> processSignAndUpload(Report report, ContractMeta contractMeta) throws IOException {
+        boolean needSign = partyService.needSign(report.getPartyId(), report.getPartyContractId());
         List<FileMeta> files = new ArrayList<>();
         for (TemplateService templateService : templateServices) {
             if (templateService.accept(report.getType(), contractMeta)) {
@@ -223,7 +224,7 @@ public class ReportService {
                     FileMeta reportFileModel = storageService.saveFile(reportFile);
                     files.add(reportFileModel);
 
-                    if (contractMeta.getNeedSign()) {
+                    if (needSign) {
                         byte[] sign = signService.sign(reportFile);
                         FileMeta signFileModel = storageService.saveFile(reportFile.getFileName().toString() + ".sgn", sign);
                         files.add(signFileModel);
