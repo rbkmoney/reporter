@@ -108,9 +108,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void registerProvisionOfServiceJob(String partyId, String contractId, long lastEventId, BusinessScheduleRef scheduleRef, Representative signer, boolean needSign, boolean needReference) throws ScheduleProcessingException, NotFoundException, StorageException {
-        log.info("Trying to register provision of service job, partyId='{}', contractId='{}', scheduleId='{}', signer='{}', needSign={}, needReference={}",
-                partyId, contractId, scheduleRef, signer, needSign, needReference);
+    public void registerProvisionOfServiceJob(String partyId, String contractId, long lastEventId, BusinessScheduleRef scheduleRef, Representative signer) throws ScheduleProcessingException, NotFoundException, StorageException {
+        log.info("Trying to register provision of service job, partyId='{}', contractId='{}', scheduleId='{}', signer='{}'",
+                partyId, contractId, scheduleRef, signer);
         PaymentInstitutionRef paymentInstitutionRef = partyService.getPaymentInstitutionRef(partyId, contractId);
         PaymentInstitution paymentInstitution = domainConfigService.getPaymentInstitution(paymentInstitutionRef);
 

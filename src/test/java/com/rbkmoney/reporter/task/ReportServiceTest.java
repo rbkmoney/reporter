@@ -117,9 +117,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                 contractId,
                 1L,
                 new BusinessScheduleRef(1),
-                new Representative("test", "test", RepresentativeDocument.articles_of_association(new ArticlesOfAssociation())),
-                true,
-                true
+                new Representative("test", "test", RepresentativeDocument.articles_of_association(new ArticlesOfAssociation()))
         );
 
         ReportType reportType = ReportType.provision_of_service;

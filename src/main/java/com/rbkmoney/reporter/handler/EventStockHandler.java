@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.handler;
 
+import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.ReportPreferences;
 import com.rbkmoney.damsel.domain.ServiceAcceptanceActPreferences;
 import com.rbkmoney.damsel.event_stock.StockEvent;
@@ -63,24 +64,33 @@ public class EventStockHandler implements EventHandler<StockEvent> {
     }
 
     private void handleContractEffect(String partyId, String contractId, long eventId, ContractEffect contractEffect) {
-        if (contractEffect.isSetReportPreferencesChanged()) {
+        if (contractEffect.isSetCreated()) {
+            Contract contract = contractEffect.getCreated();
+            if (contract.isSetReportPreferences()) {
+                ReportPreferences preferences = contract.getReportPreferences();
+                if (preferences.isSetServiceAcceptanceActPreferences()) {
+                    handlePreferences(partyId, contractId, eventId, preferences.getServiceAcceptanceActPreferences());
+                }
+            }
+        } else if (contractEffect.isSetReportPreferencesChanged()) {
             ReportPreferences reportPreferences = contractEffect.getReportPreferencesChanged();
             if (reportPreferences.isSetServiceAcceptanceActPreferences()) {
                 ServiceAcceptanceActPreferences preferences = reportPreferences.getServiceAcceptanceActPreferences();
-                taskService.registerProvisionOfServiceJob(
-                        partyId,
-                        contractId,
-                        eventId,
-                        preferences.getSchedule(),
-                        preferences.getSigner(),
-                        preferences.isNeedSign(),
-                        preferences.isSetNeedReference()
-
-                );
+                handlePreferences(partyId, contractId, eventId, preferences);
             } else {
                 taskService.deregisterProvisionOfServiceJob(partyId, contractId);
             }
         }
+    }
+
+    private void handlePreferences(String partyId, String contractId, long eventId, ServiceAcceptanceActPreferences preferences) {
+        taskService.registerProvisionOfServiceJob(
+                partyId,
+                contractId,
+                eventId,
+                preferences.getSchedule(),
+                preferences.getSigner()
+        );
     }
 
 }
