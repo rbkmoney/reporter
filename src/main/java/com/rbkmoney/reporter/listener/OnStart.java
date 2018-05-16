@@ -5,9 +5,6 @@ import com.rbkmoney.eventstock.client.EventConstraint;
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.SubscriberConfig;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
-import com.rbkmoney.geck.filter.PathConditionFilter;
-import com.rbkmoney.geck.filter.condition.IsNullCondition;
-import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.StorageException;
@@ -44,13 +41,7 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
         SubscriberConfig subscriberConfig = new DefaultSubscriberConfig<>(
                 new EventFlowFilter(
-                        new EventConstraint(eventIDRange),
-                        new PathConditionFilter(
-                                new PathConditionRule(
-                                        "source_event.processing_event.payload.party_changes",
-                                        new IsNullCondition().not()
-                                )
-                        )
+                        new EventConstraint(eventIDRange)
                 )
         );
 

@@ -171,25 +171,29 @@ public class TaskServiceImpl implements TaskService {
                     .usingJobData(GenerateReportJob.REPORT_TYPE, reportType.name())
                     .build();
 
-            TimeSpan timeSpan = schedule.getPolicy().getAssetsFreezeFor();
             Set<Trigger> triggers = new HashSet<>();
             List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule());
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
+
+                FreezeTimeCronScheduleBuilder freezeTimeCronScheduleBuilder = FreezeTimeCronScheduleBuilder
+                        .cronSchedule(cron)
+                        .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()));
+                if (schedule.isSetDelay()) {
+                    TimeSpan timeSpan = schedule.getDelay();
+                    freezeTimeCronScheduleBuilder.withYears(timeSpan.getYears())
+                            .withMonths(timeSpan.getMonths())
+                            .withDays(timeSpan.getDays())
+                            .withHours(timeSpan.getHours())
+                            .withMinutes(timeSpan.getMinutes())
+                            .withSeconds(timeSpan.getSeconds());
+                }
+
                 Trigger trigger = TriggerBuilder.newTrigger()
                         .withIdentity(buildTriggerKey(partyId, contractId, reportType, calendarRef.getId(), scheduleRef.getId(), triggerId))
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)
-                        .withSchedule(
-                                FreezeTimeCronScheduleBuilder.cronSchedule(cron)
-                                        .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()))
-                                        .withYears(timeSpan.getYears())
-                                        .withMonths(timeSpan.getMonths())
-                                        .withDays(timeSpan.getDays())
-                                        .withHours(timeSpan.getHours())
-                                        .withMinutes(timeSpan.getMinutes())
-                                        .withSeconds(timeSpan.getSeconds())
-                        )
+                        .withSchedule(freezeTimeCronScheduleBuilder)
                         .modifiedByCalendar(calendarId)
                         .build();
                 triggers.add(trigger);

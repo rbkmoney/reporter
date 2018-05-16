@@ -36,21 +36,23 @@ public class EventStockHandler implements EventHandler<StockEvent> {
                     .getSourceEvent()
                     .getProcessingEvent();
 
-            String partyId = event.getSource().getPartyId();
-            List<PartyChange> partyChanges = event
-                    .getPayload()
-                    .getPartyChanges();
+            if(event.getSource().isSetPartyId()) {
+                String partyId = event.getSource().getPartyId();
+                List<PartyChange> partyChanges = event
+                        .getPayload()
+                        .getPartyChanges();
 
-            for (PartyChange partyChange : partyChanges) {
-                if (partyChange.isSetClaimStatusChanged()) {
-                    ClaimStatus claimStatus = partyChange.getClaimStatusChanged().getStatus();
-                    if (claimStatus.isSetAccepted()) {
-                        for (ClaimEffect claimEffect : claimStatus.getAccepted().getEffects()) {
-                            if (claimEffect.isSetContractEffect()) {
-                                ContractEffectUnit contractEffectUnit = claimEffect.getContractEffect();
-                                String contractId = contractEffectUnit.getContractId();
-                                ContractEffect contractEffect = contractEffectUnit.getEffect();
-                                handleContractEffect(partyId, contractId, event.getId(), contractEffect);
+                for (PartyChange partyChange : partyChanges) {
+                    if (partyChange.isSetClaimStatusChanged()) {
+                        ClaimStatus claimStatus = partyChange.getClaimStatusChanged().getStatus();
+                        if (claimStatus.isSetAccepted()) {
+                            for (ClaimEffect claimEffect : claimStatus.getAccepted().getEffects()) {
+                                if (claimEffect.isSetContractEffect()) {
+                                    ContractEffectUnit contractEffectUnit = claimEffect.getContractEffect();
+                                    String contractId = contractEffectUnit.getContractId();
+                                    ContractEffect contractEffect = contractEffectUnit.getEffect();
+                                    handleContractEffect(partyId, contractId, event.getId(), contractEffect);
+                                }
                             }
                         }
                     }

@@ -122,7 +122,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
         ReportType reportType = ReportType.provision_of_service;
 
-        long reportId = reportService.createReport(partyId, shopId, fromTime, toTime, reportType);
+        long reportId = reportService.createReport(partyId, contractId, fromTime, toTime, reportType);
 
         Report report;
         int retryCount = 0;
