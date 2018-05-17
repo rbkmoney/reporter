@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.damsel.merch_stat.*;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.AbstractIntegrationTest;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
@@ -15,6 +16,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.thrift.TException;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -28,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
@@ -58,10 +62,20 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
         for (int i = 0; i < 3; ++i) {
             StatPayment payment = new StatPayment();
             payment.setId("id" + i);
+            payment.setCreatedAt(TypeUtil.temporalToString(LocalDateTime.now()));
             payment.setInvoiceId("invoiceId" + i);
-            InvoicePaymentCaptured invoicePaymentCaptured = new InvoicePaymentCaptured();
-            invoicePaymentCaptured.setAt("201" + i + "-03-22T06:12:27Z");
-            payment.setStatus(InvoicePaymentStatus.captured(invoicePaymentCaptured));
+            InvoicePaymentStatus invoicePaymentStatus;
+            if (i < 2) {
+                InvoicePaymentCaptured invoicePaymentCaptured = new InvoicePaymentCaptured();
+                invoicePaymentCaptured.setAt("201" + (3 - i) + "-03-22T06:12:27Z");
+                invoicePaymentStatus = InvoicePaymentStatus.captured(invoicePaymentCaptured);
+            } else {
+                InvoicePaymentRefunded invoicePaymentRefunded = new InvoicePaymentRefunded();
+                invoicePaymentRefunded.setAt("201" + (3 - i) + "-03-22T06:12:27Z");
+                invoicePaymentStatus = InvoicePaymentStatus.refunded(invoicePaymentRefunded);
+            }
+            payment.setStatus(invoicePaymentStatus);
+
             PaymentResourcePayer paymentResourcePayer = new PaymentResourcePayer(PaymentTool.bank_card(new BankCard("token", null, "424" + i, "56789" + i)), "sessionId");
             paymentResourcePayer.setEmail("abc" + i + "@mail.ru");
             payment.setPayer(Payer.payment_resource(paymentResourcePayer));
@@ -84,7 +98,15 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
         }
 
         given(statisticService.getPayments(any(), any(), any(), any(), any()))
-                .willReturn(paymentList);
+                .willAnswer((Answer<List<StatPayment>>) invocationOnMock -> {
+                    InvoicePaymentStatus status = invocationOnMock.getArgumentAt(4, InvoicePaymentStatus.class);
+                    if (status.isSetCaptured()) {
+                        return paymentList.stream().filter(p -> p.getStatus().isSetCaptured()).collect(Collectors.toList());
+                    } else if (status.isSetRefunded()) {
+                        return paymentList.stream().filter(p -> p.getStatus().isSetRefunded()).collect(Collectors.toList());
+                    }
+                    return null;
+                });
 
         given(statisticService.getRefunds(any(), any(), any(), any(), any()))
                 .willReturn(refundList);
@@ -124,7 +146,7 @@ public class PaymentRegistryTemplateServiceTest extends AbstractIntegrationTest 
         given(partyService.getShopUrls(any(), any(), any()))
                 .willReturn(shops);
 
-        Report report = new Report(random(Long.class), random(LocalDateTime.class), random(LocalDateTime.class), random(LocalDateTime.class), random(String.class), random(String.class), random(ReportStatus.class), "Europe/Moscow", random(ReportType.class));
+        Report report = new Report(random(Long.class), LocalDateTime.now().minusMonths(1), LocalDateTime.now().plusDays(1), random(LocalDateTime.class), random(String.class), random(String.class), random(ReportStatus.class), "Europe/Moscow", random(ReportType.class));
         ContractMeta contractMeta = random(ContractMeta.class);
 
         try {

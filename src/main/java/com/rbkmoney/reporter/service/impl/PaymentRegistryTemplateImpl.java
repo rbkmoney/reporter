@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.merch_stat.*;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Comparator;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class PaymentRegistryTemplateImpl implements TemplateService {
@@ -65,51 +68,69 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         ZoneId reportZoneId = ZoneId.of(report.getTimezone());
         Map<String, String> shopUrls = partyService.getShopUrls(report.getPartyId(), report.getPartyContractId(), report.getCreatedAt().toInstant(ZoneOffset.UTC));
 
+        Instant fromTime = report.getFromTime().toInstant(ZoneOffset.UTC);
+        Instant toTime = report.getToTime().toInstant(ZoneOffset.UTC);
         Map<String, String> purposes = statisticService.getInvoices(
                 report.getPartyId(),
                 report.getPartyContractId(),
-                report.getFromTime().toInstant(ZoneOffset.UTC),
-                report.getToTime().toInstant(ZoneOffset.UTC)
+                fromTime,
+                toTime
         ).stream().collect(Collectors.toMap(StatInvoice::getId, StatInvoice::getProduct));
 
         AtomicLong totalAmnt = new AtomicLong();
         AtomicLong totalPayoutAmnt = new AtomicLong();
-        List<Payment> paymentList = statisticService.getPayments(
+
+        Stream<StatPayment> statPaymentsStream = statisticService.getPayments(
                 report.getPartyId(),
                 report.getPartyContractId(),
-                report.getFromTime().toInstant(ZoneOffset.UTC),
-                report.getToTime().toInstant(ZoneOffset.UTC),
+                fromTime,
+                toTime,
                 InvoicePaymentStatus.captured(new InvoicePaymentCaptured())
-        ).stream().sorted(Comparator.comparing(p -> p.getStatus().getCaptured().getAt())).map(p -> {
-            Payment payment = new Payment();
-            payment.setId(p.getInvoiceId() + "." + p.getId());
-            payment.setCapturedAt(TimeUtil.toLocalizedDateTime(p.getStatus().getCaptured().getAt(), reportZoneId));
-            if (p.getPayer().isSetPaymentResource()) {
-                payment.setPaymentTool(p.getPayer().getPaymentResource().getPaymentTool().getSetField().getFieldName());
-            }
-            payment.setAmount(FormatUtil.formatCurrency(p.getAmount()));
-            payment.setPayoutAmount(FormatUtil.formatCurrency(p.getAmount() - p.getFee()));
-            totalAmnt.addAndGet(p.getAmount());
-            totalPayoutAmnt.addAndGet(p.getAmount() - p.getFee());
-            if (p.getPayer().isSetPaymentResource()) {
-                payment.setPayerEmail(p.getPayer().getPaymentResource().getEmail());
-            }
-            payment.setShopUrl(shopUrls.get(p.getShopId()));
-            String purpose = purposes.get(p.getInvoiceId());
-            if (purpose == null) {
-                StatInvoice invoice = statisticService.getInvoice(p.getInvoiceId());
-                purpose = invoice.getProduct();
-            }
-            payment.setPurpose(purpose);
-            return payment;
-        }).collect(Collectors.toList());
+        ).stream();
+
+        Stream<StatPayment> statPaymentsRefundedStream = statisticService.getPayments(
+                report.getPartyId(),
+                report.getPartyContractId(),
+                fromTime,
+                toTime,
+                InvoicePaymentStatus.refunded(new InvoicePaymentRefunded()))
+                .stream()
+                .filter(p -> {
+                    Instant createdAt = TypeUtil.stringToInstant(p.getCreatedAt());
+                    return createdAt.isAfter(fromTime) && createdAt.isBefore(toTime);
+                });
+
+        List<Payment> paymentList = Stream.concat(statPaymentsStream, statPaymentsRefundedStream)
+                .sorted(Comparator.comparing(this::getStatusChangedAt)).map(p -> {
+                    Payment payment = new Payment();
+                    payment.setId(p.getInvoiceId() + "." + p.getId());
+                    payment.setCapturedAt(TimeUtil.toLocalizedDateTime(getStatusChangedAt(p), reportZoneId));
+                    if (p.getPayer().isSetPaymentResource()) {
+                        payment.setPaymentTool(p.getPayer().getPaymentResource().getPaymentTool().getSetField().getFieldName());
+                    }
+                    payment.setAmount(FormatUtil.formatCurrency(p.getAmount()));
+                    payment.setPayoutAmount(FormatUtil.formatCurrency(p.getAmount() - p.getFee()));
+                    totalAmnt.addAndGet(p.getAmount());
+                    totalPayoutAmnt.addAndGet(p.getAmount() - p.getFee());
+                    if (p.getPayer().isSetPaymentResource()) {
+                        payment.setPayerEmail(p.getPayer().getPaymentResource().getEmail());
+                    }
+                    payment.setShopUrl(shopUrls.get(p.getShopId()));
+                    String purpose = purposes.get(p.getInvoiceId());
+                    if (purpose == null) {
+                        StatInvoice invoice = statisticService.getInvoice(p.getInvoiceId());
+                        purpose = invoice.getProduct();
+                    }
+                    payment.setPurpose(purpose);
+                    return payment;
+                }).collect(Collectors.toList());
 
         AtomicLong totalRefundAmnt = new AtomicLong();
         List<Refund> refundList = statisticService.getRefunds(
                 report.getPartyId(),
                 report.getPartyContractId(),
-                report.getFromTime().toInstant(ZoneOffset.UTC),
-                report.getToTime().toInstant(ZoneOffset.UTC),
+                fromTime,
+                toTime,
                 InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())
         ).stream().sorted(Comparator.comparing(r -> r.getStatus().getSucceeded().getAt())).map(r -> {
             Refund refund = new Refund();
@@ -143,7 +164,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
 
         Context context = new Context();
         context.putVar("payments", paymentList);
-        context.putVar("fromTime", TimeUtil.toLocalizedDate(report.getFromTime().toInstant(ZoneOffset.UTC), reportZoneId));
+        context.putVar("fromTime", TimeUtil.toLocalizedDate(fromTime, reportZoneId));
         context.putVar("toTime", TimeUtil.toLocalizedDate(report.getToTime().minusNanos(1).toInstant(ZoneOffset.UTC), reportZoneId));
         context.putVar("totalAmnt", FormatUtil.formatCurrency(totalAmnt.longValue()));
         context.putVar("totalPayoutAmnt", FormatUtil.formatCurrency(totalPayoutAmnt.longValue()));
@@ -154,6 +175,14 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             processTemplate(context, paymentRegistry.getInputStream(), outputStream);
         } else {
             processTemplate(context, paymentRegistryWithoutRefunds.getInputStream(), outputStream);
+        }
+    }
+
+    private Instant getStatusChangedAt(StatPayment sp) {
+        if (sp.getStatus().isSetCaptured()) {
+            return TypeUtil.stringToInstant(sp.getStatus().getCaptured().getAt());
+        } else {
+            return TypeUtil.stringToInstant(sp.getStatus().getRefunded().getAt());
         }
     }
 
