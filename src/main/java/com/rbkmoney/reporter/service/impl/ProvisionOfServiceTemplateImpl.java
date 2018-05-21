@@ -79,9 +79,10 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
                     .getLegalEntity()
                     .getRussianLegalEntity();
             context.putVar("registered_name", entity.getRegisteredName());
-            context.putVar("representative_full_name", entity.getRepresentativeFullName());
-            context.putVar("representative_position", entity.getRepresentativePosition());
         }
+
+        context.putVar("representative_full_name", contractMeta.getRepresentativeFullName());
+        context.putVar("representative_position", contractMeta.getRepresentativePosition());
 
         ShopAccountingModel shopAccountingModel = statisticService.getShopAccounting(
                 report.getPartyId(),
