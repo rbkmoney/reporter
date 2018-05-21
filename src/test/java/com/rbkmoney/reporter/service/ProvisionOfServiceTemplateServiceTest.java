@@ -80,10 +80,11 @@ public class ProvisionOfServiceTemplateServiceTest extends AbstractIntegrationTe
         given(statisticService.getShopAccounting(party.getId(), contract.getId(), "RUB", report.getFromTime().toInstant(ZoneOffset.UTC), report.getToTime().toInstant(ZoneOffset.UTC)))
                 .willReturn(currentAccounting);
 
+        ContractMeta contractMeta = random(ContractMeta.class, "lastClosingBalance");
         try {
             templateService.processReportTemplate(
                     report,
-                    random(ContractMeta.class, "lastClosingBalance"),
+                    contractMeta,
                     Files.newOutputStream(tempFile)
             );
 
@@ -172,11 +173,11 @@ public class ProvisionOfServiceTemplateServiceTest extends AbstractIntegrationTe
             );
 
             assertEquals(
-                    russianLegalEntity.getRepresentativePosition(),
+                    contractMeta.getRepresentativePosition(),
                     sheet.getRow(40).getCell(4).getStringCellValue()
             );
             assertEquals(
-                    russianLegalEntity.getRepresentativeFullName(),
+                    contractMeta.getRepresentativeFullName(),
                     sheet.getRow(41).getCell(4).getStringCellValue()
             );
 
