@@ -46,16 +46,16 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public Map<String, String> getPurposes(String partyId, String contractId, Instant fromTime, Instant toTime) {
         try {
-            long from = 0;
+            Optional<String> continuationToken = Optional.empty();
             int size = 1000;
             Map<String, String> purposes = new HashMap<>();
             List<StatInvoice> nextInvoices;
             do {
-                StatResponse statResponse = merchantStatisticsClient.getInvoices(DslUtil.createInvoicesRequest(partyId, contractId, fromTime, toTime, from, size, objectMapper));
+                StatResponse statResponse = merchantStatisticsClient.getInvoices(DslUtil.createInvoicesRequest(partyId, contractId, fromTime, toTime, continuationToken, size, objectMapper));
                 nextInvoices = statResponse.getData().getInvoices();
                 nextInvoices.forEach(i -> purposes.put(i.getId(), i.getProduct()));
-                from += size;
-            } while (nextInvoices.size() == size);
+                continuationToken = Optional.ofNullable(statResponse.getContinuationToken());
+            } while (continuationToken.isPresent());
             return purposes;
         } catch (TException ex) {
             throw new RuntimeException(ex);
