@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.merch_stat.InvoicePaymentRefundStatus;
 import com.rbkmoney.damsel.merch_stat.InvoicePaymentStatus;
-import com.rbkmoney.damsel.merch_stat.InvoiceStatus;
 import com.rbkmoney.damsel.merch_stat.StatRequest;
 
 import java.time.Instant;
@@ -12,7 +11,7 @@ import java.util.Optional;
 
 public class DslUtil {
 
-    public static StatRequest createPaymentsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentStatus status, Optional<String> continuationToken, int size, ObjectMapper objectMapper) {
+    public static StatRequest createPaymentsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, Optional<String> continuationToken, int size, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         PaymentsQuery paymentsQuery = new PaymentsQuery();
@@ -20,7 +19,6 @@ public class DslUtil {
         paymentsQuery.setContractId(contractId);
         paymentsQuery.setFromTime(fromTime);
         paymentsQuery.setToTime(toTime);
-        paymentsQuery.setPaymentStatus(status.getSetField().getFieldName());
         query.setPaymentsQuery(paymentsQuery);
         query.setSize(size);
         statisticDsl.setQuery(query);
@@ -54,20 +52,19 @@ public class DslUtil {
         return createStatRequest(statisticDsl, Optional.empty(), objectMapper);
     }
 
-    public static StatRequest createPaymentRequest(String invoiceId, String paymentId, Optional<InvoicePaymentStatus> status, ObjectMapper objectMapper) {
+    public static StatRequest createPaymentRequest(String invoiceId, String paymentId, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         PaymentsQuery paymentsQuery = new PaymentsQuery();
         paymentsQuery.setInvoiceId(invoiceId);
         paymentsQuery.setPaymentId(paymentId);
-        status.ifPresent((paymentStatus) -> paymentsQuery.setPaymentStatus(paymentStatus.getSetField().getFieldName()));
         query.setPaymentsQuery(paymentsQuery);
         statisticDsl.setQuery(query);
 
         return createStatRequest(statisticDsl, Optional.empty(), objectMapper);
     }
 
-    public static StatRequest createRefundsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status, Optional<String> continuationToken, int size, ObjectMapper objectMapper) {
+    public static StatRequest createRefundsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status, long from, int size, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         RefundsQuery refundsQuery = new RefundsQuery();
@@ -77,10 +74,11 @@ public class DslUtil {
         refundsQuery.setToTime(toTime);
         refundsQuery.setRefundStatus(status.getSetField().getFieldName());
         query.setRefundsQuery(refundsQuery);
+        query.setFrom(from);
         query.setSize(size);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, continuationToken, objectMapper);
+        return createStatRequest(statisticDsl, Optional.empty(), objectMapper);
     }
 
     public static StatRequest createStatRequest(StatisticDsl statisticDsl, Optional<String> continuationToken, ObjectMapper objectMapper) {

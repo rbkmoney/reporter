@@ -94,7 +94,7 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public Iterator<StatPayment> getPaymentsIterator(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentStatus status) {
+    public Iterator<StatPayment> getCapturedPaymentsIterator(String partyId, String contractId, Instant fromTime, Instant toTime) {
         return new Iterator<StatPayment>() {
             private Optional<String> continuationToken = Optional.empty();
             private final int size = 1000;
@@ -104,7 +104,7 @@ public class StatisticServiceImpl implements StatisticService {
             public boolean hasNext() {
                 if (nextPayments == null || ((!nextPayments.iterator().hasNext()) && continuationToken.isPresent())) {
                     try {
-                        StatResponse statResponse = merchantStatisticsClient.getPayments(DslUtil.createPaymentsRequest(partyId, contractId, fromTime, toTime, status, continuationToken, size, objectMapper));
+                        StatResponse statResponse = merchantStatisticsClient.getPayments(DslUtil.createPaymentsRequest(partyId, contractId, fromTime, toTime, continuationToken, size, objectMapper));
                         nextPayments = statResponse.getData().getPayments();
                         continuationToken = Optional.ofNullable(statResponse.getContinuationToken());
                     } catch (TException e) {
@@ -123,18 +123,13 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     public StatPayment getPayment(String invoiceId, String paymentId) {
-        return getPayment(invoiceId, paymentId, Optional.empty());
-    }
-
-    @Override
-    public StatPayment getPayment(String invoiceId, String paymentId, Optional<InvoicePaymentStatus> status) {
         try {
-            return merchantStatisticsClient.getPayments(DslUtil.createPaymentRequest(invoiceId, paymentId, status, objectMapper))
+            return merchantStatisticsClient.getPayments(DslUtil.createPaymentRequest(invoiceId, paymentId, objectMapper))
                     .getData()
                     .getPayments()
                     .stream()
                     .findFirst()
-                    .orElseThrow(() -> new PaymentNotFoundException(String.format("Payment not found, invoiceId='%s', paymentId='%s', paymentStatus='%s'", invoiceId, paymentId, status)));
+                    .orElseThrow(() -> new PaymentNotFoundException(String.format("Payment not found, invoiceId='%s', paymentId='%s'", invoiceId, paymentId)));
         } catch (TException ex) {
             throw new RuntimeException(ex);
         }
@@ -143,17 +138,17 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     public Iterator<StatRefund> getRefundsIterator(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status) {
         return new Iterator<StatRefund>() {
-            private Optional<String> continuationToken = Optional.empty();
+            private long from = 0;
             private int size = 1000;
             private List<StatRefund> nextRefunds;
 
             @Override
             public boolean hasNext() {
-                if (nextRefunds == null || ((!nextRefunds.iterator().hasNext()) && continuationToken.isPresent())) {
+                if (nextRefunds == null || ((!nextRefunds.iterator().hasNext()) && nextRefunds.size() == size)) {
                     try {
-                        StatResponse statResponse = merchantStatisticsClient.getPayments(DslUtil.createRefundsRequest(partyId, contractId, fromTime, toTime, status, continuationToken, size, objectMapper));
+                        StatResponse statResponse = merchantStatisticsClient.getPayments(DslUtil.createRefundsRequest(partyId, contractId, fromTime, toTime, status, from, size, objectMapper));
                         nextRefunds = statResponse.getData().getRefunds();
-                        continuationToken = Optional.ofNullable(statResponse.getContinuationToken());
+                        from += size;
                     } catch (TException e) {
                         throw new RuntimeException(e);
                     }

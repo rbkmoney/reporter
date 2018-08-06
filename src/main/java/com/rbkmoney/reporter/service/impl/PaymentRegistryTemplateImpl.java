@@ -14,9 +14,6 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -67,12 +64,11 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
 
         AtomicLong totalAmnt = new AtomicLong();
         AtomicLong totalPayoutAmnt = new AtomicLong();
-        Iterator<StatPayment> paymentsIterator = statisticService.getPaymentsIterator(
+        Iterator<StatPayment> paymentsIterator = statisticService.getCapturedPaymentsIterator(
                 report.getPartyId(),
                 report.getPartyContractId(),
                 report.getFromTime().toInstant(ZoneOffset.UTC),
-                report.getToTime().toInstant(ZoneOffset.UTC),
-                InvoicePaymentStatus.captured(new InvoicePaymentCaptured())
+                report.getToTime().toInstant(ZoneOffset.UTC)
         );
 
         SXSSFWorkbook wb = new SXSSFWorkbook(100); // keep 100 rows in memory, exceeding rows will be flushed to disk

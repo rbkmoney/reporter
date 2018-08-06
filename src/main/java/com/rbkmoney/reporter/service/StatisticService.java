@@ -22,11 +22,9 @@ public interface StatisticService {
 
     StatInvoice getInvoice(String invoiceId);
 
-    Iterator<StatPayment> getPaymentsIterator(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentStatus status);
+    Iterator<StatPayment> getCapturedPaymentsIterator(String partyId, String contractId, Instant fromTime, Instant toTime);
 
     StatPayment getPayment(String invoiceId, String paymentId);
-
-    StatPayment getPayment(String invoiceId, String paymentId, Optional<InvoicePaymentStatus> status);
 
     Iterator<StatRefund> getRefundsIterator(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status);
 
