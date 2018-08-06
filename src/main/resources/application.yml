@@ -5,10 +5,17 @@ partyManagement:
 magista:
   url: http://magista:8022/stat
   timeout: 60000
+bustermaze:
+  url: http://bustermaze:8022/repo
+  polling:
+    delay: 10000
+    retryDelay: 1000
+    maxPoolSize: 1
 signer:
   url: http://signer:8022/signer
 domainConfig:
   url: http://dominant:8022/v1/domain/repository
+  timeout: 5000
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
@@ -21,7 +28,6 @@ spring:
       idle-timeout: 30000
 report:
   defaultTimeZone: Europe/Moscow
-  needSign: true
 storage:
   endpoint: localhost
   signingRegion: RU

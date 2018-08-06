@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class DslUtil {
 
-    public static StatRequest createPaymentsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentStatus status, long from, int size, ObjectMapper objectMapper) {
+    public static StatRequest createPaymentsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentStatus status, Optional<String> continuationToken, int size, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         PaymentsQuery paymentsQuery = new PaymentsQuery();
@@ -22,14 +22,13 @@ public class DslUtil {
         paymentsQuery.setToTime(toTime);
         paymentsQuery.setPaymentStatus(status.getSetField().getFieldName());
         query.setPaymentsQuery(paymentsQuery);
-        query.setFrom(from);
         query.setSize(size);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, objectMapper);
+        return createStatRequest(statisticDsl, continuationToken, objectMapper);
     }
 
-    public static StatRequest createInvoicesRequest(String partyId, String contractId, Instant fromTime, Instant toTime, long from, int size, ObjectMapper objectMapper) {
+    public static StatRequest createInvoicesRequest(String partyId, String contractId, Instant fromTime, Instant toTime, Optional<String> continuationToken, int size, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         InvoicesQuery invoicesQuery = new InvoicesQuery();
@@ -38,11 +37,10 @@ public class DslUtil {
         invoicesQuery.setFromTime(fromTime);
         invoicesQuery.setToTime(toTime);
         query.setInvoicesQuery(invoicesQuery);
-        query.setFrom(from);
         query.setSize(size);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, objectMapper);
+        return createStatRequest(statisticDsl, continuationToken, objectMapper);
     }
 
     public static StatRequest createInvoiceRequest(String invoiceId, ObjectMapper objectMapper) {
@@ -53,7 +51,7 @@ public class DslUtil {
         query.setInvoicesQuery(invoicesQuery);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, objectMapper);
+        return createStatRequest(statisticDsl, Optional.empty(), objectMapper);
     }
 
     public static StatRequest createPaymentRequest(String invoiceId, String paymentId, Optional<InvoicePaymentStatus> status, ObjectMapper objectMapper) {
@@ -66,10 +64,10 @@ public class DslUtil {
         query.setPaymentsQuery(paymentsQuery);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, objectMapper);
+        return createStatRequest(statisticDsl, Optional.empty(), objectMapper);
     }
 
-    public static StatRequest createRefundsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status, long from, int size, ObjectMapper objectMapper) {
+    public static StatRequest createRefundsRequest(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status, Optional<String> continuationToken, int size, ObjectMapper objectMapper) {
         StatisticDsl statisticDsl = new StatisticDsl();
         Query query = new Query();
         RefundsQuery refundsQuery = new RefundsQuery();
@@ -79,16 +77,19 @@ public class DslUtil {
         refundsQuery.setToTime(toTime);
         refundsQuery.setRefundStatus(status.getSetField().getFieldName());
         query.setRefundsQuery(refundsQuery);
-        query.setFrom(from);
         query.setSize(size);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, objectMapper);
+        return createStatRequest(statisticDsl, continuationToken, objectMapper);
     }
 
-    public static StatRequest createStatRequest(StatisticDsl statisticDsl, ObjectMapper objectMapper) {
+    public static StatRequest createStatRequest(StatisticDsl statisticDsl, Optional<String> continuationToken, ObjectMapper objectMapper) {
         try {
-            return new StatRequest(objectMapper.writeValueAsString(statisticDsl));
+            StatRequest statRequest = new StatRequest(objectMapper.writeValueAsString(statisticDsl));
+            continuationToken.ifPresent(
+                    token -> statRequest.setContinuationToken(token)
+            );
+            return statRequest;
         } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
         }
@@ -106,7 +107,7 @@ public class DslUtil {
         query.setShopAccountingQuery(shopAccountingQuery);
         statisticDsl.setQuery(query);
 
-        return createStatRequest(statisticDsl, objectMapper);
+        return createStatRequest(statisticDsl, Optional.empty(), objectMapper);
     }
 
 }

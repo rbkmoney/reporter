@@ -1,33 +1,31 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.merch_stat.*;
-import com.rbkmoney.reporter.ReportType;
+import com.rbkmoney.reporter.domain.enums.ReportType;
+import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
-import com.rbkmoney.reporter.model.Payment;
-import com.rbkmoney.reporter.model.Refund;
 import com.rbkmoney.reporter.service.PartyService;
 import com.rbkmoney.reporter.service.StatisticService;
 import com.rbkmoney.reporter.service.TemplateService;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.jxls.common.Context;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-import sun.font.FontUtilities;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 @Component
 public class PaymentRegistryTemplateImpl implements TemplateService {
@@ -37,13 +35,23 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
     private final PartyService partyService;
 
     @Autowired
-    public PaymentRegistryTemplateImpl(StatisticService statisticService, PartyService partyService) {
+    public PaymentRegistryTemplateImpl(
+            StatisticService statisticService,
+            PartyService partyService) {
         this.statisticService = statisticService;
         this.partyService = partyService;
     }
 
     @Override
-    public void processReportTemplate(Report report, OutputStream outputStream) throws IOException {
+    public boolean accept(ReportType reportType, ContractMeta contractMeta) {
+        return reportType == ReportType.payment_registry
+                || (contractMeta.getReportType() == ReportType.provision_of_service
+                && partyService.needReference(contractMeta.getPartyId(), contractMeta.getContractId()));
+    }
+
+    @Override
+    public void processReportTemplate(Report report, ContractMeta contractMeta, OutputStream outputStream) throws
+            IOException {
         ZoneId reportZoneId = ZoneId.of(report.getTimezone());
         String fromTime = TimeUtil.toLocalizedDate(report.getFromTime().toInstant(ZoneOffset.UTC), reportZoneId);
         String toTime = TimeUtil.toLocalizedDate(report.getToTime().minusNanos(1).toInstant(ZoneOffset.UTC), reportZoneId);
@@ -144,7 +152,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             cell.setCellStyle(borderStyle);
             CellUtil.setFont(cell, font);
         }
-        sh.addMergedRegion(new CellRangeAddress(rownum - 1 , rownum - 1, 0, 2));
+        sh.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, 0, 2));
         Cell cellTotalPaymentAmount = rowTotalPaymentAmount.getCell(0);
         cellTotalPaymentAmount.setCellValue("Сумма");
         CellUtil.setAlignment(cellTotalPaymentAmount, HorizontalAlignment.CENTER);
@@ -159,7 +167,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         for (int i = 0; i < 8; ++i) {
             rowFirstRefunds.createCell(i);
         }
-        sh.addMergedRegion(new CellRangeAddress(rownum - 1 , rownum - 1, 0, 7));
+        sh.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, 0, 7));
         Cell cellFirstRefunds = rowFirstRefunds.getCell(0);
         cellFirstRefunds.setCellValue(String.format("Возвраты за период с %s по %s", fromTime, toTime));
         CellUtil.setAlignment(cellFirstRefunds, HorizontalAlignment.CENTER);
@@ -195,8 +203,8 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             row.createCell(0).setCellValue(TimeUtil.toLocalizedDateTime(r.getStatus().getSucceeded().getAt(), reportZoneId));
             //TODO captured_at only
             row.createCell(1).setCellValue(statPayment.getStatus().isSetCaptured() ?
-                TimeUtil.toLocalizedDateTime(statPayment.getStatus().getCaptured().getAt(), reportZoneId) :
-                TimeUtil.toLocalizedDateTime(statPayment.getCreatedAt(), reportZoneId));
+                    TimeUtil.toLocalizedDateTime(statPayment.getStatus().getCaptured().getAt(), reportZoneId) :
+                    TimeUtil.toLocalizedDateTime(statPayment.getCreatedAt(), reportZoneId));
             row.createCell(2).setCellValue(r.getInvoiceId() + "." + r.getPaymentId());
             row.createCell(3).setCellValue(FormatUtil.formatCurrency(r.getAmount()));
             String paymentTool = null;
@@ -226,7 +234,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             cell.setCellStyle(borderStyle);
             CellUtil.setFont(cell, font);
         }
-        sh.addMergedRegion(new CellRangeAddress(rownum - 1 , rownum - 1, 0, 2));
+        sh.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, 0, 2));
         Cell cellTotalRefundAmount = rowTotalRefundAmount.getCell(0);
         cellTotalRefundAmount.setCellValue("Сумма");
         CellUtil.setAlignment(cellTotalRefundAmount, HorizontalAlignment.CENTER);
@@ -237,8 +245,4 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         wb.dispose();
     }
 
-    @Override
-    public List<ReportType> getReportTypes() {
-        return Arrays.asList(ReportType.payment_registry);
-    }
 }
