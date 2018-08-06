@@ -70,7 +70,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void generateProvisionOfServiceReportTest() throws IOException, TException, InterruptedException {
-        given(statisticService.getCapturedPaymentsIterator(anyString(), anyString(), any(), any(), any())).willReturn(
+        given(statisticService.getCapturedPaymentsIterator(anyString(), anyString(), any(), any())).willReturn(
                 new Iterator<StatPayment>() {
                     @Override
                     public boolean hasNext() {
