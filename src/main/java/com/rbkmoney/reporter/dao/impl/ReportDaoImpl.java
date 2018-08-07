@@ -111,8 +111,8 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
         Condition condition = REPORT.PARTY_ID.eq(partyId)
                 .and(REPORT.PARTY_SHOP_ID.eq(shopId))
-                .and(REPORT.CREATED_AT.ge(fromTime))
-                .and(REPORT.CREATED_AT.lt(toTime));
+                .and(REPORT.FROM_TIME.ge(fromTime))
+                .and(REPORT.TO_TIME.le(toTime));
 
         if (!reportTypes.isEmpty()) {
             condition = condition.and(REPORT.TYPE.in(reportTypes));
