@@ -24,7 +24,7 @@ public interface StatisticService {
 
     Iterator<StatPayment> getCapturedPaymentsIterator(String partyId, String contractId, Instant fromTime, Instant toTime);
 
-    StatPayment getPayment(String invoiceId, String paymentId);
+    StatPayment getPayment(String partyId, String contractId, String invoiceId, String paymentId);
 
     Iterator<StatRefund> getRefundsIterator(String partyId, String contractId, Instant fromTime, Instant toTime, InvoicePaymentRefundStatus status);
 

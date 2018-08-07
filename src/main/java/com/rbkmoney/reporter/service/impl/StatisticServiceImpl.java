@@ -122,9 +122,9 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public StatPayment getPayment(String invoiceId, String paymentId) {
+    public StatPayment getPayment(String partyId, String contractId, String invoiceId, String paymentId) {
         try {
-            return merchantStatisticsClient.getPayments(DslUtil.createPaymentRequest(invoiceId, paymentId, objectMapper))
+            return merchantStatisticsClient.getPayments(DslUtil.createPaymentRequest(partyId, contractId, invoiceId, paymentId, objectMapper))
                     .getData()
                     .getPayments()
                     .stream()

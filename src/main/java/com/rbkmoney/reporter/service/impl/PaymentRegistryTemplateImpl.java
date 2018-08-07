@@ -195,7 +195,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         while (refundsIterator.hasNext()) {
             StatRefund r = refundsIterator.next();
             Row row = sh.createRow(rownum++);
-            StatPayment statPayment = statisticService.getPayment(r.getInvoiceId(), r.getPaymentId());
+            StatPayment statPayment = statisticService.getPayment(report.getPartyId(), report.getPartyContractId(), r.getInvoiceId(), r.getPaymentId());
             row.createCell(0).setCellValue(TimeUtil.toLocalizedDateTime(r.getStatus().getSucceeded().getAt(), reportZoneId));
             //TODO captured_at only
             row.createCell(1).setCellValue(statPayment.getStatus().isSetCaptured() ?
