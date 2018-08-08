@@ -81,7 +81,7 @@ public class ReportService {
             );
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s'",
-                    partyId, shopId, shopId, reportTypes, fromTime, toTime), ex);
+                    partyId, shopId, reportTypes, fromTime, toTime), ex);
         }
     }
 
