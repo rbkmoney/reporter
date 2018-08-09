@@ -69,44 +69,6 @@ public class S3StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public FileMeta saveFile(String filename, byte[] bytes) throws FileStorageException {
-        log.info("Trying to upload file to storage, filename='{}', bucketId='{}'", filename, bucketName);
-
-        try {
-            String fileId;
-            do {
-                fileId = UUID.randomUUID().toString();
-            } while (storageClient.doesObjectExist(bucketName, fileId));
-
-            FileMeta fileMeta = createFileMeta(
-                    fileId,
-                    bucketName,
-                    filename,
-                    DigestUtils.md2Hex(bytes),
-                    DigestUtils.sha256Hex(bytes)
-            );
-
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentDisposition("attachment;filename=" + filename);
-            Upload upload = transferManager.upload(
-                    new PutObjectRequest(bucketName, fileId, new ByteArrayInputStream(bytes), objectMetadata)
-            );
-            try {
-                upload.waitForUploadResult();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            log.info("File have been successfully uploaded, fileId='{}', bucketId='{}', filename='{}', md5='{}', sha256='{}'",
-                    fileMeta.getFileId(), fileMeta.getBucketId(), fileMeta.getFilename(), fileMeta.getMd5(), fileMeta.getSha256());
-
-            return fileMeta;
-
-        } catch (AmazonClientException ex) {
-            throw new FileStorageException(String.format("Failed to upload file to storage, filename='%s', bucketId='%s'", filename, bucketName), ex);
-        }
-    }
-
-    @Override
     public FileMeta saveFile(Path file) throws FileStorageException {
         String filename = file.getFileName().toString();
         log.info("Trying to upload file to storage, filename='{}', bucketId='{}'", filename, bucketName);
@@ -141,6 +103,44 @@ public class S3StorageServiceImpl implements StorageService {
             return fileMeta;
 
         } catch (IOException | AmazonClientException ex) {
+            throw new FileStorageException(String.format("Failed to upload file to storage, filename='%s', bucketId='%s'", filename, bucketName), ex);
+        }
+    }
+
+    @Override
+    public FileMeta saveFile(String filename, byte[] bytes) throws FileStorageException {
+        log.info("Trying to upload file to storage, filename='{}', bucketId='{}'", filename, bucketName);
+
+        try {
+            String fileId;
+            do {
+                fileId = UUID.randomUUID().toString();
+            } while (storageClient.doesObjectExist(bucketName, fileId));
+
+            FileMeta fileMeta = createFileMeta(
+                    fileId,
+                    bucketName,
+                    filename,
+                    DigestUtils.md2Hex(bytes),
+                    DigestUtils.sha256Hex(bytes)
+            );
+
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentDisposition("attachment;filename=" + filename);
+            Upload upload = transferManager.upload(
+                    new PutObjectRequest(bucketName, fileId, new ByteArrayInputStream(bytes), objectMetadata)
+            );
+            try {
+                upload.waitForUploadResult();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            log.info("File have been successfully uploaded, fileId='{}', bucketId='{}', filename='{}', md5='{}', sha256='{}'",
+                    fileMeta.getFileId(), fileMeta.getBucketId(), fileMeta.getFilename(), fileMeta.getMd5(), fileMeta.getSha256());
+
+            return fileMeta;
+
+        } catch (AmazonClientException ex) {
             throw new FileStorageException(String.format("Failed to upload file to storage, filename='%s', bucketId='%s'", filename, bucketName), ex);
         }
     }
