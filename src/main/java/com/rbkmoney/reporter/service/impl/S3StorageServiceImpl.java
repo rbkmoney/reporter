@@ -121,7 +121,7 @@ public class S3StorageServiceImpl implements StorageService {
                     fileId,
                     bucketName,
                     filename,
-                    DigestUtils.md2Hex(bytes),
+                    DigestUtils.md5Hex(bytes),
                     DigestUtils.sha256Hex(bytes)
             );
 
