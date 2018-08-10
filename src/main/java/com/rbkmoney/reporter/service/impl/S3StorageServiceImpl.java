@@ -11,7 +11,6 @@ import com.rbkmoney.reporter.exception.FileNotFoundException;
 import com.rbkmoney.reporter.exception.FileStorageException;
 import com.rbkmoney.reporter.service.StorageService;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
