@@ -43,8 +43,7 @@ public class ReportService {
     private final ZoneId defaultTimeZone;
 
     private final int batchSize;
-
-    @Autowired
+    
     public ReportService(
             ReportDao reportDao,
             List<TemplateService> templateServices,
