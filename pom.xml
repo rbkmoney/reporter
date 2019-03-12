@@ -17,20 +17,32 @@
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
-        <damsel.version>1.259-7b81c15</damsel.version>
-        <shared.resources.version>0.2.1</shared.resources.version>
+        <postgresql.version>42.2.5</postgresql.version>
+        <flyway.version>4.2.0</flyway.version>
+        <jooq.version>3.11.7</jooq.version>
+        <!---->
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
+        <damsel.version>1.259-7b81c15</damsel.version>
+        <shared.resources.version>0.2.1</shared.resources.version>
         <dockerfile.base.service.tag>22c57470c4fc47161894f036b7cf9d70f42b75f5</dockerfile.base.service.tag>
         <dockerfile.build.tag>9d4d70317dd08abd400798932a231798ee254a87</dockerfile.build.tag>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <!---->
         <db.name>reporter</db.name>
-        <db.port>5432</db.port>
-        <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
+        <db.schema>rpt</db.schema>
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
-        <db.schema>rpt</db.schema>
-        <postgresql.jdbc.version>42.2.5</postgresql.jdbc.version>
+        <db.port>5433</db.port>
+        <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
+        <!---->
+        <db.embedded.name>${db.name}</db.embedded.name>
+        <db.embedded.schema>${db.schema}</db.embedded.schema>
+        <db.embedded.user>${db.user}</db.embedded.user>
+        <db.embedded.password>${db.password}</db.embedded.password>
+        <db.embedded.port>15432</db.embedded.port>
+        <db.embedded.url>jdbc:postgresql://localhost:${db.embedded.port}/${db.embedded.name}</db.embedded.url>
     </properties>
 
     <dependencies>
@@ -124,7 +136,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${postgresql.jdbc.version}</version>
+            <version>${postgresql.version}</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -261,18 +273,32 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>4.2.0</version>
+                <version>${flyway.version}</version>
                 <configuration>
-                    <url>${db.url}</url>
-                    <user>${db.user}</user>
-                    <password>${db.password}</password>
+                    <url>${db.embedded.url}</url>
+                    <user>${db.embedded.user}</user>
+                    <password>${db.embedded.password}</password>
                     <schemas>
-                        <schema>${db.schema}</schema>
+                        <schema>${db.embedded.schema}</schema>
                     </schemas>
-                    <locations>
-                        <location>filesystem:${project.basedir}/src/main/resources/db/migration</location>
-                    </locations>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgresql.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>migrate</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>clean</goal>
+                            <goal>migrate</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jooq</groupId>
@@ -281,9 +307,9 @@
                 <configuration>
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
-                        <url>${db.url}</url>
-                        <user>${db.user}</user>
-                        <password>${db.password}</password>
+                        <url>${db.embedded.url}</url>
+                        <user>${db.embedded.user}</user>
+                        <password>${db.embedded.password}</password>
                     </jdbc>
                     <generator>
                         <generate>
@@ -293,17 +319,75 @@
                             <pojosToString>true</pojosToString>
                         </generate>
                         <database>
-                            <name>org.jooq.util.postgres.PostgresDatabase</name>
+                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-                            <excludes>schema_version</excludes>
-                            <inputSchema>${db.schema}</inputSchema>
+                            <excludes>
+                                schema_version|.*func|get_adjustment.*|get_cashflow.*|get_payment.*|get_payout.*|get_refund.*
+                            </excludes>
+                            <inputSchema>${db.embedded.schema}</inputSchema>
                         </database>
                         <target>
                             <packageName>com.rbkmoney.reporter.domain</packageName>
-                            <directory>src/main/java/</directory>
+                            <directory>target/generated-sources/jooq/</directory>
                         </target>
                     </generator>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>gen-src</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.rbkmoney.maven.plugins</groupId>
+                <artifactId>pg-embedded-plugin</artifactId>
+                <version>1.4</version>
+                <configuration>
+                    <dbName>${db.embedded.name}</dbName>
+                    <schemas>
+                        <schema>${db.embedded.schema}</schema>
+                    </schemas>
+                    <userName>${db.embedded.name}</userName>
+                    <password>${db.embedded.password}</password>
+                    <port>${db.embedded.port}</port>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>PG_server_start</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>PG_server_stop</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.2</version>
+                <configuration>
+                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                    <append>true</append>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
