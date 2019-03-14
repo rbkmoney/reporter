@@ -8,7 +8,6 @@ import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -43,7 +42,7 @@ public class ReportService {
     private final ZoneId defaultTimeZone;
 
     private final int batchSize;
-    
+
     public ReportService(
             ReportDao reportDao,
             List<TemplateService> templateServices,

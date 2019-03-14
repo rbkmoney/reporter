@@ -14,6 +14,7 @@ CREATE TABLE rpt.invoice
   event_id               BIGINT                      NOT NULL,
   event_created_at       TIMESTAMP WITHOUT TIME ZONE NOT NULL,
   event_type             rpt.invoice_event_type      NOT NULL,
+  sequence_id            CHARACTER VARYING           NOT NULL,
   invoice_id             CHARACTER VARYING           NOT NULL,
   invoice_status         rpt.invoice_status          NOT NULL,
   invoice_status_details CHARACTER VARYING,
@@ -46,25 +47,25 @@ CREATE TYPE rpt.adjustment_status AS ENUM ('pending', 'captured', 'cancelled');
 
 CREATE TABLE rpt.adjustment
 (
-  id                           BIGSERIAL                   NOT NULL,
-  event_id                     BIGINT                      NOT NULL,
-  event_created_at             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-  event_type                   rpt.invoice_event_type      NOT NULL,
-  invoice_id                   CHARACTER VARYING           NOT NULL,
-  payment_id                   CHARACTER VARYING           NOT NULL,
-  adjustment_id                CHARACTER VARYING           NOT NULL,
-  party_id                     CHARACTER VARYING           NOT NULL,
-  party_shop_id                CHARACTER VARYING           NOT NULL,
-  adjustment_status            rpt.adjustment_status       NOT NULL,
-  adjustment_status_created_at TIMESTAMP WITHOUT TIME ZONE,
-  adjustment_created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-  adjustment_reason            CHARACTER VARYING           NOT NULL,
-  adjustment_fee               BIGINT DEFAULT 0            NOT NULL,
-  adjustment_provider_fee      BIGINT DEFAULT 0            NOT NULL,
-  adjustment_external_fee      BIGINT DEFAULT 0            NOT NULL,
-  adjustment_domain_revision   BIGINT,
-  wtime                        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-  current                      BOOLEAN                     NOT NULL DEFAULT TRUE,
+  id                            BIGSERIAL                   NOT NULL,
+  event_id                      BIGINT                      NOT NULL,
+  event_created_at              TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  event_type                    rpt.invoice_event_type      NOT NULL,
+  sequence_id                   CHARACTER VARYING           NOT NULL,
+  invoice_id                    CHARACTER VARYING           NOT NULL,
+  payment_id                    CHARACTER VARYING           NOT NULL,
+  adjustment_id                 CHARACTER VARYING           NOT NULL,
+  party_id                      CHARACTER VARYING           NOT NULL,
+  party_shop_id                 CHARACTER VARYING           NOT NULL,
+  adjustment_status             rpt.adjustment_status       NOT NULL,
+  adjustment_status_created_at  TIMESTAMP WITHOUT TIME ZONE,
+  adjustment_created_at         TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  adjustment_reason             CHARACTER VARYING           NOT NULL,
+  adjustment_provider_cash_flow JSONB,
+  adjustment_external_cash_flow JSONB,
+  adjustment_domain_revision    BIGINT,
+  wtime                         TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
+  current                       BOOLEAN                     NOT NULL DEFAULT TRUE,
   CONSTRAINT adjustment_pkey PRIMARY KEY (id),
   CONSTRAINT adjustment_ukey
     UNIQUE (event_id, event_type, adjustment_status)
@@ -85,6 +86,7 @@ CREATE TABLE rpt.refund
   event_id                       BIGINT                      NOT NULL,
   event_created_at               TIMESTAMP WITHOUT TIME ZONE NOT NULL,
   event_type                     rpt.invoice_event_type      NOT NULL,
+  sequence_id                    CHARACTER VARYING           NOT NULL,
   invoice_id                     CHARACTER VARYING           NOT NULL,
   payment_id                     CHARACTER VARYING           NOT NULL,
   refund_id                      CHARACTER VARYING           NOT NULL,
@@ -98,9 +100,8 @@ CREATE TABLE rpt.refund
   refund_reason                  CHARACTER VARYING,
   refund_currency_code           CHARACTER VARYING           NOT NULL,
   refund_amount                  BIGINT                      NOT NULL,
-  refund_fee                     BIGINT DEFAULT 0            NOT NULL,
-  refund_provider_fee            BIGINT DEFAULT 0            NOT NULL,
-  refund_external_fee            BIGINT DEFAULT 0            NOT NULL,
+  refund_provider_cash_flow      JSONB,
+  refund_external_cash_flow      JSONB,
   refund_domain_revision         BIGINT,
   wtime                          TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
   current                        BOOLEAN                     NOT NULL DEFAULT TRUE,
@@ -114,36 +115,36 @@ CREATE INDEX refund_refund_created_at_idx ON rpt.refund (refund_created_at);
 
 -- payment
 
-create type rpt.invoice_payment_status as enum ('pending', 'processed', 'captured', 'cancelled', 'failed', 'refunded');
-create type rpt.payment_tool as enum ('bank_card', 'payment_terminal', 'digital_wallet');
-create type rpt.bank_card_token_provider as enum ('applepay', 'googlepay', 'samsungpay');
-create type rpt.payment_flow as enum ('instant', 'hold');
-create type rpt.on_hold_expiration as enum ('cancel', 'capture');
-create type rpt.payment_payer_type as enum ('payment_resource', 'customer', 'recurrent');
+CREATE TYPE rpt.invoice_payment_status AS ENUM ('pending', 'processed', 'captured', 'cancelled', 'failed', 'refunded');
+CREATE TYPE rpt.payment_tool AS ENUM ('bank_card', 'payment_terminal', 'digital_wallet');
+CREATE TYPE rpt.bank_card_token_provider AS ENUM ('applepay', 'googlepay', 'samsungpay');
+CREATE TYPE rpt.payment_flow AS ENUM ('instant', 'hold');
+CREATE TYPE rpt.on_hold_expiration AS ENUM ('cancel', 'capture');
+CREATE TYPE rpt.payment_payer_type AS ENUM ('payment_resource', 'customer', 'recurrent');
 
 CREATE TABLE rpt.payment
 (
-  id                                        BIGSERIAL                   NOT NULL,
-  event_id                                  BIGINT                      NOT NULL,
-  event_created_at                          TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-  event_type                                rpt.invoice_event_type      NOT NULL,
-  invoice_id                                CHARACTER VARYING           NOT NULL,
-  payment_id                                CHARACTER VARYING           NOT NULL,
-  payment_status                            rpt.invoice_payment_status  NOT NULL,
-  payment_operation_failure_class           rpt.failure_class,
-  payment_external_failure                  CHARACTER VARYING,
-  payment_external_failure_reason           CHARACTER VARYING,
-  payment_fee                               BIGINT,
-  payment_provider_fee                      BIGINT,
-  payment_external_fee                      BIGINT,
-  payment_domain_revision                   BIGINT                      NOT NULL,
-  payment_short_id                          CHARACTER VARYING,
-  payment_provider_id                       INTEGER,
-  payment_terminal_id                       INTEGER,
-  payment_amount                            BIGINT                      NOT NULL,
-  payment_currency_code                     CHARACTER VARYING           NOT NULL,
-  payment_origin_amount                     BIGINT                      NOT NULL,
-  payment_customer_id                       CHARACTER VARYING,
+  id                              BIGSERIAL                   NOT NULL,
+  event_id                        BIGINT                      NOT NULL,
+  event_created_at                TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  event_type                      rpt.invoice_event_type      NOT NULL,
+  sequence_id                     CHARACTER VARYING           NOT NULL,
+  invoice_id                      CHARACTER VARYING           NOT NULL,
+  payment_id                      CHARACTER VARYING           NOT NULL,
+  payment_status                  rpt.invoice_payment_status  NOT NULL,
+  payment_operation_failure_class rpt.failure_class,
+  payment_external_failure        CHARACTER VARYING,
+  payment_external_failure_reason CHARACTER VARYING,
+  payment_provider_cash_flow      JSONB,
+  payment_external_cash_flow      JSONB,
+  payment_domain_revision         BIGINT                      NOT NULL,
+  payment_short_id                CHARACTER VARYING,
+  payment_provider_id             INTEGER,
+  payment_terminal_id             INTEGER,
+  payment_amount                  BIGINT                      NOT NULL,
+  payment_currency_code           CHARACTER VARYING           NOT NULL,
+  payment_origin_amount           BIGINT                      NOT NULL,
+  payment_customer_id             CHARACTER VARYING,
   payment_tool                              rpt.payment_tool            NOT NULL,
   payment_bank_card_masked_pan              CHARACTER VARYING,
   payment_bank_card_bin                     CHARACTER VARYING,
@@ -168,16 +169,14 @@ CREATE TABLE rpt.payment
   payment_make_recurrent_flag               BOOLEAN,
   payment_recurrent_payer_parent_invoice_id CHARACTER VARYING,
   payment_recurrent_payer_parent_payment_id CHARACTER VARYING,
-  payment_payer_type                        rpt.payment_payer_type      NOT NULL,
-  payment_country_id                        INTEGER,
-  payment_city_id                           INTEGER,
-  party_id                                  UUID                        NOT NULL,
-  party_shop_id                             CHARACTER VARYING           NOT NULL,
-  wtime                                     TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-  current                                   BOOLEAN                     NOT NULL DEFAULT TRUE,
+  payment_payer_type              rpt.payment_payer_type      NOT NULL,
+  party_id                        UUID                        NOT NULL,
+  party_shop_id                   CHARACTER VARYING           NOT NULL,
+  wtime                           TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
+  current                         BOOLEAN                     NOT NULL DEFAULT TRUE,
   CONSTRAINT payment_pkey PRIMARY KEY (id),
   CONSTRAINT payment_ukey
-    UNIQUE (event_id, event_type, payment_status, invoice_id, payment_id)
+    UNIQUE (event_id, event_type, payment_status)
 );
 
 CREATE INDEX payment_payment_id_event_created_at_idx on rpt.payment (payment_id, event_created_at);

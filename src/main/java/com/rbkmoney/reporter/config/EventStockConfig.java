@@ -2,11 +2,11 @@ package com.rbkmoney.reporter.config;
 
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.poll.PollingEventPublisherBuilder;
+import com.rbkmoney.reporter.config.properties.BustermazeProperties;
+import com.rbkmoney.reporter.handler.EventStockClientHandler;
 import com.rbkmoney.reporter.handler.EventStockHandler;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 
@@ -14,21 +14,28 @@ import java.io.IOException;
 public class EventStockConfig {
 
     @Bean
-    public EventPublisher eventPublisher(
-            EventStockHandler eventStockHandler,
-            @Value("${bustermaze.url}") Resource resource,
-            @Value("${bustermaze.polling.delay}") int pollDelay,
-            @Value("${bustermaze.polling.maxPoolSize}") int maxPoolSize,
-            @Value("${bustermaze.polling.housekeeperTimeout}") int housekeeperTimeout
-    ) throws IOException {
+    public EventPublisher eventPublisher(EventStockHandler eventStockHandler,
+                                         BustermazeProperties properties) throws IOException {
         return new PollingEventPublisherBuilder()
-                .withURI(resource.getURI())
-                .withHousekeeperTimeout(housekeeperTimeout)
+                .withURI(properties.getUrl().getURI())
+                .withHousekeeperTimeout(properties.getHousekeeperTimeout())
                 .withEventHandler(eventStockHandler)
-                .withMaxPoolSize(maxPoolSize)
-                .withEventRetryDelay(pollDelay)
-                .withPollDelay(pollDelay)
+                .withMaxPoolSize(properties.getMaxPoolSize())
+                .withEventRetryDelay(properties.getDelay())
+                .withPollDelay(properties.getDelay())
                 .build();
     }
 
+    @Bean
+    public EventPublisher invoiceEventPublisher(EventStockClientHandler eventStockHandler,
+                                                BustermazeProperties properties) throws IOException {
+        return new PollingEventPublisherBuilder()
+                .withURI(properties.getUrl().getURI())
+                .withHousekeeperTimeout(properties.getHousekeeperTimeout())
+                .withEventHandler(eventStockHandler)
+                .withMaxPoolSize(properties.getMaxPoolSize())
+                .withEventRetryDelay(properties.getDelay())
+                .withPollDelay(properties.getDelay())
+                .build();
+    }
 }

@@ -138,7 +138,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
                 .set(REPORT.CREATED_AT, createdAt)
                 .returning(REPORT.ID);
 
-        executeOneWithReturn(query, keyHolder);
+        execute(query, keyHolder);
         return keyHolder.getKey().longValue();
     }
 }

@@ -63,7 +63,7 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-        public StatInvoice getInvoice(String invoiceId) {
+    public StatInvoice getInvoice(String invoiceId) {
         try {
             return merchantStatisticsClient.getPayments(DslUtil.createInvoiceRequest(invoiceId, objectMapper))
                     .getData()

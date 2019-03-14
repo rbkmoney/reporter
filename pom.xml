@@ -13,17 +13,18 @@
 
     <groupId>com.rbkmoney</groupId>
     <artifactId>reporter</artifactId>
-    <version>1.0.23-SNAPSHOT</version>
+    <version>1.0.24-SNAPSHOT</version>
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
         <postgresql.version>42.2.5</postgresql.version>
         <flyway.version>4.2.0</flyway.version>
         <jooq.version>3.11.7</jooq.version>
+        <lombok.version>1.18.4</lombok.version>
         <!---->
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
-        <damsel.version>1.259-7b81c15</damsel.version>
+        <damsel.version>1.278-3abdcb4</damsel.version>
         <shared.resources.version>0.2.1</shared.resources.version>
         <dockerfile.base.service.tag>22c57470c4fc47161894f036b7cf9d70f42b75f5</dockerfile.base.service.tag>
         <dockerfile.build.tag>9d4d70317dd08abd400798932a231798ee254a87</dockerfile.build.tag>
@@ -34,7 +35,7 @@
         <db.schema>rpt</db.schema>
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
-        <db.port>5433</db.port>
+        <db.port>5432</db.port>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
         <!---->
         <db.embedded.name>${db.name}</db.embedded.name>
@@ -153,6 +154,12 @@
             <artifactId>poi-ooxml</artifactId>
             <version>3.17</version>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <!--RBK libs-->
         <dependency>
             <groupId>com.rbkmoney</groupId>
@@ -179,6 +186,12 @@
             <artifactId>eventstock-client</artifactId>
             <version>1.2.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.rbkmoney.geck</groupId>
+            <artifactId>serializer</artifactId>
+            <version>0.6.9</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!--Test libs-->
         <dependency>
@@ -203,6 +216,12 @@
             <artifactId>random-beans</artifactId>
             <version>3.6.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney.geck</groupId>
+            <artifactId>serializer</artifactId>
+            <version>0.6.9</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

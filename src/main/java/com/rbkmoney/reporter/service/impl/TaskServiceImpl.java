@@ -1,8 +1,8 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.base.TimeSpan;
-import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
 import com.rbkmoney.reporter.domain.enums.ReportType;

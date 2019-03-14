@@ -13,7 +13,6 @@ import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
 
 import java.time.Instant;
-import java.util.Map;
 
 /**
  * Created by tolkonepiu on 17/07/2017.
