@@ -136,9 +136,13 @@ public class TestContainers {
                 .withConstantThroughput()
                 .build();
 
+        @Builder.Default
         private String path = "/";
+        @Builder.Default
         private Integer statusCode = 200;
+        @Builder.Default
         private Integer port = 8022;
+        @Builder.Default
         private Duration startupTimeout = Duration.ofSeconds(60);
 
         @Override

@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.dao.mapper;
 
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.reporter.util.JSONBBinding;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Field;
 import org.jooq.Table;
@@ -43,7 +44,9 @@ public class RecordRowMapper<T> implements RowMapper<T> {
         if (field.getType().isEnum()) {
             return TypeUtil.toEnumField(resultSet.getString(field.getName()), field.getType());
         }
+        if (field.getBinding() instanceof JSONBBinding) {
+            return field.getBinding().converter().from(resultSet.getString(resultSet.findColumn(field.getName())));
+        }
         return resultSet.getObject(field.getName(), field.getType());
     }
-
 }
