@@ -360,32 +360,22 @@
                                 <forcedType>
                                     <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
                                     <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
-                                    <expression>.*\.adjustment.adjustment_provider_cash_flow</expression>
+                                    <expression>.*\.payment.payment_cash_flow</expression>
                                 </forcedType>
                                 <forcedType>
                                     <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
                                     <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
-                                    <expression>.*\.adjustment.adjustment_external_cash_flow</expression>
+                                    <expression>.*\.adjustment.adjustment_cash_flow</expression>
                                 </forcedType>
                                 <forcedType>
                                     <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
                                     <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
-                                    <expression>.*\.refund.refund_provider_cash_flow</expression>
+                                    <expression>.*\.adjustment.adjustment_cash_flow_inverse_old</expression>
                                 </forcedType>
                                 <forcedType>
                                     <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
                                     <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
-                                    <expression>.*\.refund.refund_external_cash_flow</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
-                                    <expression>.*\.payment.payment_provider_cash_flow</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
-                                    <expression>.*\.payment.payment_external_cash_flow</expression>
+                                    <expression>.*\.refund.refund_cash_flow</expression>
                                 </forcedType>
                             </forcedTypes>
                         </database>
