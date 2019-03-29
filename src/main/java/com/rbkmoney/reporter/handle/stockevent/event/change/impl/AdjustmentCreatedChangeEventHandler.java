@@ -15,8 +15,8 @@ import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.handle.stockevent.event.change.InvoiceChangeEventsHandler;
 import com.rbkmoney.reporter.service.AdjustmentService;
 import com.rbkmoney.reporter.service.PaymentService;
-import com.rbkmoney.reporter.util.CashFlowUtil;
 import com.rbkmoney.reporter.util.DamselUtil;
+import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -61,15 +61,15 @@ public class AdjustmentCreatedChangeEventHandler implements InvoiceChangeEventsH
         adjustment.setSequenceId(event.getSequence());
         adjustment.setInvoiceId(invoiceId);
         adjustment.setPaymentId(paymentId);
-        adjustment.setPartyId(payment.getPaymentId());
+        adjustment.setPartyId(payment.getPartyId());
         adjustment.setPartyShopId(payment.getPartyShopId());
         adjustment.setAdjustmentId(adjustmentId);
         fillAdjustmentStatus(invoicePaymentAdjustment, adjustment);
         adjustment.setAdjustmentCreatedAt(getAdjustmentCreatedAt(invoicePaymentAdjustment));
         adjustment.setAdjustmentDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setAdjustmentReason(invoicePaymentAdjustment.getReason());
-        adjustment.setAdjustmentCashFlow(CashFlowUtil.toDtoFinalCashFlow(invoicePaymentAdjustment.getNewCashFlow()));
-        adjustment.setAdjustmentCashFlowInverseOld(CashFlowUtil.toDtoFinalCashFlow(invoicePaymentAdjustment.getOldCashFlowInverse()));
+        adjustment.setAdjustmentCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(invoicePaymentAdjustment.getNewCashFlow()));
+        adjustment.setAdjustmentCashFlowInverseOld(FinalCashFlowUtil.toDtoFinalCashFlow(invoicePaymentAdjustment.getOldCashFlowInverse()));
         if (invoicePaymentAdjustment.isSetPartyRevision()) {
             adjustment.setAdjustmentPartyRevision(invoicePaymentAdjustment.getPartyRevision());
         }

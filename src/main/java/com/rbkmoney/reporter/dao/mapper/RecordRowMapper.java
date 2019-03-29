@@ -1,7 +1,7 @@
 package com.rbkmoney.reporter.dao.mapper;
 
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.reporter.util.JSONBBinding;
+import com.rbkmoney.reporter.util.json.JSONBBinding;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Field;
 import org.jooq.Table;

@@ -19,8 +19,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
 
     private final AdjustmentDao adjustmentDao;
 
-    @Override
     @Transactional(propagation = Propagation.REQUIRED)
+    @Override
     public Long save(Adjustment adjustment) throws StorageException {
         log.info("Trying to save adjustment, adjustment='{}'", adjustment);
         try {
@@ -32,8 +32,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
     }
 
-    @Override
     @Transactional(propagation = Propagation.REQUIRED)
+    @Override
     public Adjustment get(String invoiceId, String paymentId, String adjustmentId) throws StorageException, NotFoundException {
         log.info("Trying to get adjustment, invoiceId='{}', paymentId='{}', adjustmentId='{}'", invoiceId, paymentId, adjustmentId);
         try {
@@ -48,8 +48,8 @@ public class AdjustmentServiceImpl implements AdjustmentService {
         }
     }
 
-    @Override
     @Transactional(propagation = Propagation.REQUIRED)
+    @Override
     public void updateNotCurrent(String invoiceId, String paymentId, String adjustmentId) throws StorageException {
         log.info("Trying to update not current adjustments, invoiceId='{}', paymentId='{}', adjustmentId='{}'", invoiceId, paymentId, adjustmentId);
         try {

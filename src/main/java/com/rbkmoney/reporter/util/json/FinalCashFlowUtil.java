@@ -1,14 +1,14 @@
-package com.rbkmoney.reporter.util;
+package com.rbkmoney.reporter.util.json;
 
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting.Cash;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.*;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting.Cash;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CashFlowUtil {
+public class FinalCashFlowUtil {
 
     public static FinalCashFlow toDtoFinalCashFlow(List<com.rbkmoney.damsel.domain.FinalCashFlowPosting> finalCashFlowPostings) {
         List<FinalCashFlowPosting> dtoFinalCashFlowPostings = finalCashFlowPostings.stream()
@@ -25,6 +25,7 @@ public class CashFlowUtil {
                         }
                 )
                 .collect(Collectors.toList());
+
         FinalCashFlow finalCashFlow = new FinalCashFlow();
         finalCashFlow.setCashFlows(dtoFinalCashFlowPostings);
         return finalCashFlow;

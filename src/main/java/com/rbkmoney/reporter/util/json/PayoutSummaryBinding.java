@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.util;
+package com.rbkmoney.reporter.util.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,18 +13,18 @@ import java.sql.Types;
 import java.util.Objects;
 
 @Slf4j
-public class FinalCashFlowBinding extends JSONBBinding<FinalCashFlow> {
+public class PayoutSummaryBinding extends JSONBBinding<PayoutSummary> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Converter<Object, FinalCashFlow> converter() {
-        return new Converter<Object, FinalCashFlow>() {
+    public Converter<Object, PayoutSummary> converter() {
+        return new Converter<Object, PayoutSummary>() {
 
             @Override
-            public FinalCashFlow from(Object o) {
+            public PayoutSummary from(Object o) {
                 try {
-                    return o == null ? null : objectMapper.readValue(o.toString(), FinalCashFlow.class);
+                    return o == null ? null : objectMapper.readValue(o.toString(), PayoutSummary.class);
                 } catch (IOException e) {
                     log.warn("ObjectMapper readValue error", e);
                     throw new RuntimeException(e);
@@ -32,7 +32,7 @@ public class FinalCashFlowBinding extends JSONBBinding<FinalCashFlow> {
             }
 
             @Override
-            public Object to(FinalCashFlow jsonbElement) {
+            public Object to(PayoutSummary jsonbElement) {
                 try {
                     return jsonbElement == null ? null : objectMapper.writeValueAsString(jsonbElement);
                 } catch (JsonProcessingException e) {
@@ -47,47 +47,47 @@ public class FinalCashFlowBinding extends JSONBBinding<FinalCashFlow> {
             }
 
             @Override
-            public Class<FinalCashFlow> toType() {
-                return FinalCashFlow.class;
+            public Class<PayoutSummary> toType() {
+                return PayoutSummary.class;
             }
         };
     }
 
     @Override
-    public void sql(BindingSQLContext<FinalCashFlow> ctx) throws SQLException {
+    public void sql(BindingSQLContext<PayoutSummary> ctx) throws SQLException {
         ctx.render().visit(DSL.inline(ctx.convert(converter()).value())).sql("::jsonb");
 
     }
 
     @Override
-    public void register(BindingRegisterContext<FinalCashFlow> ctx) throws SQLException {
+    public void register(BindingRegisterContext<PayoutSummary> ctx) throws SQLException {
         ctx.statement().registerOutParameter(ctx.index(), Types.VARCHAR);
     }
 
     @Override
-    public void set(BindingSetStatementContext<FinalCashFlow> ctx) throws SQLException {
+    public void set(BindingSetStatementContext<PayoutSummary> ctx) throws SQLException {
         ctx.statement().setString(ctx.index(), Objects.toString(ctx.convert(converter()).value(), null));
     }
 
     @Override
-    public void get(BindingGetStatementContext<FinalCashFlow> ctx) throws SQLException {
+    public void get(BindingGetStatementContext<PayoutSummary> ctx) throws SQLException {
         ctx.convert(converter()).value(ctx.statement().getString(ctx.index()));
 
     }
 
     @Override
-    public void get(BindingGetResultSetContext<FinalCashFlow> ctx) throws SQLException {
+    public void get(BindingGetResultSetContext<PayoutSummary> ctx) throws SQLException {
         ctx.convert(converter()).value(ctx.resultSet().getString(ctx.index()));
     }
 
     @Override
-    public void set(BindingSetSQLOutputContext<FinalCashFlow> ctx) throws SQLException {
+    public void set(BindingSetSQLOutputContext<PayoutSummary> ctx) throws SQLException {
         throw new SQLFeatureNotSupportedException();
 
     }
 
     @Override
-    public void get(BindingGetSQLInputContext<FinalCashFlow> ctx) throws SQLException {
+    public void get(BindingGetSQLInputContext<PayoutSummary> ctx) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 }

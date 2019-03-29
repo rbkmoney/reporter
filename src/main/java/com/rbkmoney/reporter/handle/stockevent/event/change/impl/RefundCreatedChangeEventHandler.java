@@ -13,7 +13,7 @@ import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.handle.stockevent.event.change.InvoiceChangeEventsHandler;
 import com.rbkmoney.reporter.service.PaymentService;
 import com.rbkmoney.reporter.service.RefundService;
-import com.rbkmoney.reporter.util.CashFlowUtil;
+import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -59,7 +59,7 @@ public class RefundCreatedChangeEventHandler implements InvoiceChangeEventsHandl
         refund.setSequenceId(event.getSequence());
         refund.setInvoiceId(invoiceId);
         refund.setPaymentId(paymentId);
-        refund.setPartyId(payment.getPaymentId());
+        refund.setPartyId(payment.getPartyId());
         refund.setPartyShopId(payment.getPartyShopId());
         refund.setRefundId(refundId);
         refund.setRefundStatus(getRefundStatus(invoicePaymentRefund));
@@ -78,7 +78,7 @@ public class RefundCreatedChangeEventHandler implements InvoiceChangeEventsHandl
             refund.setRefundCurrencyCode(payment.getPaymentCurrencyCode());
         }
         refund.setRefundReason(invoicePaymentRefund.getReason());
-        refund.setRefundCashFlow(CashFlowUtil.toDtoFinalCashFlow(invoicePaymentRefundCreated.getCashFlow()));
+        refund.setRefundCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(invoicePaymentRefundCreated.getCashFlow()));
 
         refundService.save(refund);
         log.info("Invoice payment refund has been created, refundId={}, invoiceId={}, paymentId={}", refundId, invoiceId, paymentId);

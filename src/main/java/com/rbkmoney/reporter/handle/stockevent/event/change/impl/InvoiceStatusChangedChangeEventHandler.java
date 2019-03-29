@@ -44,6 +44,7 @@ public class InvoiceStatusChangedChangeEventHandler implements InvoiceChangeEven
         invoice.setEventId(event.getId());
         invoice.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         invoice.setEventType(InvoiceEventType.INVOICE_STATUS_CHANGED);
+        invoice.setSequenceId(event.getSequence());
         invoice.setInvoiceStatus(TBaseUtil.unionFieldToEnum(invoiceStatus, InvoiceStatus.class));
         invoice.setInvoiceStatusDetails(DamselUtil.getInvoiceStatusDetails(invoiceStatus));
 

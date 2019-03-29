@@ -352,30 +352,45 @@
                             <customTypes>
                                 <customType>
                                     <name>FinalCashFlow</name>
-                                    <type>com.rbkmoney.reporter.util.FinalCashFlow</type>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
+                                    <type>com.rbkmoney.reporter.util.json.FinalCashFlow</type>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
+                                </customType>
+                                <customType>
+                                    <name>PayoutSummary</name>
+                                    <type>com.rbkmoney.reporter.util.json.PayoutSummary</type>
+                                    <binding>com.rbkmoney.reporter.util.json.PayoutSummaryBinding</binding>
                                 </customType>
                             </customTypes>
                             <forcedTypes>
                                 <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
+                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
                                     <expression>.*\.payment.payment_cash_flow</expression>
                                 </forcedType>
                                 <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
+                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
                                     <expression>.*\.adjustment.adjustment_cash_flow</expression>
                                 </forcedType>
                                 <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
+                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
                                     <expression>.*\.adjustment.adjustment_cash_flow_inverse_old</expression>
                                 </forcedType>
                                 <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.FinalCashFlowBinding</binding>
+                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
                                     <expression>.*\.refund.refund_cash_flow</expression>
+                                </forcedType>
+                                <forcedType>
+                                    <userType>com.rbkmoney.reporter.util.json.PayoutSummary</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.PayoutSummaryBinding</binding>
+                                    <expression>.*\.payout.payout_summary</expression>
+                                </forcedType>
+                                <forcedType>
+                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
+                                    <expression>.*\.payout.payout_cash_flow</expression>
                                 </forcedType>
                             </forcedTypes>
                         </database>

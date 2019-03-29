@@ -9,6 +9,8 @@ import com.rbkmoney.reporter.service.RefundService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -17,6 +19,7 @@ public class RefundServiceImpl implements RefundService {
 
     private final RefundDao refundDao;
 
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Long save(Refund refund) throws StorageException {
         log.info("Trying to save refund, refund='{}'", refund);
@@ -29,6 +32,7 @@ public class RefundServiceImpl implements RefundService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Refund get(String invoiceId, String paymentId, String refundId) throws StorageException, NotFoundException {
         log.info("Trying to get refund, invoiceId='{}', paymentId='{}', refundId='{}'", invoiceId, paymentId, refundId);
@@ -44,6 +48,7 @@ public class RefundServiceImpl implements RefundService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public void updateNotCurrent(String invoiceId, String paymentId, String refundId) throws StorageException {
         log.info("Trying to update not current refunds, invoiceId='{}', paymentId='{}', refundId='{}'", invoiceId, paymentId, refundId);

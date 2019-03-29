@@ -1,22 +1,21 @@
 package com.rbkmoney.reporter.dao;
 
-import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.domain.tables.pojos.*;
 import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.util.FinalCashFlow;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.MerchantCashFlowAccount;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.ProviderCashFlowAccount;
-import com.rbkmoney.reporter.util.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.SystemCashFlowAccount;
+import com.rbkmoney.reporter.util.json.FinalCashFlow;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.MerchantCashFlowAccount;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.ProviderCashFlowAccount;
+import com.rbkmoney.reporter.util.json.FinalCashFlow.FinalCashFlowPosting.FinalCashFlowAccount.CashFlowAccount.SystemCashFlowAccount;
+import com.rbkmoney.reporter.util.json.PayoutSummary;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.rbkmoney.reporter.util.CashFlowUtil.getCashFlowPosting;
+import static com.rbkmoney.reporter.util.json.FinalCashFlowUtil.getCashFlowPosting;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -34,6 +33,9 @@ public class DaoTests extends AbstractAppDaoTests {
 
     @Autowired
     private RefundDao refundDao;
+
+    @Autowired
+    private PayoutDao payoutDao;
 
     @Test
     public void adjustmentDaoTest() throws DaoException {
@@ -84,9 +86,20 @@ public class DaoTests extends AbstractAppDaoTests {
     }
 
     @Test
+    public void payoutDaoTest() throws DaoException {
+        Payout payout = random(Payout.class, "payoutCashFlow", "payoutSummary");
+        payout.setId(null);
+        payout.setCurrent(true);
+        Long id = payoutDao.save(payout);
+        payout.setId(id);
+        assertEquals(payout, payoutDao.get(payout.getPayoutId()));
+        payoutDao.updateNotCurrent(payout.getPayoutId());
+        assertNull(payoutDao.get(payout.getPayoutId()));
+    }
+
+    @Test
     public void jsonbTest() throws DaoException {
-        FinalCashFlow finalCashFlow = new FinalCashFlow();
-        finalCashFlow.setCashFlows(getPostings());
+        FinalCashFlow finalCashFlow = getFinalCashFlow();
 
         Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
         adjustment.setId(null);
@@ -95,16 +108,54 @@ public class DaoTests extends AbstractAppDaoTests {
         Long id = adjustmentDao.save(adjustment);
         adjustment.setId(id);
         assertEquals(adjustment.getAdjustmentCashFlow().getCashFlows().get(0).getSource().getAccountId(), adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()).getAdjustmentCashFlow().getCashFlows().get(0).getSource().getAccountId());
+
+        PayoutSummary payoutSummary = getPayoutSummary();
+        Payout payout = random(Payout.class, "payoutCashFlow", "payoutSummary");
+        payout.setId(null);
+        payout.setCurrent(true);
+        payout.setPayoutSummary(payoutSummary);
+        id = payoutDao.save(payout);
+        payout.setId(id);
+        assertEquals(payout.getPayoutSummary().getPayoutSummaryItems().get(0).getFromTime(), payoutDao.get(payout.getPayoutId()).getPayoutSummary().getPayoutSummaryItems().get(0).getFromTime());
     }
 
-    private List<FinalCashFlowPosting> getPostings() {
+    private FinalCashFlow getFinalCashFlow() {
         List<FinalCashFlowPosting> postings = new ArrayList<>();
         postings.add(getCashFlowPosting(13444L, MerchantCashFlowAccount.MerchantCashFlowAccountType.SETTLEMENT, 6L, SystemCashFlowAccount.SystemCashFlowAccountType.SETTLEMENT, 1425L, "RUB"));
         postings.add(getCashFlowPosting(13444L, MerchantCashFlowAccount.MerchantCashFlowAccountType.SETTLEMENT, 6L, SystemCashFlowAccount.SystemCashFlowAccountType.SETTLEMENT, 1425L, "RUB"));
         postings.add(getCashFlowPosting(5681L, ProviderCashFlowAccount.ProviderCashFlowAccountType.SETTLEMENT, 13444L, MerchantCashFlowAccount.MerchantCashFlowAccountType.SETTLEMENT, 50000L, "RUB"));
         postings.add(getCashFlowPosting(5681L, ProviderCashFlowAccount.ProviderCashFlowAccountType.SETTLEMENT, 13444L, MerchantCashFlowAccount.MerchantCashFlowAccountType.SETTLEMENT, 50000L, "RUB"));
         postings.add(getCashFlowPosting(6L, SystemCashFlowAccount.SystemCashFlowAccountType.SETTLEMENT, 5681L, ProviderCashFlowAccount.ProviderCashFlowAccountType.SETTLEMENT, 1100L, "RUB"));
-        return postings;
+
+        FinalCashFlow finalCashFlow = new FinalCashFlow();
+        finalCashFlow.setCashFlows(postings);
+        return finalCashFlow;
     }
 
+    private PayoutSummary getPayoutSummary() {
+        List<PayoutSummary.PayoutSummaryItem> payoutSummaryItems = new ArrayList<>();
+        payoutSummaryItems.add(getPayoutSummaryItem(0L, 0L, 0, PayoutSummary.PayoutSummaryItem.OperationType.PAYMENT, LocalDateTime.now(), LocalDateTime.now(), "RUB"));
+        payoutSummaryItems.add(getPayoutSummaryItem(0L, 0L, 0, PayoutSummary.PayoutSummaryItem.OperationType.PAYMENT, LocalDateTime.now(), LocalDateTime.now(), "RUB"));
+        payoutSummaryItems.add(getPayoutSummaryItem(0L, 0L, 0, PayoutSummary.PayoutSummaryItem.OperationType.PAYMENT, LocalDateTime.now(), LocalDateTime.now(), "RUB"));
+        payoutSummaryItems.add(getPayoutSummaryItem(0L, 0L, 0, PayoutSummary.PayoutSummaryItem.OperationType.PAYMENT, LocalDateTime.now(), LocalDateTime.now(), "RUB"));
+
+        PayoutSummary payoutSummary = new PayoutSummary();
+        payoutSummary.setPayoutSummaryItems(payoutSummaryItems);
+        return payoutSummary;
+    }
+
+    private PayoutSummary.PayoutSummaryItem getPayoutSummaryItem(long amount, long fee, int count, PayoutSummary.PayoutSummaryItem.OperationType operationType, LocalDateTime toTime, LocalDateTime fromTime, String symbolicCode) {
+        PayoutSummary.PayoutSummaryItem.CurrencyRef currency = new PayoutSummary.PayoutSummaryItem.CurrencyRef();
+        currency.setSymbolicCode(symbolicCode);
+
+        PayoutSummary.PayoutSummaryItem payoutSummaryItem = new PayoutSummary.PayoutSummaryItem();
+        payoutSummaryItem.setAmount(amount);
+        payoutSummaryItem.setFee(fee);
+        payoutSummaryItem.setCount(count);
+        payoutSummaryItem.setOperationType(operationType);
+        payoutSummaryItem.setToTime(toTime);
+        payoutSummaryItem.setFromTime(fromTime);
+        payoutSummaryItem.setCurrency(currency);
+        return payoutSummaryItem;
+    }
 }

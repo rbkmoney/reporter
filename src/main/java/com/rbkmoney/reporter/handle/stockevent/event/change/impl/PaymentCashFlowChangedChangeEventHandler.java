@@ -11,7 +11,7 @@ import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.handle.stockevent.event.change.InvoiceChangeEventsHandler;
 import com.rbkmoney.reporter.service.PaymentService;
-import com.rbkmoney.reporter.util.CashFlowUtil;
+import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -50,7 +50,7 @@ public class PaymentCashFlowChangedChangeEventHandler implements InvoiceChangeEv
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_CASH_FLOW_CHANGED);
         payment.setSequenceId(event.getSequence());
-        payment.setPaymentCashFlow(CashFlowUtil.toDtoFinalCashFlow(finalCashFlowPostings));
+        payment.setPaymentCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(finalCashFlowPostings));
 
         paymentService.updateNotCurrent(invoiceId, paymentId);
         paymentService.save(payment);

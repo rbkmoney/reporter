@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.util;
+package com.rbkmoney.reporter.util.json;
 
 import com.fasterxml.jackson.annotation.*;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FinalCashFlow {
 
-    @JsonProperty("cash_flow")
+    @JsonProperty("cash_flows")
     private List<FinalCashFlowPosting> cashFlows;
 
     @Data

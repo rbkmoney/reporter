@@ -6,7 +6,7 @@ import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.SubscriberConfig;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
 import com.rbkmoney.reporter.config.properties.EventStockProperties;
-import com.rbkmoney.reporter.service.InvoiceService;
+import com.rbkmoney.reporter.service.ProcessingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -20,14 +20,14 @@ public class OnEventStockStart implements ApplicationListener<ApplicationReadyEv
 
     private final EventPublisher eventStockPublisher;
 
-    private final InvoiceService invoiceService;
+    private final ProcessingService processingService;
 
     private final EventStockProperties eventStockProperties;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         if (eventStockProperties.isPollingEnable()) {
-            eventStockPublisher.subscribe(buildSubscriberConfig(invoiceService.getCommonLastEventId()));
+            eventStockPublisher.subscribe(buildSubscriberConfig(processingService.getLastEventId()));
         }
     }
 

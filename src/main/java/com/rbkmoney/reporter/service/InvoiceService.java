@@ -4,11 +4,7 @@ import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.StorageException;
 
-import java.util.Optional;
-
 public interface InvoiceService {
-
-    Optional<Long> getCommonLastEventId();
 
     Long save(Invoice invoice) throws StorageException;
 

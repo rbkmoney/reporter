@@ -25,10 +25,10 @@ public class InvoicePaymentProcessingEventHandlerImpl implements PaymentProcessi
 
     @Override
     public void handle(Event specific, StockEvent stockEvent) {
-        for (InvoiceChange invoiceChange : specific.getPayload().getInvoiceChanges()) {
+        for (InvoiceChange change : specific.getPayload().getInvoiceChanges()) {
             for (InvoiceChangeEventsHandler eventHandler : eventHandlers) {
-                if (eventHandler.accept(invoiceChange)) {
-                    eventHandler.handle(invoiceChange, stockEvent);
+                if (eventHandler.accept(change)) {
+                    eventHandler.handle(change, stockEvent);
                 }
             }
         }

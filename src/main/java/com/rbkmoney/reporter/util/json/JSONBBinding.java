@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.util;
+package com.rbkmoney.reporter.util.json;
 
 import org.jooq.Binding;
 

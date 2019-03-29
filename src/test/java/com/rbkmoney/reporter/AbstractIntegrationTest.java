@@ -62,7 +62,8 @@ public abstract class AbstractIntegrationTest {
                     "storage.signingRegion=RU",
                     "storage.bucketName=" + BUCKET_NAME,
                     "storage.accessKey=" + AWS_ACCESS_KEY,
-                    "storage.secretKey=" + AWS_SECRET_KEY
+                    "storage.secretKey=" + AWS_SECRET_KEY,
+                    "eventstock.pollingEnable=false"
             );
         }
     }

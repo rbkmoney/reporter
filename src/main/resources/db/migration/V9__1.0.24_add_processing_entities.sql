@@ -140,22 +140,22 @@ CREATE TYPE rpt.adjustment_status AS ENUM ('pending', 'captured', 'cancelled');
 
 CREATE TABLE rpt.adjustment
 (
-  id                               BIGSERIAL                   NOT NULL,
-  event_id                         BIGINT                      NOT NULL,
-  event_created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-  event_type                       rpt.invoice_event_type      NOT NULL,
-  sequence_id                      INT                         NOT NULL,
-  invoice_id                       CHARACTER VARYING           NOT NULL,
-  payment_id                       CHARACTER VARYING           NOT NULL,
-  party_id                         CHARACTER VARYING           NOT NULL,
-  party_shop_id                    CHARACTER VARYING           NOT NULL,
-  adjustment_id                    CHARACTER VARYING           NOT NULL,
-  adjustment_status                rpt.adjustment_status       NOT NULL,
-  adjustment_status_created_at     TIMESTAMP WITHOUT TIME ZONE,
-  adjustment_created_at            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-  adjustment_domain_revision       BIGINT,
-  adjustment_reason                CHARACTER VARYING           NOT NULL,
-  adjustment_cash_flow             JSONB,
+  id                           BIGSERIAL                   NOT NULL,
+  event_id                     BIGINT                      NOT NULL,
+  event_created_at             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  event_type                   rpt.invoice_event_type      NOT NULL,
+  sequence_id                  INT                         NOT NULL,
+  invoice_id                   CHARACTER VARYING           NOT NULL,
+  payment_id                   CHARACTER VARYING           NOT NULL,
+  party_id                     UUID                        NOT NULL,
+  party_shop_id                CHARACTER VARYING           NOT NULL,
+  adjustment_id                CHARACTER VARYING           NOT NULL,
+  adjustment_status            rpt.adjustment_status       NOT NULL,
+  adjustment_status_created_at TIMESTAMP WITHOUT TIME ZONE,
+  adjustment_created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  adjustment_domain_revision   BIGINT,
+  adjustment_reason            CHARACTER VARYING           NOT NULL,
+  adjustment_cash_flow         JSONB,
   adjustment_cash_flow_inverse_old JSONB,
   adjustment_party_revision        BIGINT,
   wtime                            TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
@@ -181,7 +181,7 @@ CREATE TABLE rpt.refund
   sequence_id                    INT                         NOT NULL,
   invoice_id                     CHARACTER VARYING           NOT NULL,
   payment_id                     CHARACTER VARYING           NOT NULL,
-  party_id                       CHARACTER VARYING           NOT NULL,
+  party_id                       UUID                        NOT NULL,
   party_shop_id                  CHARACTER VARYING           NOT NULL,
   refund_id                      CHARACTER VARYING           NOT NULL,
   refund_status                  rpt.refund_status           NOT NULL,
@@ -204,3 +204,68 @@ CREATE TABLE rpt.refund
 
 CREATE INDEX refund_refund_id_event_created_at_idx on rpt.refund (refund_id, event_created_at);
 CREATE INDEX refund_refund_created_at_idx ON rpt.refund (refund_created_at);
+
+-- payout
+
+CREATE TYPE rpt.payout_event_category AS ENUM ('PAYOUT');
+CREATE TYPE rpt.payout_event_type AS ENUM ('PAYOUT_CREATED', 'PAYOUT_STATUS_CHANGED');
+CREATE TYPE rpt.payout_status AS ENUM ('unpaid', 'paid', 'cancelled', 'confirmed');
+CREATE TYPE rpt.payout_type AS ENUM ('bank_card', 'bank_account', 'wallet');
+CREATE TYPE rpt.payout_account_type AS ENUM ('RUSSIAN_PAYOUT_ACCOUNT', 'INTERNATIONAL_PAYOUT_ACCOUNT');
+
+CREATE TABLE rpt.payout
+(
+  id                                                           BIGSERIAL                   NOT NULL,
+  event_id                                                     BIGINT                      NOT NULL,
+  event_created_at                                             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  event_type                                                   rpt.payout_event_type       NOT NULL,
+  event_category                                               rpt.payout_event_category   NOT NULL,
+  sequence_id                                                  INT                         NOT NULL,
+  payout_id                                                    CHARACTER VARYING           NOT NULL,
+  party_id                                                     UUID                        NOT NULL,
+  party_shop_id                                                CHARACTER VARYING           NOT NULL,
+  contract_id                                                  CHARACTER VARYING           NOT NULL,
+  payout_created_at                                            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  payout_status                                                rpt.payout_status           NOT NULL,
+  payout_amount                                                BIGINT                      NOT NULL,
+  payout_fee                                                   BIGINT,
+  payout_currency_code                                         CHARACTER VARYING           NOT NULL,
+  payout_cash_flow                                             JSONB,
+  payout_type                                                  rpt.payout_type             NOT NULL,
+  payout_wallet_id                                             CHARACTER VARYING,
+  payout_account_type                                          rpt.payout_account_type,
+  payout_account_bank_id                                       CHARACTER VARYING,
+  payout_account_bank_corr_id                                  CHARACTER VARYING,
+  payout_account_bank_local_code                               CHARACTER VARYING,
+  payout_account_bank_name                                     CHARACTER VARYING,
+  payout_account_purpose                                       CHARACTER VARYING,
+  payout_account_inn                                           CHARACTER VARYING,
+  payout_account_legal_agreement_id                            CHARACTER VARYING,
+  payout_account_legal_agreement_signed_at                     TIMESTAMP WITHOUT TIME ZONE,
+  payout_account_trading_name                                  CHARACTER VARYING,
+  payout_account_legal_name                                    CHARACTER VARYING,
+  payout_account_actual_address                                CHARACTER VARYING,
+  payout_account_registered_address                            CHARACTER VARYING,
+  payout_account_registered_number                             CHARACTER VARYING,
+  payout_account_bank_iban                                     CHARACTER VARYING,
+  payout_account_bank_number                                   CHARACTER VARYING,
+  payout_account_bank_address                                  CHARACTER VARYING,
+  payout_account_bank_bic                                      CHARACTER VARYING,
+  payout_account_bank_aba_rtn                                  CHARACTER VARYING,
+  payout_account_bank_country_code                             CHARACTER VARYING,
+  payout_cancel_details                                        CHARACTER VARYING,
+  payout_international_correspondent_account_bank_account      CHARACTER VARYING,
+  payout_international_correspondent_account_bank_number       CHARACTER VARYING,
+  payout_international_correspondent_account_bank_iban         CHARACTER VARYING,
+  payout_international_correspondent_account_bank_name         CHARACTER VARYING,
+  payout_international_correspondent_account_bank_address      CHARACTER VARYING,
+  payout_international_correspondent_account_bank_bic          CHARACTER VARYING,
+  payout_international_correspondent_account_bank_aba_rtn      CHARACTER VARYING,
+  payout_international_correspondent_account_bank_country_code CHARACTER VARYING,
+  payout_summary                                               JSONB,
+  wtime                                                        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
+  current                                                      BOOLEAN                     NOT NULL DEFAULT TRUE,
+  CONSTRAINT payout_pkey PRIMARY KEY (id),
+  CONSTRAINT payout_ukey
+    UNIQUE (event_id, event_type, payout_status)
+);
