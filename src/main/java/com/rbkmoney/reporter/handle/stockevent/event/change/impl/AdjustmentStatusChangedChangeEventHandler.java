@@ -50,6 +50,8 @@ public class AdjustmentStatusChangedChangeEventHandler implements InvoiceChangeE
 
         Adjustment adjustment = adjustmentService.get(invoiceId, paymentId, adjustmentId);
 
+        adjustment.setId(null);
+        adjustment.setWtime(null);
         adjustment.setEventId(event.getId());
         adjustment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_STATUS_CHANGED);

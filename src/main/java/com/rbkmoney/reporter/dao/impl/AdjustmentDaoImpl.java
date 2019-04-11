@@ -47,7 +47,12 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     @Override
     public Long save(Adjustment adjustment) throws DaoException {
         AdjustmentRecord record = getDslContext().newRecord(ADJUSTMENT, adjustment);
-        Query query = getDslContext().insertInto(ADJUSTMENT).set(record).returning(ADJUSTMENT.ID);
+        Query query = getDslContext().insertInto(ADJUSTMENT)
+                .set(record)
+                .onConflict(ADJUSTMENT.EVENT_ID, ADJUSTMENT.EVENT_TYPE, ADJUSTMENT.ADJUSTMENT_STATUS)
+                .doUpdate()
+                .set(record)
+                .returning(ADJUSTMENT.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
         return keyHolder.getKey().longValue();

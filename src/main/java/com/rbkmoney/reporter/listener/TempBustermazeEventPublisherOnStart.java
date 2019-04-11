@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class OnEventStockStart implements ApplicationListener<ApplicationReadyEvent> {
+public class TempBustermazeEventPublisherOnStart implements ApplicationListener<ApplicationReadyEvent> {
 
     private final EventPublisher tempBustermazeEventPublisher;
 

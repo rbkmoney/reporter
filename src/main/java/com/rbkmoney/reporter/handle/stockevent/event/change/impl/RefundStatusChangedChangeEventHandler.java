@@ -49,6 +49,8 @@ public class RefundStatusChangedChangeEventHandler implements InvoiceChangeEvent
 
         Refund refund = refundService.get(invoiceId, paymentId, refundId);
 
+        refund.setId(null);
+        refund.setWtime(null);
         refund.setEventId(event.getId());
         refund.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_STATUS_CHANGED);

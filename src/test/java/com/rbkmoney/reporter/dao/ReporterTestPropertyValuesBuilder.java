@@ -26,7 +26,6 @@ public class ReporterTestPropertyValuesBuilder {
         strings.add("bustermaze.polling.enable=false");
         strings.add("jobs.synchronization.enabled=false");
         strings.add("jobs.report.enabled=false");
-        strings.add("logging.level.root=info");
         return strings.toArray(new String[0]);
     }
 

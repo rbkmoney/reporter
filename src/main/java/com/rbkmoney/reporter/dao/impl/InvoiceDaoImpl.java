@@ -38,7 +38,12 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
     @Override
     public Long save(Invoice invoice) throws DaoException {
         InvoiceRecord invoiceRecord = getDslContext().newRecord(INVOICE, invoice);
-        Query query = getDslContext().insertInto(INVOICE).set(invoiceRecord).returning(INVOICE.ID);
+        Query query = getDslContext().insertInto(INVOICE)
+                .set(invoiceRecord)
+                .onConflict(INVOICE.EVENT_ID, INVOICE.EVENT_TYPE, INVOICE.INVOICE_STATUS)
+                .doUpdate()
+                .set(invoiceRecord)
+                .returning(INVOICE.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
         return keyHolder.getKey().longValue();

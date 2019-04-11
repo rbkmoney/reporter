@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.service;
+package com.rbkmoney.reporter.event;
 
 import com.rbkmoney.AbstractTestUtils;
 import com.rbkmoney.TestContainers;
@@ -19,13 +19,13 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@ContextConfiguration(classes = ReporterApplication.class, initializers = AbstractAppSerivceTests.Initializer.class)
+@ContextConfiguration(classes = ReporterApplication.class, initializers = AbstractAppEventServiceTests.Initializer.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public abstract class AbstractAppSerivceTests extends AbstractTestUtils {
+public abstract class AbstractAppEventServiceTests extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builder(false)
             .addPostgreSQLTestContainer()
-            // todo ceph-container -> file-storage
+            // todo rm ceph-container
             .addCephTestContainer()
             .build();
 

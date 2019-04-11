@@ -47,7 +47,12 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     @Override
     public Long save(Payout payout) throws DaoException {
         PayoutRecord payoutRecord = getDslContext().newRecord(PAYOUT, payout);
-        Query query = getDslContext().insertInto(PAYOUT).set(payoutRecord).returning(PAYOUT.ID);
+        Query query = getDslContext().insertInto(PAYOUT)
+                .set(payoutRecord)
+                .onConflict(PAYOUT.EVENT_ID, PAYOUT.EVENT_TYPE, PAYOUT.PAYOUT_STATUS)
+                .doUpdate()
+                .set(payoutRecord)
+                .returning(PAYOUT.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
         return keyHolder.getKey().longValue();

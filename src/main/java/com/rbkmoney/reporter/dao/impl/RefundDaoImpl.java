@@ -53,7 +53,12 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     @Override
     public Long save(Refund refund) throws DaoException {
         RefundRecord record = getDslContext().newRecord(REFUND, refund);
-        Query query = getDslContext().insertInto(REFUND).set(record).returning(REFUND.ID);
+        Query query = getDslContext().insertInto(REFUND)
+                .set(record)
+                .onConflict(REFUND.EVENT_ID, REFUND.EVENT_TYPE, REFUND.REFUND_STATUS)
+                .doUpdate()
+                .set(record)
+                .returning(REFUND.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
         return keyHolder.getKey().longValue();

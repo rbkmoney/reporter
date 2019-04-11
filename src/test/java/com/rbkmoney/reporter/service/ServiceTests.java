@@ -21,7 +21,7 @@ import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class ServiceTests extends AbstractAppSerivceTests {
+public class ServiceTests extends AbstractAppServiceTests {
 
     @Autowired
     private ReportingService reportingService;

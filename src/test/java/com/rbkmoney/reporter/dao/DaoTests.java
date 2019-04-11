@@ -57,6 +57,20 @@ public class DaoTests extends AbstractAppDaoTests {
 
     @Test
     @Sql("classpath:data/sql/truncate.sql")
+    public void adjustmentDaoDuplicationTest() throws DaoException {
+        Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
+        adjustment.setId(null);
+        adjustment.setCurrent(true);
+        adjustmentDao.save(adjustment);
+        Long id = adjustmentDao.save(adjustment);
+        adjustment.setId(id);
+        assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
+        adjustmentDao.updateNotCurrent(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId());
+        assertNull(adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
+    }
+
+    @Test
+    @Sql("classpath:data/sql/truncate.sql")
     public void invoiceDaoTest() throws DaoException {
         Invoice invoice = random(Invoice.class);
         invoice.setId(null);

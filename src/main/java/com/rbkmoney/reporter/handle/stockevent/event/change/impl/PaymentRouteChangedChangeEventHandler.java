@@ -43,6 +43,8 @@ public class PaymentRouteChangedChangeEventHandler implements InvoiceChangeEvent
 
         Payment payment = paymentService.get(invoiceId, paymentId);
 
+        payment.setId(null);
+        payment.setWtime(null);
         payment.setEventId(event.getId());
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ROUTE_CHANGED);

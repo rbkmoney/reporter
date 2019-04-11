@@ -37,6 +37,8 @@ public class PayoutStatusChangedChangeEventHandler implements PayoutChangeEvents
 
         Payout payout = payoutService.get(payoutId);
 
+        payout.setId(null);
+        payout.setWtime(null);
         payout.setEventId(event.getId());
         payout.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         payout.setEventType(PayoutEventType.PAYOUT_STATUS_CHANGED);

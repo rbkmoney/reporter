@@ -41,6 +41,8 @@ public class InvoiceStatusChangedChangeEventHandler implements InvoiceChangeEven
 
         Invoice invoice = invoiceService.get(invoiceId);
 
+        invoice.setId(null);
+        invoice.setWtime(null);
         invoice.setEventId(event.getId());
         invoice.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         invoice.setEventType(InvoiceEventType.INVOICE_STATUS_CHANGED);
