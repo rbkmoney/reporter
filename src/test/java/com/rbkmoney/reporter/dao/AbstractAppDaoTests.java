@@ -23,7 +23,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractAppDaoTests extends AbstractTestUtils {
 
-    private static TestContainers testContainers = TestContainersBuilder.builder(true)
+    private static TestContainers testContainers = TestContainersBuilder.builder(false)
             .addPostgreSQLTestContainer()
             // todo цеф нужен на дао тестах потому что по дефолту при запуске приложения идет подключение к цеф, по факту на тестах дао сеф дергаться не должен
             .addCephTestContainer()

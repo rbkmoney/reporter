@@ -90,7 +90,7 @@ public class TestContainers {
                                 .withEnv("storage.accessKey", AWS_ACCESS_KEY)
                                 .withEnv("storage.secretKey", AWS_SECRET_KEY)
                                 .withEnv("storage.clientProtocol", PROTOCOL)
-                                .withEnv("storage.clientMaxErrorRetry", MAX_ERROR_RETRY)
+                                .withEnv("storage.client.maxErrorRetry", MAX_ERROR_RETRY)
                                 .withEnv("storage.bucketName", BUCKET_NAME)
                                 .withEnv("server.port", String.valueOf(FILE_STORAGE_PORT))
                                 .waitingFor(getNetworkModeHostWaitStrategy("/actuator/health", 200, FILE_STORAGE_PORT, Duration.ofMinutes(1)));

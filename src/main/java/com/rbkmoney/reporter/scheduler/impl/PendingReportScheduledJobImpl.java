@@ -22,9 +22,14 @@ public class PendingReportScheduledJobImpl implements ScheduledJob {
     @Override
     public void run() {
         List<Report> reports = reportService.getPendingReports();
+        if (reports.isEmpty()) {
+            log.info("No pending reports found, nothing to do");
+            return;
+        }
         log.debug("Trying to process {} pending reports", reports.size());
         for (Report report : reports) {
             reportService.generateReport(report);
         }
+        log.info("End process {} pending reports", reports.size());
     }
 }

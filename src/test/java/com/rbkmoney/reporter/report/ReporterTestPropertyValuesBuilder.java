@@ -21,7 +21,7 @@ public class ReporterTestPropertyValuesBuilder {
         strings.add("storage.accessKey=" + AWS_ACCESS_KEY);
         strings.add("storage.secretKey=" + AWS_SECRET_KEY);
         strings.add("storage.clientProtocol=" + PROTOCOL);
-        strings.add("storage.clientMaxErrorRetry=" + MAX_ERROR_RETRY);
+        strings.add("storage.client.maxErrorRetry=" + MAX_ERROR_RETRY);
         strings.add("storage.bucketName=" + BUCKET_NAME);
         strings.add("bustermaze.polling.enable=false");
         strings.add("jobs.synchronization.enabled=false");
