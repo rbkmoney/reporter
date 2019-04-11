@@ -5,4 +5,5 @@ import java.util.Optional;
 public interface ProcessingService {
 
     Optional<Long> getLastEventId();
+
 }

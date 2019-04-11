@@ -14,5 +14,6 @@ public class BustermazeProperties {
     private int delay;
     private int maxPoolSize;
     private int housekeeperTimeout;
+    private boolean enable;
 
 }

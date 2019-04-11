@@ -13,7 +13,7 @@
 
     <groupId>com.rbkmoney</groupId>
     <artifactId>reporter</artifactId>
-    <version>1.0.24-SNAPSHOT</version>
+    <version>1.1.24-SNAPSHOT</version>
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
@@ -391,6 +391,11 @@
                                     <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
                                     <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
                                     <expression>.*\.payout.payout_cash_flow</expression>
+                                </forcedType>
+                                <forcedType>
+                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
+                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
+                                    <expression>.*\.data_with_cash_flows</expression>
                                 </forcedType>
                             </forcedTypes>
                         </database>

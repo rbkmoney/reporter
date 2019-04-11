@@ -13,8 +13,12 @@ bustermaze:
     maxPoolSize: 1
     housekeeperTimeout: 15000
     url: http://bustermaze:8022/repo
-eventstock:
-  pollingEnable: true
+    enable: true
+jobs:
+  synchronization:
+    enabled: true
+  report:
+    enabled: true
 signer:
   url: http://signer:8022/signer
   timeout: 5000

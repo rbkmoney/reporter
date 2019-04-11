@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.utils;
+package com.rbkmoney.reporter.report;
 
 import com.rbkmoney.TestContainers;
 
@@ -23,7 +23,10 @@ public class ReporterTestPropertyValuesBuilder {
         strings.add("storage.clientProtocol=" + PROTOCOL);
         strings.add("storage.clientMaxErrorRetry=" + MAX_ERROR_RETRY);
         strings.add("storage.bucketName=" + BUCKET_NAME);
-        strings.add("eventstock.pollingEnable=false");
+        strings.add("bustermaze.polling.enable=false");
+        strings.add("jobs.synchronization.enabled=false");
+        strings.add("jobs.report.enabled=true");
+        strings.add("scheduled.initialDelay=1500");
         strings.add("logging.level.root=info");
         return strings.toArray(new String[0]);
     }

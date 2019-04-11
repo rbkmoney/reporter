@@ -71,8 +71,8 @@ public class RefundCreatedChangeEventHandler implements InvoiceChangeEventsHandl
         if (invoicePaymentRefund.isSetCash()) {
             Cash cash = invoicePaymentRefund.getCash();
 
-            refund.setRefundCurrencyCode(cash.getCurrency().getSymbolicCode());
             refund.setRefundAmount(cash.getAmount());
+            refund.setRefundCurrencyCode(cash.getCurrency().getSymbolicCode());
         } else {
             refund.setRefundAmount(payment.getPaymentAmount());
             refund.setRefundCurrencyCode(payment.getPaymentCurrencyCode());

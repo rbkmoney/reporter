@@ -37,7 +37,7 @@ public class FinalCashFlow {
             @JsonProperty("account_id")
             private Long accountId;
 
-            @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+            @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
             @JsonSubTypes({
                     @JsonSubTypes.Type(value = CashFlowAccount.MerchantCashFlowAccount.class, name = "MerchantCashFlowAccount"),
                     @JsonSubTypes.Type(value = CashFlowAccount.ProviderCashFlowAccount.class, name = "ProviderCashFlowAccount"),

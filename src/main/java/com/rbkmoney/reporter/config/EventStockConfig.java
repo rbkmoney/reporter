@@ -27,8 +27,8 @@ public class EventStockConfig {
     }
 
     @Bean
-    public EventPublisher eventStockPublisher(EventStockClientHandler eventStockHandler,
-                                              BustermazeProperties properties) throws IOException {
+    public EventPublisher tempBustermazeEventPublisher(EventStockClientHandler eventStockHandler,
+                                                       BustermazeProperties properties) throws IOException {
         return new PollingEventPublisherBuilder()
                 .withURI(properties.getUrl().getURI())
                 .withHousekeeperTimeout(properties.getHousekeeperTimeout())

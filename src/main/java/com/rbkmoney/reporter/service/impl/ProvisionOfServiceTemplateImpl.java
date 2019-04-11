@@ -8,49 +8,38 @@ import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.StorageException;
-import com.rbkmoney.reporter.model.ShopAccountingModel;
 import com.rbkmoney.reporter.service.PartyService;
-import com.rbkmoney.reporter.service.StatisticService;
+import com.rbkmoney.reporter.service.ReportingService;
 import com.rbkmoney.reporter.service.TemplateService;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jxls.common.Context;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class ProvisionOfServiceTemplateImpl implements TemplateService {
 
-    public static final String DEFAULT_REPORT_CURRENCY_CODE = "RUB";
-
-    private final StatisticService statisticService;
+    private static final String DEFAULT_REPORT_CURRENCY_CODE = "RUB";
 
     private final PartyService partyService;
+    private final ReportingService reportingService;
 
     private final ContractMetaDao contractMetaDao;
 
-    private final Resource resource;
-
-    @Autowired
-    public ProvisionOfServiceTemplateImpl(
-            StatisticService statisticService,
-            PartyService partyService,
-            ContractMetaDao contractMetaDao,
-            @Value("${report.type.pos.path|classpath:templates/provision_of_service_act.xlsx}") ClassPathResource resource
-    ) {
-        this.statisticService = statisticService;
-        this.partyService = partyService;
-        this.contractMetaDao = contractMetaDao;
-        this.resource = resource;
-    }
+    @Value("${report.type.pos.path|classpath:templates/provision_of_service_act.xlsx}")
+    private ClassPathResource resource;
 
     @Override
     public boolean accept(ReportType reportType) {
@@ -60,6 +49,12 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
     @Override
     public void processReportTemplate(Report report, OutputStream outputStream) throws IOException {
         try {
+            String fundsAcquired = "funds_acquired";
+            String feeCharged = "fee_charged";
+            String fundsPaidOut = "funds_paid_out";
+            String fundsRefunded = "funds_refunded";
+            String fundsAdjusted = "funds_adjusted";
+
             Party party = partyService.getParty(report.getPartyId(), report.getCreatedAt().toInstant(ZoneOffset.UTC));
             Shop shop = party.getShops().get(report.getPartyShopId());
             if (shop == null) {
@@ -108,31 +103,33 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
             context.putVar("representative_full_name", contractMeta.getRepresentativeFullName());
             context.putVar("representative_position", contractMeta.getRepresentativePosition());
 
-            ShopAccountingModel shopAccountingModel = statisticService.getShopAccounting(
+            Map<String, Long> accountingData = reportingService.getShopAccountingReportData(
                     report.getPartyId(),
                     report.getPartyShopId(),
                     DEFAULT_REPORT_CURRENCY_CODE,
-                    report.getFromTime().toInstant(ZoneOffset.UTC),
-                    report.getToTime().toInstant(ZoneOffset.UTC)
+                    report.getFromTime(),
+                    report.getToTime()
             );
-            context.putVar("funds_acquired", FormatUtil.formatCurrency(shopAccountingModel.getFundsAcquired()));
-            context.putVar("fee_charged", FormatUtil.formatCurrency(shopAccountingModel.getFeeCharged()));
-            context.putVar("funds_paid_out", FormatUtil.formatCurrency(shopAccountingModel.getFundsPaidOut()));
-            context.putVar("funds_refunded", FormatUtil.formatCurrency(shopAccountingModel.getFundsRefunded()));
+
+            context.putVar(fundsAcquired, FormatUtil.formatCurrency(accountingData.get(fundsAcquired)));
+            context.putVar(feeCharged, FormatUtil.formatCurrency(accountingData.get(feeCharged)));
+            context.putVar(fundsPaidOut, FormatUtil.formatCurrency(accountingData.get(fundsPaidOut)));
+            context.putVar(fundsRefunded, FormatUtil.formatCurrency(accountingData.get(fundsRefunded)));
 
             long openingBalance;
             if (contractMeta.getLastClosingBalance() == null) {
-                ShopAccountingModel previousPeriod = statisticService.getShopAccounting(
+                Map<String, Long> prevAccountingData = reportingService.getShopAccountingReportData(
                         report.getPartyId(),
                         report.getPartyShopId(),
                         DEFAULT_REPORT_CURRENCY_CODE,
-                        report.getFromTime().toInstant(ZoneOffset.UTC)
+                        report.getFromTime()
                 );
-                openingBalance = previousPeriod.getAvailableFunds();
+                openingBalance = getAvailableFunds(fundsAcquired, feeCharged, fundsPaidOut, fundsRefunded, fundsAdjusted, prevAccountingData);
             } else {
                 openingBalance = contractMeta.getLastClosingBalance();
             }
-            long closingBalance = openingBalance + shopAccountingModel.getAvailableFunds();
+
+            long closingBalance = openingBalance + getAvailableFunds(fundsAcquired, feeCharged, fundsPaidOut, fundsRefunded, fundsAdjusted, accountingData);
 //            contractMetaDao.saveLastClosingBalance(report.getPartyId(), contractId, closingBalance);
             context.putVar("opening_balance", FormatUtil.formatCurrency(openingBalance));
             context.putVar("closing_balance", FormatUtil.formatCurrency(closingBalance));
@@ -143,4 +140,8 @@ public class ProvisionOfServiceTemplateImpl implements TemplateService {
         }
     }
 
+    private long getAvailableFunds(String fundsAcquired, String feeCharged, String fundsPaidOut, String fundsRefunded, String fundsAdjusted, Map<String, Long> accountingData) {
+        return accountingData.get(fundsAcquired) + accountingData.get(fundsAdjusted)
+                - accountingData.get(feeCharged) - accountingData.get(fundsPaidOut) - accountingData.get(fundsRefunded);
+    }
 }

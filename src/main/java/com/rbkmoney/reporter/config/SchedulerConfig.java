@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by tolkonepiu on 17/07/2017.
  */
 @Configuration
-public class TaskConfig {
+public class SchedulerConfig {
 
     @Bean
     @DependsOn("dataSource")
@@ -24,16 +24,18 @@ public class TaskConfig {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setDaemon(true);
         ThreadGroup threadGroup = new ThreadGroup("Schedulers");
-        taskScheduler.setThreadFactory(new ThreadFactory() {
-            AtomicInteger counter = new AtomicInteger();
+        taskScheduler.setThreadFactory(
+                new ThreadFactory() {
+                    AtomicInteger counter = new AtomicInteger();
 
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread thread = new Thread(threadGroup, r, "Scheduler-" + counter.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        Thread thread = new Thread(threadGroup, r, "Scheduler-" + counter.incrementAndGet());
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                }
+        );
         return taskScheduler;
     }
 

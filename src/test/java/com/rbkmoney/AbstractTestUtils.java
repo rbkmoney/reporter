@@ -36,6 +36,10 @@ public abstract class AbstractTestUtils {
         return random(String.class);
     }
 
+    protected static LocalDateTime generateLocalDateTime() {
+        return random(LocalDateTime.class);
+    }
+
     protected static Instant generateCurrentTimePlusDay() {
         return now().plusDays(1).toInstant(getZoneOffset());
     }

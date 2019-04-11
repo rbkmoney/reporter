@@ -4,7 +4,7 @@ import com.rbkmoney.eventstock.client.DefaultSubscriberConfig;
 import com.rbkmoney.eventstock.client.EventConstraint;
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
-import com.rbkmoney.reporter.config.properties.EventStockProperties;
+import com.rbkmoney.reporter.config.properties.BustermazeProperties;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.StorageException;
@@ -23,11 +23,11 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
     private final ContractMetaDao contractMetaDao;
 
-    private final EventStockProperties eventStockProperties;
+    private final BustermazeProperties bustermazeProperties;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (eventStockProperties.isPollingEnable()) {
+        if (bustermazeProperties.isEnable()) {
             EventConstraint.EventIDRange eventIDRange = new EventConstraint.EventIDRange();
 
             try {

@@ -4,7 +4,6 @@ import com.rbkmoney.AbstractTestUtils;
 import com.rbkmoney.TestContainers;
 import com.rbkmoney.TestContainersBuilder;
 import com.rbkmoney.reporter.ReporterApplication;
-import com.rbkmoney.reporter.utils.ReporterTestPropertyValuesBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -24,9 +23,9 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractAppDaoTests extends AbstractTestUtils {
 
-    private static TestContainers testContainers = TestContainersBuilder.builder(false)
+    private static TestContainers testContainers = TestContainersBuilder.builder(true)
             .addPostgreSQLTestContainer()
-            // todo цеф нужен на дао тестах потому что по дефолту при запуске приложения идет подключение к цеф, можно заменить на file-storage
+            // todo цеф нужен на дао тестах потому что по дефолту при запуске приложения идет подключение к цеф, по факту на тестах дао сеф дергаться не должен
             .addCephTestContainer()
             .build();
 
