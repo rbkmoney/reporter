@@ -35,6 +35,9 @@ spring:
     hikari:
       maximum-pool-size: 3
       idle-timeout: 30000
+  output:
+    ansi:
+      enabled: always
 report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
