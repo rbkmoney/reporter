@@ -345,9 +345,7 @@
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-                            <excludes>
-                                schema_version|.*func|get_adjustment.*|get_cashflow.*|get_payment.*|get_payout.*|get_refund.*
-                            </excludes>
+                            <excludes>schema_version|flyway_schema_history</excludes>
                             <inputSchema>${db.embedded.schema}</inputSchema>
                             <customTypes>
                                 <customType>

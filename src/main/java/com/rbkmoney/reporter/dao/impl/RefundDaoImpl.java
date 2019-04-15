@@ -6,14 +6,13 @@ import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RefundPaymentRegistryReportDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.dto.RefundPaymentRegistryReportData;
-import com.rbkmoney.reporter.domain.Routines;
+import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DSLExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.rbkmoney.reporter.dao.mapper.RefundPaymentRegistryReportDataRowMapper.refundAmount;
 import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.Refund.REFUND;
@@ -80,7 +78,7 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     public Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException {
         String key = "funds_refunded";
         Query query = getDslContext().select(
-                DSLExtension.getRefundAmount().cast(Long.class).minus(DSLExtension.getRefundFee().cast(Long.class)).as(key)
+                RoutinesWrapper.getRefundAmount().minus(RoutinesWrapper.getRefundFee()).as(key)
 
         )
                 .from(REFUND)
@@ -121,7 +119,7 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
                         REFUND.PAYMENT_ID,
                         PAYMENT.PAYMENT_TOOL,
                         PAYMENT.PAYMENT_EMAIL,
-                        Routines.getCashFlowAmount(REFUND.REFUND_CASH_FLOW, REFUND.REFUND_AMOUNT).as(refundAmount),
+                        RoutinesWrapper.getRefundCashFlowAmount(),
                         INVOICE.INVOICE_PRODUCT
                 )
                 .from(REFUND)

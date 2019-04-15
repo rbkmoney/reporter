@@ -6,7 +6,7 @@ import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.mapper.PaymentRegistryReportDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentRegistryReportData;
-import com.rbkmoney.reporter.domain.Routines;
+import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
@@ -14,7 +14,6 @@ import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DSLExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -27,7 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.rbkmoney.reporter.dao.mapper.PaymentRegistryReportDataRowMapper.*;
 import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 
@@ -80,8 +78,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
         String amountKey = "funds_acquired";
         String feeKey = "fee_charged";
         Query query = getDslContext().select(
-                DSLExtension.getPaymentAmount().as(amountKey),
-                DSLExtension.getPaymentFee().as(feeKey)
+                RoutinesWrapper.getPaymentAmount().as(amountKey),
+                RoutinesWrapper.getPaymentFee().as(feeKey)
         )
                 .from(PAYMENT)
                 .where(
@@ -123,10 +121,10 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                         PAYMENT.PAYMENT_ID,
                         PAYMENT.PAYMENT_TOOL,
                         PAYMENT.PAYMENT_EMAIL,
-                        Routines.getCashFlowAmount(PAYMENT.PAYMENT_CASH_FLOW, PAYMENT.PAYMENT_AMOUNT).as(paymentAmount),
-                        Routines.getCashFlowFee(PAYMENT.PAYMENT_CASH_FLOW, defaultValue).as(paymentFee),
-                        Routines.getCashFlowProviderFee(PAYMENT.PAYMENT_CASH_FLOW, defaultValue).as(paymentProviderFee),
-                        Routines.getCashFlowExternalFee(PAYMENT.PAYMENT_CASH_FLOW, defaultValue).as(paymentExternalFee),
+                        RoutinesWrapper.getPaymentCashFlowAmount(),
+                        RoutinesWrapper.getPaymentCashFlowFee(),
+                        RoutinesWrapper.getPaymentCashFlowProviderFee(),
+                        RoutinesWrapper.getPaymentCashFlowExternalFee(),
                         INVOICE.INVOICE_PRODUCT
                 )
                 .from(PAYMENT)

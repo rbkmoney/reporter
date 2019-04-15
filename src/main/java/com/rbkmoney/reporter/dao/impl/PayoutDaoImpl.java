@@ -4,16 +4,17 @@ import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.PayoutDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.PayoutEventCategory;
 import com.rbkmoney.reporter.domain.enums.PayoutStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payout;
 import com.rbkmoney.reporter.domain.tables.records.PayoutRecord;
 import com.rbkmoney.reporter.exception.DaoException;
+import org.jooq.AggregateFunction;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DSLExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -74,8 +75,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         String key = "funds_paid_out";
         Field<Long> paidFundsField = DSL.field("paid_funds", Long.class);
         Field<Long> cancelledFundsField = DSL.field("cancelled_funds", Long.class);
-        Field<Long> paymentAmountAggregateFunction = DSLExtension.getPayoutAmount().cast(Long.class);
-        Field<Long> paymentFeeAggregateFunction = DSLExtension.getPayoutFee().cast(Long.class);
+        AggregateFunction<Long> paymentAmountAggregateFunction = RoutinesWrapper.getPayoutAmount();
+        AggregateFunction<Long> paymentFeeAggregateFunction = RoutinesWrapper.getPayoutFee();
 
         Query query = getDslContext().select(paidFundsField.minus(cancelledFundsField).as(key))
                 .from(

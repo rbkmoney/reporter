@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
@@ -12,7 +13,6 @@ import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DSLExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -74,7 +74,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     public Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException {
         String key = "funds_adjusted";
         Query query = getDslContext().select(
-                DSLExtension.getPaymentFee().cast(Long.class).minus(DSLExtension.getAdjustmentFee().cast(Long.class)).as(key)
+                RoutinesWrapper.getPaymentFee().minus(RoutinesWrapper.getAdjustmentFee()).as(key)
         )
                 .from(ADJUSTMENT)
                 .join(PAYMENT)
