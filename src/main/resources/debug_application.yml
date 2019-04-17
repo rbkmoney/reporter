@@ -15,9 +15,9 @@ spring:
       enabled: always
 jobs:
   synchronization:
-    enabled: true
+    enabled: false
   report:
-    enabled: true
+    enabled: false
 kafka:
   bootstrap:
     servers: kenny-kafka1.bst1.rbkmoney.net:9092
@@ -35,18 +35,23 @@ report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
 storage:
-  endpoint: localhost
+  endpoint: localhost:42827
   signingRegion: RU
-  bucketName: "reports"
+  bucketName: "test"
   client:
     maxErrorRetry: 10
+  accessKey: "test"
+  secretKey: "test"
+  clientProtocol: "HTTP"
+retry-policy:
+  maxAttempts: -1
 partyManagement:
   url: http://hellgate:8022/v1/processing/partymgmt
   timeout: 5000
 bustermaze:
   processing:
     polling:
-      url: http://bustermaze:8022/repo
+      url: http://localhost:8026/repo
       housekeeperTimeout: 15000
       maxPoolSize: 1
       maxQuerySize: 1000
@@ -55,7 +60,7 @@ bustermaze:
       enable: true
   payout:
     polling:
-      url: http://bustermaze:8022/repo/payout
+      url: http://localhost:8026/repo/payout
       housekeeperTimeout: 15000
       maxPoolSize: 1
       maxQuerySize: 1000

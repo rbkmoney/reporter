@@ -23,7 +23,8 @@ public class ReporterTestPropertyValuesBuilder {
         strings.add("storage.clientProtocol=" + PROTOCOL);
         strings.add("storage.clientMaxErrorRetry=" + MAX_ERROR_RETRY);
         strings.add("storage.bucketName=" + BUCKET_NAME);
-        strings.add("bustermaze.polling.enable=false");
+        strings.add("bustermaze.processing.polling.enable=false");
+        strings.add("bustermaze.payout.polling.enable=false");
         strings.add("jobs.synchronization.enabled=false");
         strings.add("jobs.report.enabled=false");
         return strings.toArray(new String[0]);

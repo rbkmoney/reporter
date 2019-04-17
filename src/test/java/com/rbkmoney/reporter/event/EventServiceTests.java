@@ -16,7 +16,7 @@ import com.rbkmoney.damsel.payout_processing.Wallet;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.reporter.dao.*;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handler.EventStockClientHandler;
+import com.rbkmoney.reporter.handle.impl.StockEventTopEventHandler;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
 public class EventServiceTests extends AbstractAppEventServiceTests {
 
     @Autowired
-    private EventStockClientHandler clientHandler;
+    private StockEventTopEventHandler clientHandler;
 
     @Autowired
     private AdjustmentDao adjustmentDao;

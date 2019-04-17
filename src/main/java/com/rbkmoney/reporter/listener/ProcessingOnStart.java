@@ -5,7 +5,7 @@ import com.rbkmoney.eventstock.client.EventConstraint;
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.SubscriberConfig;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
-import com.rbkmoney.reporter.config.properties.BustermazeProperties;
+import com.rbkmoney.reporter.config.properties.BustermazeProcessingProperties;
 import com.rbkmoney.reporter.service.ProcessingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -16,18 +16,18 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class TempBustermazeEventPublisherOnStart implements ApplicationListener<ApplicationReadyEvent> {
+public class ProcessingOnStart implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final EventPublisher tempBustermazeEventPublisher;
+    private final EventPublisher processingEventPublisher;
 
     private final ProcessingService processingService;
 
-    private final BustermazeProperties bustermazeProperties;
+    private final BustermazeProcessingProperties properties;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (bustermazeProperties.isEnable()) {
-            tempBustermazeEventPublisher.subscribe(buildSubscriberConfig(processingService.getLastEventId()));
+        if (properties.isEnable()) {
+            processingEventPublisher.subscribe(buildSubscriberConfig(processingService.getLastEventId()));
         }
     }
 

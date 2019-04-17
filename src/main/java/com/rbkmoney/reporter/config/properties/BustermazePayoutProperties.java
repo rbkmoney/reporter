@@ -6,14 +6,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 @Configuration
-@ConfigurationProperties(prefix = "bustermaze.polling")
+@ConfigurationProperties(prefix = "bustermaze.payout.polling")
 @Data
-public class BustermazeProperties {
+public class BustermazePayoutProperties {
 
     private Resource url;
-    private int delay;
-    private int maxPoolSize;
     private int housekeeperTimeout;
+    private int maxPoolSize;
+    private int maxQuerySize;
+    private int delay;
+    private int retryDelay;
     private boolean enable;
 
 }
