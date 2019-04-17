@@ -26,7 +26,7 @@ public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport im
     public AbstractGenericDao(DataSource dataSource) {
         setDataSource(dataSource);
         Configuration configuration = new DefaultConfiguration();
-        configuration.set(SQLDialect.POSTGRES_9_5);
+        configuration.set(SQLDialect.POSTGRES);
         this.dslContext = DSL.using(configuration);
     }
 
@@ -75,6 +75,11 @@ public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport im
     }
 
     @Override
+    public <T> List<T> fetch(Query query, Class<T> type) throws DaoException {
+        return fetch(query, new SingleColumnRowMapper<>(type));
+    }
+
+    @Override
     public <T> List<T> fetch(Query query, RowMapper<T> rowMapper) throws DaoException {
         return fetch(query, rowMapper, getNamedParameterJdbcTemplate());
     }
@@ -108,106 +113,110 @@ public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport im
     }
 
     @Override
-    public void execute(Query query) throws DaoException {
-        execute(query, -1);
-    }
-
-    @Override
-    public void execute(Query query, int expectedRowsAffected) throws DaoException {
-        execute(query, expectedRowsAffected, getNamedParameterJdbcTemplate());
-    }
-
-    @Override
-    public void execute(Query query, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate) throws DaoException {
-        execute(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), expectedRowsAffected, namedParameterJdbcTemplate);
-    }
-
-    @Override
     public void executeOne(String namedSql, SqlParameterSource parameterSource) throws DaoException {
         execute(namedSql, parameterSource, 1);
     }
 
     @Override
-    public void execute(String namedSql) throws DaoException {
-        execute(namedSql, EmptySqlParameterSource.INSTANCE);
+    public void executeOne(Query query, KeyHolder keyHolder) throws DaoException {
+        executeOne(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), keyHolder);
     }
 
     @Override
-    public void execute(String namedSql, SqlParameterSource parameterSource) throws DaoException {
-        execute(namedSql, parameterSource, -1);
+    public void executeOne(String namedSql, SqlParameterSource parameterSource, KeyHolder keyHolder) throws DaoException {
+        execute(namedSql, parameterSource, 1, keyHolder);
     }
 
     @Override
-    public void execute(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected) throws DaoException {
-        execute(namedSql, parameterSource, expectedRowsAffected, getNamedParameterJdbcTemplate());
+    public int execute(Query query) throws DaoException {
+        return execute(query, -1);
     }
 
     @Override
-    public void execute(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate) throws DaoException {
+    public int execute(Query query, int expectedRowsAffected) throws DaoException {
+        return execute(query, expectedRowsAffected, getNamedParameterJdbcTemplate());
+    }
+
+    @Override
+    public int execute(Query query, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate) throws DaoException {
+        return execute(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), expectedRowsAffected, namedParameterJdbcTemplate);
+    }
+
+    @Override
+    public int execute(String namedSql) throws DaoException {
+        return execute(namedSql, EmptySqlParameterSource.INSTANCE);
+    }
+
+    @Override
+    public int execute(String namedSql, SqlParameterSource parameterSource) throws DaoException {
+        return execute(namedSql, parameterSource, -1);
+    }
+
+    @Override
+    public int execute(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected) throws DaoException {
+        return execute(namedSql, parameterSource, expectedRowsAffected, getNamedParameterJdbcTemplate());
+    }
+
+    @Override
+    public int execute(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate) throws DaoException {
         try {
             int rowsAffected = namedParameterJdbcTemplate.update(
                     namedSql,
-                    parameterSource);
+                    parameterSource
+            );
 
             if (expectedRowsAffected != -1 && rowsAffected != expectedRowsAffected) {
                 throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(namedSql, expectedRowsAffected, rowsAffected);
             }
+            return rowsAffected;
         } catch (NestedRuntimeException ex) {
             throw new DaoException(ex);
         }
     }
 
     @Override
-    public void executeOneWithReturn(Query query, KeyHolder keyHolder) throws DaoException {
-        executeOneWithReturn(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), keyHolder);
+    public int execute(Query query, KeyHolder keyHolder) throws DaoException {
+        return execute(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), -1, keyHolder);
     }
 
     @Override
-    public void executeOneWithReturn(String namedSql, SqlParameterSource parameterSource, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(namedSql, parameterSource, 1, keyHolder);
+    public int execute(Query query, int expectedRowsAffected, KeyHolder keyHolder) throws DaoException {
+        return execute(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), expectedRowsAffected, getNamedParameterJdbcTemplate(), keyHolder);
     }
 
     @Override
-    public void executeWithReturn(Query query, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), -1, keyHolder);
+    public int execute(Query query, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate, KeyHolder keyHolder) throws DaoException {
+        return execute(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), expectedRowsAffected, namedParameterJdbcTemplate, keyHolder);
     }
 
     @Override
-    public void executeWithReturn(Query query, int expectedRowsAffected, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), expectedRowsAffected, getNamedParameterJdbcTemplate(), keyHolder);
+    public int execute(String namedSql, KeyHolder keyHolder) throws DaoException {
+        return execute(namedSql, EmptySqlParameterSource.INSTANCE, keyHolder);
     }
 
     @Override
-    public void executeWithReturn(Query query, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(query.getSQL(ParamType.NAMED), toSqlParameterSource(query.getParams()), expectedRowsAffected, namedParameterJdbcTemplate, keyHolder);
+    public int execute(String namedSql, SqlParameterSource parameterSource, KeyHolder keyHolder) throws DaoException {
+        return execute(namedSql, parameterSource, -1, keyHolder);
     }
 
     @Override
-    public void executeWithReturn(String namedSql, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(namedSql, EmptySqlParameterSource.INSTANCE, keyHolder);
+    public int execute(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected, KeyHolder keyHolder) throws DaoException {
+        return execute(namedSql, parameterSource, expectedRowsAffected, getNamedParameterJdbcTemplate(), keyHolder);
     }
 
     @Override
-    public void executeWithReturn(String namedSql, SqlParameterSource parameterSource, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(namedSql, parameterSource, -1, keyHolder);
-    }
-
-    @Override
-    public void executeWithReturn(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected, KeyHolder keyHolder) throws DaoException {
-        executeWithReturn(namedSql, parameterSource, expectedRowsAffected, getNamedParameterJdbcTemplate(), keyHolder);
-    }
-
-    @Override
-    public void executeWithReturn(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate, KeyHolder keyHolder) throws DaoException {
+    public int execute(String namedSql, SqlParameterSource parameterSource, int expectedRowsAffected, NamedParameterJdbcTemplate namedParameterJdbcTemplate, KeyHolder keyHolder) throws DaoException {
         try {
             int rowsAffected = namedParameterJdbcTemplate.update(
                     namedSql,
                     parameterSource,
-                    keyHolder);
+                    keyHolder
+            );
 
             if (expectedRowsAffected != -1 && rowsAffected != expectedRowsAffected) {
                 throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(namedSql, expectedRowsAffected, rowsAffected);
             }
+            return rowsAffected;
         } catch (NestedRuntimeException ex) {
             throw new DaoException(ex);
         }
@@ -225,5 +234,4 @@ public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport im
         }
         return sqlParameterSource;
     }
-
 }

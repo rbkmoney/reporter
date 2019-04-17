@@ -1,7 +1,6 @@
 package com.rbkmoney.reporter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
-import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.reports.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
@@ -12,8 +11,9 @@ import com.rbkmoney.reporter.exception.ShopNotFoundException;
 import com.rbkmoney.reporter.service.PartyService;
 import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.util.DamselUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -27,17 +27,13 @@ import static com.rbkmoney.reporter.util.DamselUtil.buildInvalidRequest;
  * Created by tolkonepiu on 18/07/2017.
  */
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class ReportsHandler implements ReportingSrv.Iface {
 
     private final ReportService reportService;
 
     private final PartyService partyService;
-
-    @Autowired
-    public ReportsHandler(ReportService reportService, PartyService partyService) {
-        this.reportService = reportService;
-        this.partyService = partyService;
-    }
 
     @Override
     public List<Report> getReports(ReportRequest reportRequest, List<ReportType> reportTypes) throws DatasetTooBig, InvalidRequest, TException {

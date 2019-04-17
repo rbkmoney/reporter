@@ -8,9 +8,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
-import com.rbkmoney.damsel.merch_stat.MerchantStatisticsSrv;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
-import com.rbkmoney.damsel.signer.SignerSrv;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,10 +21,8 @@ import java.io.IOException;
 public class ApplicationConfig {
 
     @Bean
-    public RepositoryClientSrv.Iface dominantClient(
-            @Value("${domainConfig.url}") Resource resource,
-            @Value("${domainConfig.timeout}") int timeout
-    ) throws IOException {
+    public RepositoryClientSrv.Iface dominantClient(@Value("${domainConfig.url}") Resource resource,
+                                                    @Value("${domainConfig.timeout}") int timeout) throws IOException {
         return new THSpawnClientBuilder()
                 .withAddress(resource.getURI())
                 .withNetworkTimeout(timeout)
@@ -34,35 +30,12 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public PartyManagementSrv.Iface partyManagementClient(
-            @Value("${partyManagement.url}") Resource resource,
-            @Value("${partyManagement.timeout}") int timeout
-    ) throws IOException {
+    public PartyManagementSrv.Iface partyManagementClient(@Value("${partyManagement.url}") Resource resource,
+                                                          @Value("${partyManagement.timeout}") int timeout) throws IOException {
         return new THSpawnClientBuilder()
                 .withAddress(resource.getURI())
                 .withNetworkTimeout(timeout)
                 .build(PartyManagementSrv.Iface.class);
-    }
-
-    @Bean
-    public SignerSrv.Iface signerClient(
-            @Value("${signer.url}") Resource resource,
-            @Value("${signer.timeout}") int timeout
-            ) throws IOException {
-        return new THSpawnClientBuilder()
-                .withNetworkTimeout(timeout)
-                .withAddress(resource.getURI()).build(SignerSrv.Iface.class);
-    }
-
-    @Bean
-    public MerchantStatisticsSrv.Iface merchantStatisticsClient(
-            @Value("${magista.url}") Resource resource,
-            @Value("${magista.timeout}") int timeout
-    ) throws IOException {
-        return new THSpawnClientBuilder()
-                .withAddress(resource.getURI())
-                .withNetworkTimeout(timeout)
-                .build(MerchantStatisticsSrv.Iface.class);
     }
 
     @Bean

@@ -10,24 +10,18 @@ import com.rbkmoney.eventstock.client.EventHandler;
 import com.rbkmoney.reporter.exception.StorageException;
 import com.rbkmoney.reporter.service.TaskService;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class EventStockHandler implements EventHandler<StockEvent> {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     private final TaskService taskService;
-
-    @Autowired
-    public EventStockHandler(TaskService taskService) {
-        this.taskService = taskService;
-    }
 
     @Override
     public EventAction handle(StockEvent stockEvent, String subsKey) {
@@ -36,7 +30,7 @@ public class EventStockHandler implements EventHandler<StockEvent> {
                     .getSourceEvent()
                     .getProcessingEvent();
 
-            if(event.getSource().isSetPartyId()) {
+            if (event.getSource().isSetPartyId()) {
                 String partyId = event.getSource().getPartyId();
                 List<PartyChange> partyChanges = event
                         .getPayload()
@@ -86,13 +80,6 @@ public class EventStockHandler implements EventHandler<StockEvent> {
     }
 
     private void handlePreferences(String partyId, String contractId, long eventId, ServiceAcceptanceActPreferences preferences) {
-        taskService.registerProvisionOfServiceJob(
-                partyId,
-                contractId,
-                eventId,
-                preferences.getSchedule(),
-                preferences.getSigner()
-        );
+        taskService.registerProvisionOfServiceJob(partyId, contractId, eventId, preferences.getSchedule(), preferences.getSigner());
     }
-
 }

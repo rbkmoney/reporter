@@ -7,12 +7,18 @@ magista:
   url: http://magista:8022/stat
   timeout: 60000
 bustermaze:
-  url: http://bustermaze:8022/repo
   polling:
     delay: 10000
     retryDelay: 1000
     maxPoolSize: 1
     housekeeperTimeout: 15000
+    url: http://bustermaze:8022/repo
+    enable: true
+jobs:
+  synchronization:
+    enabled: true
+  report:
+    enabled: true
 signer:
   url: http://signer:8022/signer
   timeout: 5000
@@ -29,6 +35,9 @@ spring:
     hikari:
       maximum-pool-size: 3
       idle-timeout: 30000
+  output:
+    ansi:
+      enabled: always
 report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
@@ -38,4 +47,3 @@ storage:
   bucketName: "reports"
   client:
     maxErrorRetry: 10
-

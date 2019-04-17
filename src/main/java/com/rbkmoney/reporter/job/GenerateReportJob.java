@@ -1,7 +1,5 @@
 package com.rbkmoney.reporter.job;
 
-import com.rbkmoney.damsel.domain.Contract;
-import com.rbkmoney.damsel.domain.Party;
 import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.domain.enums.ReportType;
@@ -19,9 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
