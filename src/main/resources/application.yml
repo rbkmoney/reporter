@@ -21,28 +21,30 @@ jobs:
 kafka:
   bootstrap:
     servers: kenny-kafka1.bst1.rbkmoney.net:9092
-  processing:
-    topic: mg-invoice-100-2
   concurrency: 5
+  processing:
+    topic:
+      name: mg-invoice-100-2
+      enabled: false
   ssl:
     enable: false
-    keystore-location: "src/main/resources/cert/kenny-k.struzhkin.p12"
-    keystore-password: "kenny"
-    key-password: "kenny"
-    server-password: "kenny12"
-    server-keystore-location: "src/main/resources/cert/truststore.p12"
+    keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
+    keystore-password: kenny
+    key-password: kenny
+    server-password: kenny12
+    server-keystore-location: src/main/resources/cert/truststore.p12
 report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
 storage:
   endpoint: localhost:42827
   signingRegion: RU
-  bucketName: "test"
+  bucketName: test
   client:
     maxErrorRetry: 10
-  accessKey: "test"
-  secretKey: "test"
-  clientProtocol: "HTTP"
+  accessKey: test
+  secretKey: test
+  clientProtocol: HTTP
 retry-policy:
   maxAttempts: -1
 partyManagement:
@@ -57,7 +59,7 @@ bustermaze:
       maxQuerySize: 1000
       delay: 10000
       retryDelay: 1000
-      enable: true
+      enabled: false
   payout:
     polling:
       url: http://localhost:8026/repo/payout
@@ -66,7 +68,7 @@ bustermaze:
       maxQuerySize: 1000
       delay: 10000
       retryDelay: 1000
-      enable: true
+      enabled: false
 signer:
   url: http://signer:8022/signer
   timeout: 5000

@@ -16,6 +16,6 @@ public class BustermazeProcessingProperties {
     private int maxQuerySize;
     private int delay;
     private int retryDelay;
-    private boolean enable;
+    private boolean enabled;
 
 }

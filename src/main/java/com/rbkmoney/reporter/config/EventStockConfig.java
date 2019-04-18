@@ -4,7 +4,7 @@ import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.poll.PollingEventPublisherBuilder;
 import com.rbkmoney.reporter.config.properties.BustermazePayoutProperties;
 import com.rbkmoney.reporter.config.properties.BustermazeProcessingProperties;
-import com.rbkmoney.reporter.handle.impl.StockEventTopEventHandler;
+import com.rbkmoney.reporter.handler.EventStockEventHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,7 +14,7 @@ import java.io.IOException;
 public class EventStockConfig {
 
     @Bean
-    public EventPublisher processingEventPublisher(StockEventTopEventHandler handler,
+    public EventPublisher processingEventPublisher(EventStockEventHandler handler,
                                                    BustermazeProcessingProperties properties) throws IOException {
         return new PollingEventPublisherBuilder()
                 .withURI(properties.getUrl().getURI())
@@ -28,7 +28,7 @@ public class EventStockConfig {
     }
 
     @Bean
-    public EventPublisher payoutEventPublisher(StockEventTopEventHandler handler,
+    public EventPublisher payoutEventPublisher(EventStockEventHandler handler,
                                                BustermazePayoutProperties properties) throws IOException {
         return new PollingEventPublisherBuilder()
                 .withURI(properties.getUrl().getURI())

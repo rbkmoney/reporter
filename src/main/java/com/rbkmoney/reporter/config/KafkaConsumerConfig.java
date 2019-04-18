@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaConfig {
+public class KafkaConsumerConfig {
 
     private static final String GROUP_ID = "ReporterListener";
     private static final String EARLIEST = "earliest";

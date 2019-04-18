@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.impl;
+package com.rbkmoney.reporter.handler;
 
 import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.eventstock.client.EventAction;
@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class StockEventTopEventHandler implements EventHandler<StockEvent> {
+public class EventStockEventHandler implements EventHandler<StockEvent> {
 
     private final List<StockEventHandler> eventHandlers;
 

@@ -26,7 +26,7 @@ public class PayoutOnStart implements ApplicationListener<ApplicationReadyEvent>
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (properties.isEnable()) {
+        if (properties.isEnabled()) {
             payoutEventPublisher.subscribe(buildSubscriberConfig(processingService.getLastEventId()));
         }
     }

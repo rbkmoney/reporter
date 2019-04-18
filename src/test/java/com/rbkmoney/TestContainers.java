@@ -65,7 +65,7 @@ public class TestContainers {
             getCephTestContainer().ifPresent(
                     container -> {
                         container
-                                .withNetworkAliases("ceph-test-container")
+                                .withNetworkAliases("ceph")
                                 .withExposedPorts(5000, 80)
                                 .withEnv("RGW_NAME", "localhost")
                                 .withEnv("NETWORK_AUTO_DETECT", "4")
@@ -82,7 +82,7 @@ public class TestContainers {
             getFileStorageTestContainer().ifPresent(
                     container -> {
                         container
-                                .withNetworkAliases("file-storage-test-container")
+                                .withNetworkAliases("file-storage")
                                 // это не сработает при тестах на mac os. но этот контейнер нужен только при инетграционных тестах с файловым хранилищем
                                 .withNetworkMode("host")
                                 .withEnv("storage.endpoint", "localhost:" + getCephTestContainer().get().getMappedPort(80))

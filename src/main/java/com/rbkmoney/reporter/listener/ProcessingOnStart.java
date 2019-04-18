@@ -26,7 +26,7 @@ public class ProcessingOnStart implements ApplicationListener<ApplicationReadyEv
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (properties.isEnable()) {
+        if (properties.isEnabled()) {
             processingEventPublisher.subscribe(buildSubscriberConfig(processingService.getLastEventId()));
         }
     }

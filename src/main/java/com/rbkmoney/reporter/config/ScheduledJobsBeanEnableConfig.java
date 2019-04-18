@@ -13,16 +13,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @EnableScheduling
-public class ScheduledJobsConfig {
+public class ScheduledJobsBeanEnableConfig {
 
     @Bean
-    @ConditionalOnProperty(value = "jobs.synchronization.enabled", matchIfMissing = true, havingValue = "true")
+    @ConditionalOnProperty(value = "jobs.synchronization.enabled", havingValue = "true")
     public ScheduledJob synchronizationInnerJobsScheduledJob(ContractMetaDao contractMetaDao, JobService jobService) {
         return new SynchronizationInnerJobsScheduledJobImpl(contractMetaDao, jobService);
     }
 
     @Bean
-    @ConditionalOnProperty(value = "jobs.report.enabled", matchIfMissing = true, havingValue = "true")
+    @ConditionalOnProperty(value = "jobs.report.enabled", havingValue = "true")
     public ScheduledJob pendingReportScheduledJob(ReportService reportService) {
         return new PendingReportScheduledJobImpl(reportService);
     }
