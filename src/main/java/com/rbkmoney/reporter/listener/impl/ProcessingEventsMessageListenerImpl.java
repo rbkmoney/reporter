@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.listener;
+package com.rbkmoney.reporter.listener.impl;
 
 import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
@@ -8,6 +8,7 @@ import com.rbkmoney.damsel.payment_processing.EventSource;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.converter.SourceEventParser;
 import com.rbkmoney.reporter.handler.EventStockEventHandler;
+import com.rbkmoney.reporter.listener.MessageListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -40,7 +41,7 @@ public class ProcessingEventsMessageListenerImpl implements MessageListener {
         Event event = new Event();
         event.setId(machineEvent.getEventId());
         event.setCreatedAt(machineEvent.getCreatedAt());
-        event.setSource(EventSource.invoice_id(""));
+        event.setSource(EventSource.invoice_id(machineEvent.getSourceId()));
         event.setPayload(payload);
         event.setSequence((int) machineEvent.getEventId());
 

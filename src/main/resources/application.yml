@@ -27,7 +27,7 @@ kafka:
       name: mg-invoice-100-2
       enabled: false
   ssl:
-    enable: false
+    enable: true
     keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
     keystore-password: kenny
     key-password: kenny
@@ -51,15 +51,6 @@ partyManagement:
   url: http://hellgate:8022/v1/processing/partymgmt
   timeout: 5000
 bustermaze:
-  processing:
-    polling:
-      url: http://localhost:8026/repo
-      housekeeperTimeout: 15000
-      maxPoolSize: 1
-      maxQuerySize: 1000
-      delay: 10000
-      retryDelay: 1000
-      enabled: false
   payout:
     polling:
       url: http://localhost:8026/repo/payout
@@ -69,9 +60,6 @@ bustermaze:
       delay: 10000
       retryDelay: 1000
       enabled: false
-signer:
-  url: http://signer:8022/signer
-  timeout: 5000
 domainConfig:
   url: http://dominant:8022/v1/domain/repository
   timeout: 5000
