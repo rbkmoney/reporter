@@ -13,6 +13,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+//todo remove after adding payout kafka topic
 public class EventStockEventHandler implements EventHandler<StockEvent> {
 
     private final List<StockEventHandler> eventHandlers;

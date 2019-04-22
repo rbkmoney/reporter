@@ -1,11 +1,9 @@
 package com.rbkmoney.reporter.handle;
 
-import com.rbkmoney.damsel.event_stock.StockEvent;
+public interface EventHandler<E, B> {
 
-public interface EventHandler<T> {
+    boolean accept(E payload);
 
-    boolean accept(T specific);
-
-    void handle(T specific, StockEvent stockEvent);
+    void handle(E payload, B baseEvent);
 
 }
