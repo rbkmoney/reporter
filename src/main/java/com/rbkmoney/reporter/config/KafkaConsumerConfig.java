@@ -51,7 +51,7 @@ public class KafkaConsumerConfig {
     @Value("${kafka.ssl.keystore-location}")
     private String clientStoreCertPath;
 
-    @Value("${kafka.ssl.enable}")
+    @Value("${kafka.ssl.enabled}")
     private boolean kafkaSslEnable;
 
     @Bean

@@ -483,7 +483,6 @@ public class CashFlowTests extends AbstractAppDaoTests {
                 toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))
         );
 
-        assertEquals((long) 2475599, (long) paymentData.get(0).getEventId());
         assertEquals(LocalDateTime.parse("2017-08-23T08:30:56"), paymentData.get(0).getEventCreatedAt());
         assertEquals(InvoiceEventType.INVOICE_PAYMENT_STATUS_CHANGED, paymentData.get(0).getEventType());
         assertEquals("uWIbtnV7h2", paymentData.get(0).getInvoiceId());
@@ -506,7 +505,6 @@ public class CashFlowTests extends AbstractAppDaoTests {
                 toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))
         );
 
-        assertEquals((long) 1001, (long) refundData.get(0).getEventId());
         assertEquals(LocalDateTime.parse("2017-08-24T16:13:23"), refundData.get(0).getRefundEventCreatedAt());
         assertEquals(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED, refundData.get(0).getEventType());
         assertEquals("uWIbtnV7h2", refundData.get(0).getInvoiceId());

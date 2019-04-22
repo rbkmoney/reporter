@@ -5,6 +5,6 @@ import org.springframework.kafka.support.Acknowledgment;
 
 public interface MessageListener {
 
-    void listen(MachineEvent machineEvent, Acknowledgment ack) throws Exception;
+    void listen(MachineEvent machineEvent, Acknowledgment ack);
 
 }

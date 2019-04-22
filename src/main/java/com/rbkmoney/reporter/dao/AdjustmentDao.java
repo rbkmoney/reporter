@@ -9,8 +9,6 @@ import java.util.Optional;
 
 public interface AdjustmentDao {
 
-    Optional<Long> getLastEventId() throws DaoException;
-
     Long save(Adjustment adjustment) throws DaoException;
 
     Adjustment get(String invoiceId, String paymentId, String adjustmentId) throws DaoException;

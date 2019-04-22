@@ -25,7 +25,6 @@ public class RefundPaymentRegistryReportDataRowMapper implements RowMapper<Refun
     public RefundPaymentRegistryReportData mapRow(ResultSet rs, int i) throws SQLException {
         RefundPaymentRegistryReportData data = new RefundPaymentRegistryReportData();
         data.setId(rs.getLong(REFUND.ID.getName()));
-        data.setEventId(rs.getLong(REFUND.EVENT_ID.getName()));
         data.setRefundEventCreatedAt(rs.getObject(REFUND.EVENT_CREATED_AT.getName(), LocalDateTime.class));
         data.setPaymentEventCreatedAt(rs.getObject(PAYMENT.EVENT_CREATED_AT.getName(), LocalDateTime.class));
         data.setEventType(TypeUtil.toEnumField(rs.getString(REFUND.EVENT_TYPE.getName()), InvoiceEventType.class));

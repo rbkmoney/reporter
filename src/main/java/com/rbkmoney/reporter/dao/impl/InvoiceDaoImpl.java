@@ -7,14 +7,12 @@ import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.jooq.Query;
-import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 
@@ -30,17 +28,11 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
     }
 
     @Override
-    public Optional<Long> getLastEventId() throws DaoException {
-        Query query = getDslContext().select(DSL.max(INVOICE.EVENT_ID)).from(INVOICE);
-        return Optional.ofNullable(fetchOne(query, Long.class));
-    }
-
-    @Override
     public Long save(Invoice invoice) throws DaoException {
         InvoiceRecord invoiceRecord = getDslContext().newRecord(INVOICE, invoice);
         Query query = getDslContext().insertInto(INVOICE)
                 .set(invoiceRecord)
-                .onConflict(INVOICE.EVENT_ID, INVOICE.EVENT_TYPE, INVOICE.INVOICE_STATUS)
+                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID)
                 .doUpdate()
                 .set(invoiceRecord)
                 .returning(INVOICE.ID);

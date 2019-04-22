@@ -23,11 +23,14 @@ kafka:
     servers: kenny-kafka1.bst1.rbkmoney.net:9092
   concurrency: 5
   processing:
-    topic:
-      name: mg-invoice-100-2
+    payout:
+      topic: mg-payout-100-2
       enabled: false
+    payment:
+      topic: mg-invoice-100-2
+      enabled: true
   ssl:
-    enable: true
+    enabled: true
     keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
     keystore-password: kenny
     key-password: kenny

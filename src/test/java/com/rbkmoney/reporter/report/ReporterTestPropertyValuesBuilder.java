@@ -23,7 +23,8 @@ public class ReporterTestPropertyValuesBuilder {
         strings.add("storage.clientProtocol=" + PROTOCOL);
         strings.add("storage.client.maxErrorRetry=" + MAX_ERROR_RETRY);
         strings.add("storage.bucketName=" + BUCKET_NAME);
-        strings.add("kafka.processing.topic.enabled=false");
+        strings.add("kafka.processing.payment.enabled=false");
+        strings.add("kafka.processing.payout.enabled=false");
         strings.add("bustermaze.payout.polling.enabled=false");
         strings.add("jobs.synchronization.enabled=false");
         strings.add("jobs.report.enabled=true");

@@ -11,8 +11,6 @@ import java.util.Optional;
 
 public interface PaymentDao {
 
-    Optional<Long> getLastEventId() throws DaoException;
-
     Long save(Payment payment) throws DaoException;
 
     Payment get(String invoiceId, String paymentId) throws DaoException;
