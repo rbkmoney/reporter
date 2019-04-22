@@ -1,22 +1,16 @@
-package com.rbkmoney.reporter.serde;
+package com.rbkmoney.reporter.serialization.impl;
 
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.machinegun.eventsink.SinkEvent;
+import com.rbkmoney.reporter.serialization.MachineEventDeserializer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
-import java.util.Map;
-
 @Slf4j
-public class MachineEventDeserializer implements Deserializer<MachineEvent> {
+public class MachineEventDeserializerImpl implements MachineEventDeserializer {
 
-    private ThreadLocal<TDeserializer> tDeserializerThreadLocal = getTDeserializerThreadLocal();
-
-    @Override
-    public void configure(Map<String, ?> configs, boolean isKey) {
-    }
+    private final ThreadLocal<TDeserializer> tDeserializerThreadLocal = getTDeserializerThreadLocal();
 
     @Override
     public MachineEvent deserialize(String topic, byte[] data) {
@@ -28,11 +22,6 @@ public class MachineEventDeserializer implements Deserializer<MachineEvent> {
             log.error("Error when deserialize ruleTemplate data: {} ", data, e);
         }
         return machineEvent.getEvent();
-    }
-
-    @Override
-    public void close() {
-
     }
 
     private ThreadLocal<TDeserializer> getTDeserializerThreadLocal() {

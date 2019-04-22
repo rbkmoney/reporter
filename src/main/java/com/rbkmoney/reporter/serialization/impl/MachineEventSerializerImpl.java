@@ -1,24 +1,18 @@
-package com.rbkmoney.reporter.serde;
+package com.rbkmoney.reporter.serialization.impl;
 
-import com.rbkmoney.machinegun.eventsink.SinkEvent;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.reporter.serialization.MachineEventSerializer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.serialization.Serializer;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
-import java.util.Map;
-
 @Slf4j
-public class MachineEventSerializer implements Serializer<SinkEvent> {
+public class MachineEventSerializerImpl implements MachineEventSerializer {
 
-    private ThreadLocal<TSerializer> tSerializerThreadLocal = getTSerializerThreadLocal();
-
-    @Override
-    public void configure(Map<String, ?> configs, boolean isKey) {
-    }
+    private final ThreadLocal<TSerializer> tSerializerThreadLocal = getTSerializerThreadLocal();
 
     @Override
-    public byte[] serialize(String topic, SinkEvent data) {
+    public byte[] serialize(String topic, MachineEvent data) {
         byte[] retVal = null;
         try {
             retVal = tSerializerThreadLocal.get().serialize(data);
@@ -26,10 +20,6 @@ public class MachineEventSerializer implements Serializer<SinkEvent> {
             log.error("Error when serialize RuleTemplate data: {} ", data, e);
         }
         return retVal;
-    }
-
-    @Override
-    public void close() {
     }
 
     private ThreadLocal<TSerializer> getTSerializerThreadLocal() {

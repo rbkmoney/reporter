@@ -28,7 +28,7 @@ kafka:
       enabled: false
     payment:
       topic: mg-invoice-100-2
-      enabled: true
+      enabled: false
   ssl:
     enabled: true
     keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
