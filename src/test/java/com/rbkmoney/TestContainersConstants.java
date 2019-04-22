@@ -13,5 +13,5 @@ public class TestContainersConstants {
     public static final String PROTOCOL = "HTTP";
     public static final String MAX_ERROR_RETRY = "10";
     public static final String BUCKET_NAME = "test";
-
+    public static final String KAFKA_PORT = "9092";
 }

@@ -10,6 +10,7 @@ import org.rnorth.ducttape.ratelimits.RateLimiter;
 import org.rnorth.ducttape.ratelimits.RateLimiterBuilder;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
@@ -35,6 +36,7 @@ public class TestContainers {
     private PostgreSQLContainer postgresSQLTestContainer;
     private GenericContainer cephTestContainer;
     private GenericContainer fileStorageTestContainer;
+    private KafkaContainer kafkaTestContainer;
 
     public Optional<PostgreSQLContainer> getPostgresSQLTestContainer() {
         return Optional.ofNullable(postgresSQLTestContainer);
@@ -46,6 +48,10 @@ public class TestContainers {
 
     public Optional<GenericContainer> getFileStorageTestContainer() {
         return Optional.ofNullable(fileStorageTestContainer);
+    }
+
+    public Optional<KafkaContainer> getKafkaTestContainer() {
+        return Optional.ofNullable(kafkaTestContainer);
     }
 
     public Boolean isDockerContainersEnable() {
@@ -99,6 +105,15 @@ public class TestContainers {
                         log.info("File-storage container successfully started");
                     }
             );
+            getKafkaTestContainer().ifPresent(
+                    container -> {
+                        container
+                                .withEmbeddedZookeeper();
+                        log.info("Starting kafka container");
+                        container.start();
+                        log.info("Kafka container successfully started");
+                    }
+            );
         }
     }
 
@@ -107,6 +122,7 @@ public class TestContainers {
             getFileStorageTestContainer().ifPresent(GenericContainer::stop);
             getCephTestContainer().ifPresent(GenericContainer::stop);
             getPostgresSQLTestContainer().ifPresent(GenericContainer::stop);
+            getKafkaTestContainer().ifPresent(GenericContainer::stop);
         }
     }
 
