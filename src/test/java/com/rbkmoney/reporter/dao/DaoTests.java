@@ -57,7 +57,7 @@ public class DaoTests extends AbstractAppDaoTests {
 
     @Test
     @Sql("classpath:data/sql/truncate.sql")
-    public void adjustmentDaoDuplicationTest() throws DaoException {
+    public void duplicationTest() throws DaoException {
         Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
         adjustment.setId(null);
         adjustment.setCurrent(true);
