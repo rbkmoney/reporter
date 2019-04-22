@@ -1,6 +1,6 @@
 package com.rbkmoney.reporter.serialization.impl;
 
-import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.reporter.serialization.MachineEventSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TSerializer;
@@ -12,7 +12,8 @@ public class MachineEventSerializerImpl implements MachineEventSerializer {
     private final ThreadLocal<TSerializer> tSerializerThreadLocal = getTSerializerThreadLocal();
 
     @Override
-    public byte[] serialize(String topic, MachineEvent data) {
+    public byte[] serialize(String topic, SinkEvent data) {
+        log.debug("Message, topic: {}, data: {}", topic, data);
         byte[] retVal = null;
         try {
             retVal = tSerializerThreadLocal.get().serialize(data);

@@ -16,6 +16,7 @@ public abstract class AbstractThriftDeserializer<T extends TBase> implements Bin
 
     @Override
     public final T deserialize(byte[] bin) throws Exception {
+        log.debug("serialize, data: {}", bin.length);
         T terminalObject = getTerminalObject();
         try {
             tDeserializerThreadLocal.get().deserialize(terminalObject, bin);

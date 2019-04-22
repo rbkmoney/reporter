@@ -10,8 +10,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: reporter
-    volumes:
-      - /tmp/docker/postgresql/data:/var/lib/postgresql
+  #    volumes:
+  #      - /tmp/docker/postgresql/data:/var/lib/postgresql
 
   zookeeper:
     image: confluentinc/cp-zookeeper:5.0.1
@@ -20,9 +20,9 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    volumes:
-      - /tmp/docker/zookeeper/data:/var/lib/zookeeper/data
-      - /tmp/docker/zookeeper/log:/var/lib/zookeeper/log
+  #    volumes:
+  #      - /tmp/docker/zookeeper/data:/var/lib/zookeeper/data
+  #      - /tmp/docker/zookeeper/log:/var/lib/zookeeper/log
 
   kafka:
     image: confluentinc/cp-enterprise-kafka:5.0.1
@@ -45,8 +45,8 @@ services:
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: "true"
       CONFLUENT_SUPPORT_CUSTOMER_ID: anonymous
-    volumes:
-      - /tmp/docker/kafka/data:/var/lib/kafka/data
+  #    volumes:
+  #      - /tmp/docker/kafka/data:/var/lib/kafka/data
 
   ceph:
     image: dr.rbkmoney.com/ceph-demo:latest

@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.listener.impl;
 
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.reporter.handle.machineevent.MachineEventHandler;
 import com.rbkmoney.reporter.listener.MessageListener;
 import com.rbkmoney.reporter.parser.Parser;
@@ -19,7 +20,9 @@ public class PaymentEventsMessageListenerImpl implements MessageListener {
 
     @KafkaListener(topics = "${kafka.processing.payment.topic}", containerFactory = "kafkaListenerContainerFactory")
     @Override
-    public void listen(MachineEvent machineEvent, Acknowledgment ack) {
+    public void listen(SinkEvent event, Acknowledgment ack) {
+        MachineEvent machineEvent = event.getEvent();
+
         EventPayload payload = parser.parse(machineEvent);
 
         handler.handle(payload, machineEvent);

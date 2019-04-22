@@ -20,8 +20,8 @@ jobs:
     enabled: false
 kafka:
   bootstrap:
-    servers: kenny-kafka1.bst1.rbkmoney.net:9092
-  concurrency: 5
+    servers: localhost:9092
+  concurrency: 1
   processing:
     payout:
       topic: mg-payout-100-2
@@ -30,7 +30,7 @@ kafka:
       topic: mg-invoice-100-2
       enabled: false
   ssl:
-    enabled: true
+    enabled: false
     keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
     keystore-password: kenny
     key-password: kenny

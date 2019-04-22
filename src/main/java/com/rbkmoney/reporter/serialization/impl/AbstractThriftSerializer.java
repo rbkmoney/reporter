@@ -14,6 +14,7 @@ public abstract class AbstractThriftSerializer<T extends TBase> implements Binar
 
     @Override
     public final byte[] serialize(T data) throws Exception {
+        log.debug("serialize, data: {}", data);
         byte[] bin;
         try {
             bin = tSerializerThreadLocal.get().serialize(data);
