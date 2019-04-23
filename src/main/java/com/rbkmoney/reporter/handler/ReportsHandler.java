@@ -3,8 +3,8 @@ package com.rbkmoney.reporter.handler;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.reports.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.reporter.domain.enums.ReportStatus;
-import com.rbkmoney.reporter.exception.FileNotFoundException;
+import com.rbkmoney.reporter.config.properties.ReportingProperties;
+import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ReportNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
@@ -16,8 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
 import org.springframework.stereotype.Component;
 
-import java.net.URL;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,62 +32,56 @@ import static com.rbkmoney.reporter.util.DamselUtil.buildInvalidRequest;
 @RequiredArgsConstructor
 public class ReportsHandler implements ReportingSrv.Iface {
 
+    private final ReportingProperties reportingProperties;
     private final ReportService reportService;
-
     private final PartyService partyService;
 
     @Override
-    public List<Report> getReports(ReportRequest reportRequest, List<ReportType> reportTypes) throws DatasetTooBig, InvalidRequest, TException {
-        try {
-            Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
-            Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
+    public List<Report> getReports(ReportRequest reportRequest, List<String> reportTypes) throws DatasetTooBig, InvalidRequest, TException {
+        checkArgs(reportRequest, reportTypes);
 
-            if (fromTime.compareTo(toTime) > 0) {
-                throw buildInvalidRequest("fromTime must be less that toTime");
-            }
+        Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
+        Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
 
-            return reportService.getReportsByRange(
-                    reportRequest.getPartyId(),
-                    reportRequest.getShopId(),
-                    reportTypes.stream()
-                            .map(reportType -> TypeUtil.toEnumField(reportType.name(), com.rbkmoney.reporter.domain.enums.ReportType.class))
-                            .collect(Collectors.toList()),
-                    fromTime,
-                    toTime
-            ).stream()
-                    .filter(report -> report.getStatus() != ReportStatus.cancelled)
-                    .map(report -> DamselUtil.toDamselReport(report, reportService.getReportFiles(report.getId())))
-                    .collect(Collectors.toList());
-        } catch (IllegalArgumentException ex) {
-            throw buildInvalidRequest(ex);
+        List<com.rbkmoney.reporter.domain.tables.pojos.Report> reportsByRange = reportService.getReportsByRangeNotCancelled(
+                reportRequest.getPartyId(),
+                reportRequest.getShopId(),
+                fromTime,
+                toTime,
+                reportTypes
+        );
+
+        if (reportingProperties.getReportsLimit() > 0 && reportsByRange.size() > reportingProperties.getReportsLimit()) {
+            throw new DatasetTooBig(reportingProperties.getReportsLimit());
         }
+
+        return reportsByRange.stream()
+                .map(report -> DamselUtil.toDamselReport(report, reportService.getReportFileDataIds(report.getId())))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public long generateReport(ReportRequest reportRequest, ReportType reportType) throws PartyNotFound, ShopNotFound, InvalidRequest, TException {
+    public long generateReport(ReportRequest reportRequest, String reportType) throws PartyNotFound, ShopNotFound, InvalidRequest, TException {
+        checkArgs(reportRequest, Collections.singletonList(reportType));
+
+        Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
+        Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
+
         try {
-
-            Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
-            Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
-
-            if (fromTime.compareTo(toTime) > 0) {
-                throw buildInvalidRequest("fromTime must be less that toTime");
-            }
-
+            // проверка на существование в хелгейте
             partyService.getShop(reportRequest.getPartyId(), reportRequest.getShopId());
+
             return reportService.createReport(
                     reportRequest.getPartyId(),
                     reportRequest.getShopId(),
                     fromTime,
                     toTime,
-                    TypeUtil.toEnumField(reportType.name(), com.rbkmoney.reporter.domain.enums.ReportType.class)
+                    reportType
             );
         } catch (PartyNotFoundException ex) {
             throw new PartyNotFound();
         } catch (ShopNotFoundException ex) {
             throw new ShopNotFound();
-        } catch (IllegalArgumentException ex) {
-            throw buildInvalidRequest(ex);
         }
     }
 
@@ -95,7 +90,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
         try {
             return DamselUtil.toDamselReport(
                     reportService.getReport(partyId, shopId, reportId),
-                    reportService.getReportFiles(reportId)
+                    reportService.getReportFileDataIds(reportId)
             );
         } catch (ReportNotFoundException ex) {
             throw new ReportNotFound();
@@ -111,16 +106,27 @@ public class ReportsHandler implements ReportingSrv.Iface {
         }
     }
 
-    @Override
-    public String generatePresignedUrl(String fileId, String expiresIn) throws FileNotFound, InvalidRequest, TException {
+    private void checkArgs(ReportRequest reportRequest, List<String> reportTypes) throws InvalidRequest {
         try {
-            Instant expiresInInstant = TypeUtil.stringToInstant(expiresIn);
-            URL url = reportService.generatePresignedUrl(fileId, expiresInInstant);
-            return url.toString();
-        } catch (FileNotFoundException ex) {
-            throw new FileNotFound();
+            Instant fromTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getFromTime());
+            Instant toTime = TypeUtil.stringToInstant(reportRequest.getTimeRange().getToTime());
+
+            if (fromTime.isAfter(toTime)) {
+                throw new IllegalArgumentException("fromTime must be less that toTime");
+            }
+
+            for (String reportType : reportTypes) {
+                checkReportType(reportType);
+            }
         } catch (IllegalArgumentException ex) {
             throw buildInvalidRequest(ex);
+        }
+    }
+
+    private void checkReportType(String reportType) throws IllegalArgumentException {
+        if (Arrays.stream(ReportType.values())
+                .noneMatch(r -> r.getLiteral().equals(reportType))) {
+            throw new IllegalArgumentException("reportType does not exist");
         }
     }
 }

@@ -25,8 +25,6 @@ public abstract class AbstractAppEventServiceTests extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builder(false)
             .addPostgreSQLTestContainer()
-            // todo rm ceph-container
-            .addCephTestContainer()
             .build();
 
     @BeforeClass

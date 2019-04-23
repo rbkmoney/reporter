@@ -25,8 +25,6 @@ public abstract class AbstractAppDaoTests extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builder(false)
             .addPostgreSQLTestContainer()
-            // todo цеф нужен на дао тестах потому что по дефолту при запуске приложения идет подключение к цеф, по факту на тестах дао сеф дергаться не должен
-            .addCephTestContainer()
             .build();
 
     @BeforeClass

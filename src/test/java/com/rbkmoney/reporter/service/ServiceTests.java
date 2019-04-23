@@ -1,33 +1,58 @@
 package com.rbkmoney.reporter.service;
 
-import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
-import org.apache.commons.codec.digest.DigestUtils;
+import com.rbkmoney.file.storage.FileStorageSrv;
+import com.rbkmoney.reporter.domain.enums.ReportStatus;
+import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.thrift.TException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
+import java.nio.file.Paths;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 
 import static com.rbkmoney.geck.common.util.TypeUtil.stringToTemporal;
 import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
+import static java.nio.file.Files.newInputStream;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class ServiceTests extends AbstractAppServiceTests {
+
+    private String partyId = generateString();
+    private String shopId = generateString();
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private ReportingService reportingService;
 
     @Autowired
-    private StorageService storageService;
+    private ReportService reportService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private HttpClient httpClient;
+
+    @Autowired
+    private FileStorageSrv.Iface client;
 
     @Test
     @Sql("classpath:data/sql/shop_accounting_full_data.sql")
@@ -46,25 +71,87 @@ public class ServiceTests extends AbstractAppServiceTests {
     }
 
     @Test
-    public void saveFileTest() throws IOException {
-        Path expectedFile = Files.createTempFile("reporter_", "_expected_file");
-        Path actualFile = Files.createTempFile("reporter_", "_actual_file");
+    public void reportServiceTest() {
+        jdbcTemplate.execute("truncate table rpt.report cascade");
 
-        try {
-            Files.write(expectedFile, "4815162342".getBytes());
-            FileMeta fileMeta = storageService.saveFile(expectedFile);
-            URL url = storageService.getFileUrl(fileMeta.getFileId(), fileMeta.getBucketId(), LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.UTC));
-            assertNotNull(url);
+        List<Long> reportIds = range(0, 5)
+                .mapToLong(i -> createReport("provision_of_service"))
+                .boxed()
+                .collect(toList());
+        reportIds.add(createReport("payment_registry"));
 
-            try (InputStream in = url.openStream()) {
-                Files.copy(in, actualFile, StandardCopyOption.REPLACE_EXISTING);
-            }
-            assertEquals(Files.readAllLines(expectedFile), Files.readAllLines(actualFile));
-            assertEquals(fileMeta.getMd5(), DigestUtils.md5Hex(Files.newInputStream(actualFile)));
-            assertEquals(fileMeta.getSha256(), DigestUtils.sha256Hex(Files.newInputStream(actualFile)));
-        } finally {
-            Files.deleteIfExists(expectedFile);
-            Files.deleteIfExists(actualFile);
-        }
+        assertEquals(
+                5,
+                reportService.getReportsByRange(
+                        partyId,
+                        shopId,
+                        fromTime.toInstant(ZoneOffset.UTC),
+                        toTime.toInstant(ZoneOffset.UTC),
+                        singletonList("provision_of_service")
+                )
+                        .size()
+        );
+
+        Long reportId = reportIds.get(0);
+        Report report = reportService.getReport(partyId, shopId, reportId);
+        assertEquals(toTime, report.getToTime());
+
+        reportService.cancelReport(partyId, shopId, reportId);
+
+        assertEquals(
+                4,
+                reportService.getReportsByRangeNotCancelled(
+                        partyId,
+                        shopId,
+                        fromTime.toInstant(ZoneOffset.UTC),
+                        toTime.toInstant(ZoneOffset.UTC),
+                        singletonList("provision_of_service")
+                )
+                        .size()
+        );
+
+        reportService.changeReportStatus(report, ReportStatus.created);
+
+        assertEquals(
+                5,
+                reportService.getReportsByRangeNotCancelled(
+                        partyId,
+                        shopId,
+                        fromTime.toInstant(ZoneOffset.UTC),
+                        toTime.toInstant(ZoneOffset.UTC),
+                        singletonList("provision_of_service")
+                )
+                        .size()
+        );
+
+        assertEquals(1, reportService.getPendingReports().size());
+    }
+
+    @Test
+    public void fileStorageServiceTest() throws URISyntaxException, IOException, TException, InterruptedException {
+        Path file = getFileFromResources();
+        String fileDataId = fileStorageService.saveFile(file);
+        String downloadUrl = client.generateDownloadUrl(fileDataId, generateCurrentTimePlusDay().toString());
+
+        HttpResponse responseGet = httpClient.execute(new HttpGet(downloadUrl));
+        InputStream content = responseGet.getEntity().getContent();
+        assertEquals(getContent(newInputStream(file)), getContent(content));
+    }
+
+    private long createReport(String reportType) {
+        return reportService.createReport(
+                partyId,
+                shopId,
+                fromTime.toInstant(ZoneOffset.UTC),
+                toTime.toInstant(ZoneOffset.UTC),
+                reportType
+        );
+    }
+
+    private Path getFileFromResources() throws URISyntaxException {
+        ClassLoader classLoader = this.getClass().getClassLoader();
+
+        URL url = requireNonNull(classLoader.getResource("respect1"));
+        return Paths.get(url.toURI());
     }
 }

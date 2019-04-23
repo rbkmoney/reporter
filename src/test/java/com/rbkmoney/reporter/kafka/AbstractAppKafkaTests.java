@@ -26,8 +26,6 @@ public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
     private static TestContainers testContainers = TestContainersBuilder.builder(false)
             .addKafkaTestContainer()
             .addPostgreSQLTestContainer()
-            // todo in fact unused, rm after
-            .addCephTestContainer()
             .build();
 
     @BeforeClass

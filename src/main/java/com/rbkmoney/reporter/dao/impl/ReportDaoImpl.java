@@ -2,10 +2,12 @@ package com.rbkmoney.reporter.dao.impl;
 
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.ReportDao;
+import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
-import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
+import com.rbkmoney.reporter.domain.tables.pojos.FileInfo;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.domain.tables.records.FileInfoRecord;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.jooq.Condition;
 import org.jooq.Query;
@@ -19,21 +21,20 @@ import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.rbkmoney.reporter.domain.tables.FileMeta.FILE_META;
+import static com.rbkmoney.reporter.domain.tables.FileInfo.FILE_INFO;
 import static com.rbkmoney.reporter.domain.tables.Report.REPORT;
 
 @Component
 public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
 
     private final RowMapper<Report> reportRowMapper;
-
-    private final RowMapper<FileMeta> fileMetaRowMapper;
+    private final RecordRowMapper<FileInfo> fileInfoRecordRowMapper;
 
     @Autowired
     public ReportDaoImpl(DataSource dataSource) {
         super(dataSource);
         reportRowMapper = BeanPropertyRowMapper.newInstance(Report.class);
-        fileMetaRowMapper = BeanPropertyRowMapper.newInstance(FileMeta.class);
+        fileInfoRecordRowMapper = new RecordRowMapper<>(FILE_INFO, FileInfo.class);
     }
 
     @Override
@@ -47,13 +48,11 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
-    public List<FileMeta> getReportFiles(long reportId) throws DaoException {
-        Query query = getDslContext().selectFrom(FILE_META)
-                .where(
-                        FILE_META.REPORT_ID.eq(reportId)
-                );
-        return fetch(query, fileMetaRowMapper);
+    public List<FileInfo> getByReportIds(long reportId) throws DaoException {
+        Condition condition = FILE_INFO.REPORT_ID.eq(reportId);
+        Query query = getDslContext().selectFrom(FILE_INFO).where(condition);
 
+        return fetch(query, fileInfoRecordRowMapper);
     }
 
     @Override
@@ -66,26 +65,18 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
-    public FileMeta getFile(String fileId) throws DaoException {
-        Query query = getDslContext()
-                .selectFrom(FILE_META)
-                .where(FILE_META.FILE_ID.eq(fileId));
+    public Long attachFileInfo(long reportId, String fileDataId) throws DaoException {
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setReportId(reportId);
+        fileInfo.setFileDataId(fileDataId);
 
-        return fetchOne(query, fileMetaRowMapper);
-    }
+        FileInfoRecord record = getDslContext().newRecord(FILE_INFO, fileInfo);
 
-    @Override
-    public String attachFile(long reportId, FileMeta file) throws DaoException {
-        Query query = getDslContext().insertInto(FILE_META)
-                .set(FILE_META.FILE_ID, file.getFileId())
-                .set(FILE_META.REPORT_ID, reportId)
-                .set(FILE_META.BUCKET_ID, file.getBucketId())
-                .set(FILE_META.FILENAME, file.getFilename())
-                .set(FILE_META.MD5, file.getMd5())
-                .set(FILE_META.SHA256, file.getSha256());
-        executeOne(query);
+        Query query = getDslContext().insertInto(FILE_INFO).set(record).returning(FILE_INFO.ID);
 
-        return file.getFileId();
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        executeOne(query, keyHolder);
+        return keyHolder.getKey().longValue();
     }
 
     @Override
@@ -109,7 +100,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
+    public List<Report> getReportsByRange(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, List<ReportType> reportTypes) throws DaoException {
         Condition condition = REPORT.PARTY_ID.eq(partyId)
                 .and(REPORT.PARTY_SHOP_ID.eq(shopId))
                 .and(REPORT.FROM_TIME.ge(fromTime))

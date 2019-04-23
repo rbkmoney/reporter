@@ -14,7 +14,6 @@ import com.rbkmoney.reporter.dao.mapper.dto.RefundPaymentRegistryReportData;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
-import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.service.ReportService;
@@ -25,25 +24,20 @@ import com.rbkmoney.reporter.service.impl.ProvisionOfServiceTemplateImpl;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.thrift.TException;
-import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -57,7 +51,8 @@ import java.util.concurrent.TimeUnit;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -281,7 +276,7 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
                 new Representative("test", "test", RepresentativeDocument.articles_of_association(new ArticlesOfAssociation()))
         );
 
-        long reportId = reportService.createReport(partyId, shopId, fromTime, toTime, ReportType.provision_of_service);
+        long reportId = reportService.createReport(partyId, shopId, fromTime, toTime, ReportType.provision_of_service.getLiteral());
 
         log.info("################### 4 seconds sleep now on main thread; ##########################");
         TimeUnit.SECONDS.sleep(10);
@@ -290,23 +285,9 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
 
         assertEquals(ReportStatus.created, report.getStatus());
 
-        List<FileMeta> reportFiles = reportService.getReportFiles(report.getId());
+        List<String> reportFiles = reportService.getReportFileDataIds(report.getId());
 
         assertEquals(2, reportFiles.size());
-
-        for (FileMeta fileMeta : reportFiles) {
-            URL url = reportService.generatePresignedUrl(fileMeta.getFileId(), LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.UTC));
-            assertNotNull(url);
-            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                try (InputStream inputStream = url.openStream()) {
-                    Streams.copy(inputStream, outputStream, true);
-                    byte[] actualBytes = outputStream.toByteArray();
-
-                    assertEquals(fileMeta.getMd5(), DigestUtils.md5Hex(actualBytes));
-                    assertEquals(fileMeta.getSha256(), DigestUtils.sha256Hex(actualBytes));
-                }
-            }
-        }
     }
 
     private void mockPartyManagementClient(Party party) throws TException {

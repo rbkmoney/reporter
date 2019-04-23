@@ -66,7 +66,7 @@ public class GenerateReportJob implements Job {
                 return;
             }
 
-            shops.forEach(shop -> reportService.createReport(partyId, shop.getId(), fromTime, toTime, reportType, zoneId, jobExecutionContext.getFireTime().toInstant()));
+            shops.forEach(shop -> reportService.createReport(partyId, shop.getId(), fromTime, toTime, reportType.getLiteral(), zoneId, jobExecutionContext.getFireTime().toInstant()));
 
             log.info("Report for contract have been successfully created, partyId='{}', contractId='{}', trigger='{}', jobExecutionContext='{}'",
                     partyId, contractId, trigger, jobExecutionContext);
