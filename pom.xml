@@ -13,7 +13,7 @@
 
     <groupId>com.rbkmoney</groupId>
     <artifactId>reporter</artifactId>
-    <version>1.1.24-SNAPSHOT</version>
+    <version>1.1.25-SNAPSHOT</version>
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
@@ -25,12 +25,13 @@
         <!---->
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
-        <damsel.version>1.278-3abdcb4</damsel.version>
+        <damsel.version>1.289-ef27dd7</damsel.version>
         <shared.resources.version>0.2.1</shared.resources.version>
         <dockerfile.base.service.tag>22c57470c4fc47161894f036b7cf9d70f42b75f5</dockerfile.base.service.tag>
         <dockerfile.build.tag>9d4d70317dd08abd400798932a231798ee254a87</dockerfile.build.tag>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <file-storage-proto.version>1.24-a77c0c4</file-storage-proto.version>
         <!---->
         <db.name>reporter</db.name>
         <db.schema>rpt</db.schema>
@@ -222,6 +223,11 @@
             <groupId>com.rbkmoney</groupId>
             <artifactId>kafka-common-lib</artifactId>
             <version>0.0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>file-storage-proto</artifactId>
+            <version>${file-storage-proto.version}</version>
         </dependency>
 
         <!--Test libs-->

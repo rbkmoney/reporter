@@ -26,7 +26,6 @@ public abstract class AbstractAppDaoTests extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addPostgresqlTestContainer()
-            .addCephTestContainer()
             .build();
 
     @BeforeClass

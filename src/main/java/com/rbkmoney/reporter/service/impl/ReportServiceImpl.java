@@ -3,11 +3,11 @@ package com.rbkmoney.reporter.service.impl;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
-import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
+import com.rbkmoney.reporter.domain.tables.pojos.FileInfo;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.*;
+import com.rbkmoney.reporter.service.FileStorageService;
 import com.rbkmoney.reporter.service.ReportService;
-import com.rbkmoney.reporter.service.StorageService;
 import com.rbkmoney.reporter.service.TemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ValidationException;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -26,7 +25,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -36,7 +37,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportDao reportDao;
 
     private final List<TemplateService> templateServices;
-    private final StorageService storageService;
+    private final FileStorageService fileStorageService;
 
     @Value("${report.defaultTimeZone}")
     private ZoneId defaultTimeZone;
@@ -44,15 +45,23 @@ public class ReportServiceImpl implements ReportService {
     @Value("${report.batchSize}")
     private int batchSize;
 
+    public List<Report> getReportsByRangeNotCancelled(String partyId, String shopId, Instant fromTime, Instant toTime, List<String> reportTypes) throws StorageException {
+        return getReportsByRange(partyId, shopId, fromTime, toTime, reportTypes).stream()
+                .filter(report -> report.getStatus() != ReportStatus.cancelled)
+                .collect(Collectors.toList());
+    }
+
     @Override
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) throws StorageException {
+    public List<Report> getReportsByRange(String partyId, String shopId, Instant fromTime, Instant toTime, List<String> reportTypes) throws StorageException {
         try {
             return reportDao.getReportsByRange(
                     partyId,
                     shopId,
-                    reportTypes,
                     LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
-                    LocalDateTime.ofInstant(toTime, ZoneOffset.UTC)
+                    LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
+                    Arrays.stream(ReportType.values())
+                            .filter(reportType -> reportTypes.contains(reportType.getLiteral()))
+                            .collect(Collectors.toList())
             );
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s'",
@@ -71,11 +80,17 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<FileMeta> getReportFiles(long reportId) throws StorageException {
+    public List<String> getReportFileDataIds(long reportId) throws StorageException {
         try {
-            return reportDao.getReportFiles(reportId);
-        } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get report files from storage, reportId='%d'", reportId), ex);
+            log.info("Trying to get files information, reportId='{}'", reportId);
+
+            List<String> fileIds = reportDao.getByReportIds(reportId).stream()
+                    .map(FileInfo::getFileDataId)
+                    .collect(Collectors.toList());
+            log.info("Files information for report have been found, reportId='{}'", reportId);
+            return fileIds;
+        } catch (DaoException e) {
+            throw new StorageException(e);
         }
     }
 
@@ -93,12 +108,12 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType) throws PartyNotFoundException, ShopNotFoundException {
+    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, String reportType) throws PartyNotFoundException, ShopNotFoundException {
         return createReport(partyId, shopId, fromTime, toTime, reportType, defaultTimeZone, Instant.now());
     }
 
     @Override
-    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, ReportType reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
+    public long createReport(String partyId, String shopId, Instant fromTime, Instant toTime, String reportType, ZoneId timezone, Instant createdAt) throws PartyNotFoundException, ShopNotFoundException {
         log.info("Trying to create report, partyId={}, shopId={}, reportType={}, fromTime={}, toTime={}",
                 partyId, shopId, reportType, fromTime, toTime);
 
@@ -108,7 +123,10 @@ public class ReportServiceImpl implements ReportService {
                     shopId,
                     LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
                     LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
-                    reportType,
+                    Arrays.stream(ReportType.values())
+                            .filter(r -> r.getLiteral().equals(reportType))
+                            .findFirst()
+                            .orElse(null),
                     timezone.getId(),
                     LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
             );
@@ -122,37 +140,27 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public URL generatePresignedUrl(String fileId, Instant expiresIn) throws FileNotFoundException, StorageException {
-        FileMeta file;
-        try {
-            file = reportDao.getFile(fileId);
-        } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get file meta, fileId='%s'", fileId), ex);
-        }
-
-        if (file == null) {
-            throw new FileNotFoundException(String.format("File with id '%s' not found", fileId));
-        }
-
-        return storageService.getFileUrl(file.getFileId(), file.getBucketId(), expiresIn);
-    }
-
-    @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void generateReport(Report report) {
-        log.info("Trying to process report, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
-                report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime());
+        log.info(
+                "Trying to process report, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime()
+        );
         try {
-            List<FileMeta> reportFiles = processSignAndUpload(report);
-            finishedReportTask(report.getId(), reportFiles);
-            log.info("Report has been successfully processed, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
-                    report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime());
+            List<String> fileDataIds = processSignAndUpload(report);
+            finishedReportTask(report, fileDataIds);
+            log.info(
+                    "Report has been successfully processed, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                    report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime()
+            );
         } catch (ValidationException ex) {
             log.error("Report data validation failed, reportId='{}'", report.getId(), ex);
             changeReportStatus(report, ReportStatus.cancelled);
         } catch (Throwable throwable) {
-            log.error("The report has failed to process, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
-                    report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime(), throwable);
+            log.error(
+                    "The report has failed to process, reportId='{}', reportType='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                    report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(), report.getToTime(), throwable
+            );
         }
     }
 
@@ -178,33 +186,72 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void finishedReportTask(long reportId, List<FileMeta> reportFiles) throws StorageException {
+    public void finishedReportTask(Report report, List<String> fileDataIds) throws StorageException {
         try {
-            for (FileMeta file : reportFiles) {
-                reportDao.attachFile(reportId, file);
+            String fileDataIdsLog = fileDataIds.stream()
+                    .collect(Collectors.joining(", ", "[", "]"));
+
+            logInfo("Save report files information, fileDataIds: " + fileDataIdsLog + "; report: ", report);
+            for (String fileDataId : fileDataIds) {
+                reportDao.attachFileInfo(report.getId(), fileDataId);
             }
 
-            reportDao.changeReportStatus(reportId, ReportStatus.created);
+            logInfo("Change report status on [created], ", report);
+            reportDao.changeReportStatus(report.getId(), ReportStatus.created);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to finish report task, reportId='%d'", reportId), ex);
+            throw new StorageException(String.format("Failed to finish report task, reportId='%d'", report.getId()), ex);
         }
     }
 
     @Override
-    public List<FileMeta> processSignAndUpload(Report report) throws IOException {
-        List<FileMeta> files = new ArrayList<>();
+    public List<String> processSignAndUpload(Report report) throws IOException, FileStorageException {
+        List<String> fileDataIds = new ArrayList<>();
         for (TemplateService templateService : templateServices) {
             if (templateService.accept(report.getType())) {
+                logInfo("Create temp report file, report: ", report);
                 Path reportFile = Files.createTempFile(report.getType() + "_", "_report.xlsx");
                 try {
+                    logInfo("Fill temp report file in with data, report: ", report);
                     templateService.processReportTemplate(report, Files.newOutputStream(reportFile));
-                    FileMeta reportFileModel = storageService.saveFile(reportFile);
-                    files.add(reportFileModel);
+
+                    logInfo("Save temp report file in file storage, report: ", report);
+                    String fileDataId = fileStorageService.saveFile(reportFile);
+
+                    fileDataIds.add(fileDataId);
                 } finally {
+                    logInfo("Delete temp report file, report: ", report);
                     Files.deleteIfExists(reportFile);
                 }
             }
         }
-        return files;
+        return fileDataIds;
+    }
+
+    private void logInfo(String message, Report report) {
+        String format = getFormatMessage(message, report);
+        log.info(format);
+    }
+
+    private String getFormatMessage(String message, Report report) {
+        return String.format(
+                message +
+                        "reportId='%s', " +
+                        "partyId='%s', " +
+                        "contractId='%s', " +
+                        "fromTime='%s', " +
+                        "toTime='%s', " +
+                        "createdAt='%s', " +
+                        "reportType='%s', " +
+                        "status='%s'"
+                ,
+                report.getId(),
+                report.getPartyId(),
+                report.getPartyShopId(),
+                report.getFromTime().toString(),
+                report.getToTime().toString(),
+                report.getCreatedAt().toString(),
+                report.getType(),
+                report.getStatus()
+        );
     }
 }

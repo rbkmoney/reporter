@@ -12,7 +12,6 @@ import org.springframework.test.context.jdbc.Sql;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.TimeZone;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -146,9 +145,9 @@ public class DaoTests extends AbstractAppDaoTests {
         assertEquals(timezone, report.getTimezone());
         assertEquals(createdAt, report.getCreatedAt());
 
-        assertEquals(1, reportDao.getReportsByRange(partyId, shopId, new ArrayList<>(), fromTime, toTime).size());
+        assertEquals(1, reportDao.getReportsByRange(partyId, shopId, fromTime, toTime, new ArrayList<>()).size());
 
-        assertEquals(1, reportDao.getReportsByRange(partyId, shopId, Arrays.asList(reportType), fromTime, toTime).size());
+        assertEquals(1, reportDao.getReportsByRange(partyId, shopId, fromTime, toTime, Arrays.asList(reportType)).size());
     }
 
     @Test
@@ -166,35 +165,6 @@ public class DaoTests extends AbstractAppDaoTests {
         reportDao.changeReportStatus(reportId, ReportStatus.created);
 
         reportDao.getReport(partyId, shopId, reportId);
-    }
-
-    @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void attachFileTest() throws DaoException {
-        FileMeta file = random(FileMeta.class);
-        Long reportId = generateLong();
-
-        String fileId = reportDao.attachFile(reportId, file);
-        FileMeta currentFile = reportDao.getFile(fileId);
-
-        assertEquals(file.getFileId(), currentFile.getFileId());
-        assertEquals(reportId, currentFile.getReportId());
-        assertEquals(file.getBucketId(), currentFile.getBucketId());
-        assertEquals(file.getFilename(), currentFile.getFilename());
-        assertEquals(file.getMd5(), currentFile.getMd5());
-        assertEquals(file.getSha256(), currentFile.getSha256());
-
-        List<FileMeta> files = reportDao.getReportFiles(reportId);
-        assertEquals(1, files.size());
-
-        currentFile = files.get(0);
-
-        assertEquals(file.getFileId(), currentFile.getFileId());
-        assertEquals(reportId, currentFile.getReportId());
-        assertEquals(file.getBucketId(), currentFile.getBucketId());
-        assertEquals(file.getFilename(), currentFile.getFilename());
-        assertEquals(file.getMd5(), currentFile.getMd5());
-        assertEquals(file.getSha256(), currentFile.getSha256());
     }
 
     @Test

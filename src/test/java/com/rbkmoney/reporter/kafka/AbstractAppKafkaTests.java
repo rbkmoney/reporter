@@ -27,7 +27,6 @@ public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addKafkaTestContainer()
             .addPostgresqlTestContainer()
-            .addCephTestContainer()
             .build();
 
     @BeforeClass

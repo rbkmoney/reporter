@@ -27,6 +27,7 @@ public abstract class AbstractAppReportBuildingTests extends AbstractTestUtils {
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addPostgresqlTestContainer()
             .addCephTestContainer()
+            .addFileStorageTestContainer()
             .build();
 
     @BeforeClass
