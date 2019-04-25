@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -7,7 +7,7 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class PaymentTerminalRecieptChangeMachineEventHandler implements InvoiceC
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         PaymentTerminalReceipt paymentTerminalReceipt = getPaymentTerminalReciept(invoicePaymentChange);
 
@@ -45,6 +45,7 @@ public class PaymentTerminalRecieptChangeMachineEventHandler implements InvoiceC
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         payment.setEventType(InvoiceEventType.PAYMENT_TERMINAL_RECIEPT);
         payment.setSequenceId(baseEvent.getEventId());
+        payment.setChangeId(changeId);
         payment.setPaymentShortId(paymentTerminalReceipt.getShortPaymentId());
 
         paymentService.updateNotCurrent(invoiceId, paymentId);

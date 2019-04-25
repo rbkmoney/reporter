@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing;
+package com.rbkmoney.reporter.handle.machineevent.payment;
 
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.reporter.handle.machineevent.MachineEventHandler;

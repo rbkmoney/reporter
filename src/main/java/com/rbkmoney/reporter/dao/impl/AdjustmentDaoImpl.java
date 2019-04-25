@@ -43,7 +43,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         AdjustmentRecord record = getDslContext().newRecord(ADJUSTMENT, adjustment);
         Query query = getDslContext().insertInto(ADJUSTMENT)
                 .set(record)
-                .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.PAYMENT_ID, ADJUSTMENT.ADJUSTMENT_ID, ADJUSTMENT.SEQUENCE_ID)
+                .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.SEQUENCE_ID, ADJUSTMENT.CHANGE_ID)
                 .doUpdate()
                 .set(record)
                 .returning(ADJUSTMENT.ID);

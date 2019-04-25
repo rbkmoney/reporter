@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.claimeffect;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.claimeffect;
 
 import com.rbkmoney.damsel.payment_processing.ClaimEffect;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;

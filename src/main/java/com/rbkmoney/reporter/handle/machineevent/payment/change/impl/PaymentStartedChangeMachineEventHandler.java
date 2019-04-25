@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.base.Content;
 import com.rbkmoney.damsel.domain.InvoicePaymentStatus;
@@ -15,7 +15,7 @@ import com.rbkmoney.reporter.domain.enums.OnHoldExpiration;
 import com.rbkmoney.reporter.domain.enums.*;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.InvoiceService;
 import com.rbkmoney.reporter.service.PaymentService;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
@@ -38,7 +38,7 @@ public class PaymentStartedChangeMachineEventHandler implements InvoiceChangeMac
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentStarted invoicePaymentStarted = getInvoicePaymentStarted(invoicePaymentChange);
         InvoicePayment invoicePayment = invoicePaymentStarted.getPayment();
@@ -57,8 +57,9 @@ public class PaymentStartedChangeMachineEventHandler implements InvoiceChangeMac
         Payment payment = new Payment();
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_STARTED);
-        payment.setSequenceId(baseEvent.getEventId());
         payment.setInvoiceId(invoiceId);
+        payment.setSequenceId(baseEvent.getEventId());
+        payment.setChangeId(changeId);
         payment.setPartyId(invoice.getPartyId());
         payment.setPartyShopId(invoice.getPartyShopId());
         payment.setPaymentId(paymentId);

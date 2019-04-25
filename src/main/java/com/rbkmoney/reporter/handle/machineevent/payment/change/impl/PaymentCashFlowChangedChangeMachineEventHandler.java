@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.domain.FinalCashFlowPosting;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
@@ -8,7 +8,7 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.PaymentService;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class PaymentCashFlowChangedChangeMachineEventHandler implements InvoiceC
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentCashFlowChanged invoicePaymentCashFlowChanged = getInvoicePaymentCashFlowChanged(invoicePaymentChange);
         List<FinalCashFlowPosting> finalCashFlowPostings = invoicePaymentCashFlowChanged.getCashFlow();
@@ -48,6 +48,7 @@ public class PaymentCashFlowChangedChangeMachineEventHandler implements InvoiceC
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_CASH_FLOW_CHANGED);
         payment.setSequenceId(baseEvent.getEventId());
+        payment.setChangeId(changeId);
         payment.setPaymentCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(finalCashFlowPostings));
 
         paymentService.updateNotCurrent(invoiceId, paymentId);

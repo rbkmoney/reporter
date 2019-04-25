@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.Failure;
@@ -15,7 +15,7 @@ import com.rbkmoney.reporter.domain.enums.FailureClass;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class PaymentStatusChangedChangeMachineEventHandler implements InvoiceCha
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentStatusChanged invoicePaymentStatusChanged = getInvoicePaymentStatusChanged(invoicePaymentChange);
         com.rbkmoney.damsel.domain.InvoicePaymentStatus invoicePaymentStatusChangedStatus = invoicePaymentStatusChanged.getStatus();
@@ -52,6 +52,7 @@ public class PaymentStatusChangedChangeMachineEventHandler implements InvoiceCha
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_STATUS_CHANGED);
         payment.setSequenceId(baseEvent.getEventId());
+        payment.setChangeId(changeId);
         fillPaymentStatus(invoicePaymentStatusChangedStatus, payment);
 
         paymentService.updateNotCurrent(invoiceId, paymentId);

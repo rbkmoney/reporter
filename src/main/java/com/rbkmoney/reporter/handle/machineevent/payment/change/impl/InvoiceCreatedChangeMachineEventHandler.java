@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.base.Content;
 import com.rbkmoney.damsel.domain.InvoiceDetails;
@@ -9,7 +9,7 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoiceStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.InvoiceService;
 import com.rbkmoney.reporter.util.DamselUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class InvoiceCreatedChangeMachineEventHandler implements InvoiceChangeMac
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         com.rbkmoney.damsel.domain.Invoice damselInvoice = payload.getInvoiceCreated().getInvoice();
         InvoiceDetails details = damselInvoice.getDetails();
         com.rbkmoney.damsel.domain.InvoiceStatus invoiceStatus = damselInvoice.getStatus();
@@ -43,8 +43,9 @@ public class InvoiceCreatedChangeMachineEventHandler implements InvoiceChangeMac
         Invoice invoice = new Invoice();
         invoice.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         invoice.setEventType(InvoiceEventType.INVOICE_CREATED);
-        invoice.setSequenceId(baseEvent.getEventId());
         invoice.setInvoiceId(invoiceId);
+        invoice.setSequenceId(baseEvent.getEventId());
+        invoice.setChangeId(changeId);
         invoice.setPartyId(UUID.fromString(damselInvoice.getOwnerId()));
         if (damselInvoice.isSetPartyRevision()) {
             invoice.setInvoicePartyRevision(damselInvoice.getPartyRevision());

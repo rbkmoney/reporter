@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
@@ -13,7 +13,7 @@ import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.PaymentService;
 import com.rbkmoney.reporter.service.RefundService;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
@@ -39,7 +39,7 @@ public class RefundCreatedChangeMachineEventHandler implements InvoiceChangeMach
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentRefundChange invoicePaymentRefundChange = getInvoicePaymentRefundChange(invoicePaymentChange);
         InvoicePaymentRefundCreated invoicePaymentRefundCreated = getInvoicePaymentRefundCreated(invoicePaymentRefundChange);
@@ -56,8 +56,9 @@ public class RefundCreatedChangeMachineEventHandler implements InvoiceChangeMach
         Refund refund = new Refund();
         refund.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED);
-        refund.setSequenceId(baseEvent.getEventId());
         refund.setInvoiceId(invoiceId);
+        refund.setSequenceId(baseEvent.getEventId());
+        refund.setChangeId(changeId);
         refund.setPaymentId(paymentId);
         refund.setPartyId(payment.getPartyId());
         refund.setPartyShopId(payment.getPartyShopId());

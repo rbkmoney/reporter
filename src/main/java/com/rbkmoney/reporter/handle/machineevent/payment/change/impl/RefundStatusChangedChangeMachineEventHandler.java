@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.domain.Failure;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefundStatus;
@@ -15,7 +15,7 @@ import com.rbkmoney.reporter.domain.enums.FailureClass;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.RefundService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class RefundStatusChangedChangeMachineEventHandler implements InvoiceChan
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentRefundChange invoicePaymentRefundChange = getInvoicePaymentRefundChange(invoicePaymentChange);
         InvoicePaymentRefundStatusChanged invoicePaymentRefundStatusChanged = getInvoicePaymentRefundStatusChanged(invoicePaymentRefundChange);
@@ -55,6 +55,7 @@ public class RefundStatusChangedChangeMachineEventHandler implements InvoiceChan
         refund.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_STATUS_CHANGED);
         refund.setSequenceId(baseEvent.getEventId());
+        refund.setChangeId(changeId);
         refund.setRefundStatus(TBaseUtil.unionFieldToEnum(invoicePaymentRefundStatus, RefundStatus.class));
         if (invoicePaymentRefundStatus.isSetFailed()) {
             OperationFailure operationFailure = invoicePaymentRefundStatus.getFailed().getFailure();

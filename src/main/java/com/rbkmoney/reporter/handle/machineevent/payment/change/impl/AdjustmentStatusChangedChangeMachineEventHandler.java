@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustmentStatus;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
@@ -10,7 +10,7 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.AdjustmentService;
 import com.rbkmoney.reporter.util.DamselUtil;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class AdjustmentStatusChangedChangeMachineEventHandler implements Invoice
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentAdjustmentChange invoicePaymentAdjustmentChange = getInvoicePaymentAdjustmentChange(invoicePaymentChange);
         InvoicePaymentAdjustmentStatus invoicePaymentAdjustmentStatus = getInvoicePaymentAdjustmentStatus(invoicePaymentAdjustmentChange);
@@ -52,6 +52,7 @@ public class AdjustmentStatusChangedChangeMachineEventHandler implements Invoice
         adjustment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_STATUS_CHANGED);
         adjustment.setSequenceId(baseEvent.getEventId());
+        adjustment.setChangeId(changeId);
         adjustment.setAdjustmentStatus(TBaseUtil.unionFieldToEnum(invoicePaymentAdjustmentStatus, AdjustmentStatus.class));
         adjustment.setAdjustmentStatusCreatedAt(getAdjustmentStatusCreatedAt(invoicePaymentAdjustmentStatus));
 

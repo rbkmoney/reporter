@@ -32,7 +32,7 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
         InvoiceRecord invoiceRecord = getDslContext().newRecord(INVOICE, invoice);
         Query query = getDslContext().insertInto(INVOICE)
                 .set(invoiceRecord)
-                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID)
+                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID, INVOICE.CHANGE_ID)
                 .doUpdate()
                 .set(invoiceRecord)
                 .returning(INVOICE.ID);

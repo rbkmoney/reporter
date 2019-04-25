@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.claimeffect.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.claimeffect.impl;
 
 import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.ReportPreferences;
@@ -7,7 +7,7 @@ import com.rbkmoney.damsel.payment_processing.ClaimEffect;
 import com.rbkmoney.damsel.payment_processing.ContractEffect;
 import com.rbkmoney.damsel.payment_processing.ContractEffectUnit;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.claimeffect.ClaimEffectMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.claimeffect.ClaimEffectMachineEventHandler;
 import com.rbkmoney.reporter.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class ContractEffectUnitMachineEventHandler implements ClaimEffectMachine
     }
 
     @Override
-    public void handle(ClaimEffect payload, MachineEvent baseEvent) {
+    public void handle(ClaimEffect payload, MachineEvent baseEvent, Integer changeId) {
         ContractEffectUnit contractEffectUnit = payload.getContractEffect();
 
         long eventId = baseEvent.getEventId();

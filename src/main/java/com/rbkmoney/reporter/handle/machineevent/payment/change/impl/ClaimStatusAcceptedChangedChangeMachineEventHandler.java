@@ -1,10 +1,10 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.payment_processing.ClaimEffect;
 import com.rbkmoney.damsel.payment_processing.PartyChange;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.PartyChangeMachineEventHandler;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.claimeffect.ClaimEffectMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.PartyChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.claimeffect.ClaimEffectMachineEventHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,10 +27,11 @@ public class ClaimStatusAcceptedChangedChangeMachineEventHandler implements Part
 
     @Override
     public void handle(PartyChange payload, MachineEvent stockEvent) {
-        for (ClaimEffect effect : payload.getClaimStatusChanged().getStatus().getAccepted().getEffects()) {
+        for (int i = 0; i < payload.getClaimStatusChanged().getStatus().getAccepted().getEffects().size(); i++) {
+            ClaimEffect effect = payload.getClaimStatusChanged().getStatus().getAccepted().getEffects().get(i);
             for (ClaimEffectMachineEventHandler eventsHandler : eventsHandlers) {
                 if (eventsHandler.accept(effect)) {
-                    eventsHandler.handle(effect, stockEvent);
+                    eventsHandler.handle(effect, stockEvent, i);
                 }
             }
         }

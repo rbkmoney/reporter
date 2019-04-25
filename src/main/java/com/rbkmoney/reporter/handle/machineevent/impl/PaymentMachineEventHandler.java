@@ -3,7 +3,7 @@ package com.rbkmoney.reporter.handle.machineevent.impl;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.handle.machineevent.MachineEventHandler;
-import com.rbkmoney.reporter.handle.machineevent.processing.PaymentProcessingMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.PaymentProcessingMachineEventHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

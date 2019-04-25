@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent.processing.change.impl;
+package com.rbkmoney.reporter.handle.machineevent.payment.change.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustment;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
@@ -11,7 +11,7 @@ import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handle.machineevent.processing.change.InvoiceChangeMachineEventHandler;
+import com.rbkmoney.reporter.handle.machineevent.payment.change.InvoiceChangeMachineEventHandler;
 import com.rbkmoney.reporter.service.AdjustmentService;
 import com.rbkmoney.reporter.service.PaymentService;
 import com.rbkmoney.reporter.util.DamselUtil;
@@ -38,7 +38,7 @@ public class AdjustmentCreatedChangeMachineEventHandler implements InvoiceChange
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent) {
+    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentAdjustmentChange invoicePaymentAdjustmentChange = getInvoicePaymentAdjustmentChange(invoicePaymentChange);
         InvoicePaymentAdjustment invoicePaymentAdjustment = getInvoicePaymentAdjustment(invoicePaymentAdjustmentChange);
@@ -54,8 +54,9 @@ public class AdjustmentCreatedChangeMachineEventHandler implements InvoiceChange
         Adjustment adjustment = new Adjustment();
         adjustment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED);
-        adjustment.setSequenceId(baseEvent.getEventId());
         adjustment.setInvoiceId(invoiceId);
+        adjustment.setSequenceId(baseEvent.getEventId());
+        adjustment.setChangeId(changeId);
         adjustment.setPaymentId(paymentId);
         adjustment.setPartyId(payment.getPartyId());
         adjustment.setPartyShopId(payment.getPartyShopId());
