@@ -14,12 +14,12 @@ public abstract class AbstractThriftSerializer<T extends TBase> implements Binar
 
     @Override
     public final byte[] serialize(T data) throws Exception {
-        log.debug("serialize, data: {}", data);
+        log.debug("Serialize, data: {}", data);
         byte[] bin;
         try {
             bin = tSerializerThreadLocal.get().serialize(data);
         } catch (TException e) {
-            log.error(this.getClass() + " e: ", e);
+            log.error("Error when serialize " + data.getClass() + "data: {} ", data, e);
             throw new Exception(e);
         }
         return bin;

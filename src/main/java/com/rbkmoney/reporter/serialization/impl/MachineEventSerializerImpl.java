@@ -9,21 +9,17 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 @Slf4j
 public class MachineEventSerializerImpl implements MachineEventSerializer {
 
-    private final ThreadLocal<TSerializer> tSerializerThreadLocal = getTSerializerThreadLocal();
+    private final ThreadLocal<TSerializer> tSerializerThreadLocal = ThreadLocal.withInitial(() -> new TSerializer(new TBinaryProtocol.Factory()));
 
     @Override
     public byte[] serialize(String topic, SinkEvent data) {
-        log.debug("Message, topic: {}, data: {}", topic, data);
+        log.debug("Serialize message, topic: {}, data: {}", topic, data);
         byte[] retVal = null;
         try {
             retVal = tSerializerThreadLocal.get().serialize(data);
         } catch (Exception e) {
-            log.error("Error when serialize RuleTemplate data: {} ", data, e);
+            log.error("Error when serialize machinegun SinkEvent data: {} ", data, e);
         }
         return retVal;
-    }
-
-    private ThreadLocal<TSerializer> getTSerializerThreadLocal() {
-        return ThreadLocal.withInitial(() -> new TSerializer(new TBinaryProtocol.Factory()));
     }
 }
