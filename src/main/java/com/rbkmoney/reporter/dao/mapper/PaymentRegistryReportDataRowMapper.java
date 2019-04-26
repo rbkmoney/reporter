@@ -28,7 +28,6 @@ public class PaymentRegistryReportDataRowMapper implements RowMapper<PaymentRegi
     public PaymentRegistryReportData mapRow(ResultSet rs, int i) throws SQLException {
         PaymentRegistryReportData data = new PaymentRegistryReportData();
         data.setId(rs.getLong(PAYMENT.ID.getName()));
-        data.setEventId(rs.getLong(PAYMENT.EVENT_ID.getName()));
         data.setEventCreatedAt(rs.getObject(PAYMENT.EVENT_CREATED_AT.getName(), LocalDateTime.class));
         data.setEventType(TypeUtil.toEnumField(rs.getString(PAYMENT.EVENT_TYPE.getName()), InvoiceEventType.class));
         data.setPartyId(UUID.fromString(rs.getString(PAYMENT.PARTY_ID.getName())));

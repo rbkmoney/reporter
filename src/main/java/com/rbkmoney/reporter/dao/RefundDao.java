@@ -11,8 +11,6 @@ import java.util.Optional;
 
 public interface RefundDao {
 
-    Optional<Long> getLastEventId() throws DaoException;
-
     Long save(Refund refund) throws DaoException;
 
     Refund get(String invoiceId, String paymentId, String refundId) throws DaoException;

@@ -1,30 +1,5 @@
 server:
   port: @server.port@
-partyManagement:
-  url: http://hellgate:8022/v1/processing/partymgmt
-  timeout: 5000
-magista:
-  url: http://magista:8022/stat
-  timeout: 60000
-bustermaze:
-  polling:
-    delay: 10000
-    retryDelay: 1000
-    maxPoolSize: 1
-    housekeeperTimeout: 15000
-    url: http://bustermaze:8022/repo
-    enable: true
-jobs:
-  synchronization:
-    enabled: true
-  report:
-    enabled: true
-signer:
-  url: http://signer:8022/signer
-  timeout: 5000
-domainConfig:
-  url: http://dominant:8022/v1/domain/repository
-  timeout: 5000
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
@@ -38,12 +13,56 @@ spring:
   output:
     ansi:
       enabled: always
+jobs:
+  synchronization:
+    enabled: false
+  report:
+    enabled: false
+kafka:
+  bootstrap:
+    servers: localhost:9092
+  concurrency: 1
+  processing:
+    payout:
+      topic: mg-payout-100-2
+      enabled: false
+    payment:
+      topic: mg-invoice-100-2
+      enabled: false
+  ssl:
+    enabled: false
+    keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
+    keystore-password: kenny
+    key-password: kenny
+    server-password: kenny12
+    server-keystore-location: src/main/resources/cert/truststore.p12
 report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
 storage:
-  endpoint: localhost
+  endpoint: localhost:42827
   signingRegion: RU
-  bucketName: "reports"
+  bucketName: test
   client:
     maxErrorRetry: 10
+  accessKey: test
+  secretKey: test
+  clientProtocol: HTTP
+retry-policy:
+  maxAttempts: -1
+partyManagement:
+  url: http://hellgate:8022/v1/processing/partymgmt
+  timeout: 5000
+bustermaze:
+  payout:
+    polling:
+      url: http://localhost:8026/repo/payout
+      housekeeperTimeout: 15000
+      maxPoolSize: 1
+      maxQuerySize: 1000
+      delay: 10000
+      retryDelay: 1000
+      enabled: false
+domainConfig:
+  url: http://dominant:8022/v1/domain/repository
+  timeout: 5000

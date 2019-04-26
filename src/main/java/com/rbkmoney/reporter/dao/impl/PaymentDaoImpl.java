@@ -43,17 +43,11 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
-    public Optional<Long> getLastEventId() throws DaoException {
-        Query query = getDslContext().select(DSL.max(PAYMENT.EVENT_ID)).from(PAYMENT);
-        return Optional.ofNullable(fetchOne(query, Long.class));
-    }
-
-    @Override
     public Long save(Payment payment) throws DaoException {
         PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, payment);
         Query query = getDslContext().insertInto(PAYMENT)
                 .set(paymentRecord)
-                .onConflict(PAYMENT.EVENT_ID, PAYMENT.EVENT_TYPE, PAYMENT.PAYMENT_STATUS)
+                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
                 .doUpdate()
                 .set(paymentRecord)
                 .returning(PAYMENT.ID);
@@ -112,7 +106,6 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
         Query query = getDslContext()
                 .select(
                         PAYMENT.ID,
-                        PAYMENT.EVENT_ID,
                         PAYMENT.EVENT_CREATED_AT,
                         PAYMENT.EVENT_TYPE,
                         PAYMENT.PARTY_ID,

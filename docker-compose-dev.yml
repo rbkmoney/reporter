@@ -2,42 +2,81 @@ version: '3'
 services:
   postgresql:
     image: postgres:9.6
-    volumes:
-      - ./data:/var/lib/postgresql
+    hostname: postgresql
+    container_name: postgresql
     ports:
-      - "5432:5432"
+      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: reporter
-  ceph-test-container:
-    image: 'dr.rbkmoney.com/ceph-demo:latest'
-    container_name: ceph-test-container
-    hostname: ceph-test-container
-    ports:
-      - "42827:80"
+  #    volumes:
+  #      - /tmp/docker/postgresql/data:/var/lib/postgresql
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.0.1
+    hostname: zookeeper
+    container_name: zookeeper
     environment:
-      SERVICE_NAME: "ceph-test-container"
-      RGW_NAME: "localhost"
-      NETWORK_AUTO_DETECT: "4"
-      CEPH_DEMO_UID: "ceph-test"
-      CEPH_DEMO_ACCESS_KEY: "test"
-      CEPH_DEMO_SECRET_KEY: "test"
-      CEPH_DEMO_BUCKET: "test"
-#  file-storage-test-container:
-#    image: 'dr.rbkmoney.com/rbkmoney/file-storage:replace_me_on_last_tag'
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  #    volumes:
+  #      - /tmp/docker/zookeeper/data:/var/lib/zookeeper/data
+  #      - /tmp/docker/zookeeper/log:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-enterprise-kafka:5.0.1
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://kafka:29092,PLAINTEXT://localhost:9092
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:9092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: "true"
+      CONFLUENT_SUPPORT_CUSTOMER_ID: anonymous
+  #    volumes:
+  #      - /tmp/docker/kafka/data:/var/lib/kafka/data
+
+  ceph:
+    image: dr.rbkmoney.com/ceph-demo:latest
+    hostname: ceph
+    container_name: ceph
+    ports:
+      - 42827:80
+    environment:
+      SERVICE_NAME: ceph
+      RGW_NAME: localhost
+      NETWORK_AUTO_DETECT: 4
+      CEPH_DEMO_UID: ceph-test
+      CEPH_DEMO_ACCESS_KEY: test
+      CEPH_DEMO_SECRET_KEY: test
+      CEPH_DEMO_BUCKET: test
+
+#  file-storage:
+#    image: dr.rbkmoney.com/rbkmoney/file-storage:replace_me_on_last_tag
 #    depends_on:
-#      - ceph-test-container
-#    container_name: file-storage-test-container
-#    hostname: file-storage-test-container
-#    network_mode: "host"
+#      - ceph
+#    container_name: file-storage
+#    hostname: file-storage
+#    network_mode: host
 #    environment:
-#      SERVICE_NAME: "file-storage-test-container"
-#      server.port: "42826"
-#      storage.endpoint: "localhost:42827"
-#      storage.signingRegion: "RU"
-#      storage.accessKey: "test"
-#      storage.secretKey: "test"
-#      storage.clientProtocol: "HTTP"
-#      storage.client.maxErrorRetry: "10"
-#      storage.bucketName: "test"
+#      SERVICE_NAME: file-storage
+#      server.port: 42826
+#      storage.endpoint: localhost:42827
+#      storage.signingRegion: RU
+#      storage.accessKey: test
+#      storage.secretKey: test
+#      storage.clientProtocol: HTTP
+#      storage.client.maxErrorRetry: 10
+#      storage.bucketName: test

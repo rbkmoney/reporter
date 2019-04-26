@@ -2,9 +2,8 @@ package com.rbkmoney.reporter.config;
 
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.poll.PollingEventPublisherBuilder;
-import com.rbkmoney.reporter.config.properties.BustermazeProperties;
-import com.rbkmoney.reporter.handler.EventStockClientHandler;
-import com.rbkmoney.reporter.handler.EventStockHandler;
+import com.rbkmoney.reporter.config.properties.BustermazePayoutProperties;
+import com.rbkmoney.reporter.handler.EventStockEventHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,28 +13,16 @@ import java.io.IOException;
 public class EventStockConfig {
 
     @Bean
-    public EventPublisher eventPublisher(EventStockHandler eventStockHandler,
-                                         BustermazeProperties properties) throws IOException {
+    public EventPublisher payoutEventPublisher(EventStockEventHandler handler,
+                                               BustermazePayoutProperties properties) throws IOException {
         return new PollingEventPublisherBuilder()
                 .withURI(properties.getUrl().getURI())
                 .withHousekeeperTimeout(properties.getHousekeeperTimeout())
-                .withEventHandler(eventStockHandler)
+                .withEventHandler(handler)
                 .withMaxPoolSize(properties.getMaxPoolSize())
-                .withEventRetryDelay(properties.getDelay())
+                .withMaxQuerySize(properties.getMaxQuerySize())
                 .withPollDelay(properties.getDelay())
-                .build();
-    }
-
-    @Bean
-    public EventPublisher tempBustermazeEventPublisher(EventStockClientHandler eventStockHandler,
-                                                       BustermazeProperties properties) throws IOException {
-        return new PollingEventPublisherBuilder()
-                .withURI(properties.getUrl().getURI())
-                .withHousekeeperTimeout(properties.getHousekeeperTimeout())
-                .withEventHandler(eventStockHandler)
-                .withMaxPoolSize(properties.getMaxPoolSize())
-                .withEventRetryDelay(properties.getDelay())
-                .withPollDelay(properties.getDelay())
+                .withEventRetryDelay(properties.getRetryDelay())
                 .build();
     }
 }

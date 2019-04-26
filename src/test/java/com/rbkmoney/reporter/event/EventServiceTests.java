@@ -8,15 +8,17 @@ import com.rbkmoney.damsel.domain.InvoicePaymentRefundPending;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
-import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
-import com.rbkmoney.damsel.payment_processing.EventSource;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.damsel.payout_processing.Wallet;
 import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.machinegun.msgpack.Value;
 import com.rbkmoney.reporter.dao.*;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handler.EventStockClientHandler;
+import com.rbkmoney.reporter.handle.machineevent.impl.PaymentMachineEventHandler;
+import com.rbkmoney.reporter.handler.EventStockEventHandler;
+import com.rbkmoney.reporter.serialization.impl.PaymentEventPayloadSerializer;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
@@ -32,7 +34,13 @@ import static org.junit.Assert.assertNotNull;
 public class EventServiceTests extends AbstractAppEventServiceTests {
 
     @Autowired
-    private EventStockClientHandler clientHandler;
+    private EventStockEventHandler stockEventHandler;
+
+    @Autowired
+    private PaymentMachineEventHandler paymentMachineEventHandler;
+
+    @Autowired
+    private PaymentEventPayloadSerializer paymentEventPayloadSerializer;
 
     @Autowired
     private AdjustmentDao adjustmentDao;
@@ -75,18 +83,18 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         List<InvoiceChange> invoiceChanges = new ArrayList<>();
         invoiceChanges.add(InvoiceChange.invoice_payment_change(invoicePaymentChange));
 
-        Event event = new Event();
-        event.setId(generateLong());
-        event.setCreatedAt(generateDate());
-        event.setSource(EventSource.invoice_id(generateString()));
-        event.setPayload(EventPayload.invoice_changes(invoiceChanges));
+        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
 
-        StockEvent stockEvent = new StockEvent();
-        stockEvent.setSourceEvent(SourceEvent.processing_event(event));
+        MachineEvent machineEvent = new MachineEvent();
+        machineEvent.setSourceNs(generateString());
+        machineEvent.setSourceId(generateString());
+        machineEvent.setEventId(generateLong());
+        machineEvent.setCreatedAt(generateDate());
+        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
 
         String adjustmentId = invoicePaymentAdjustmentChange.getId();
         String paymentId = invoicePaymentChange.getId();
-        String invoiceId = event.getSource().getInvoiceId();
+        String invoiceId = machineEvent.getSourceId();
 
         Payment payment = random(Payment.class, "paymentCashFlow");
         payment.setInvoiceId(invoiceId);
@@ -95,7 +103,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         payment.setCurrent(true);
         paymentDao.save(payment);
 
-        clientHandler.handle(stockEvent, "");
+        paymentMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(adjustmentDao.get(invoiceId, paymentId, adjustmentId));
     }
@@ -118,18 +126,18 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         List<InvoiceChange> invoiceChanges = new ArrayList<>();
         invoiceChanges.add(InvoiceChange.invoice_created(invoiceCreated));
 
-        Event event = new Event();
-        event.setId(generateLong());
-        event.setCreatedAt(generateDate());
-        event.setSource(EventSource.invoice_id(generateString()));
-        event.setPayload(EventPayload.invoice_changes(invoiceChanges));
+        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
 
-        StockEvent stockEvent = new StockEvent();
-        stockEvent.setSourceEvent(SourceEvent.processing_event(event));
+        MachineEvent machineEvent = new MachineEvent();
+        machineEvent.setSourceNs(generateString());
+        machineEvent.setSourceId(generateString());
+        machineEvent.setEventId(generateLong());
+        machineEvent.setCreatedAt(generateDate());
+        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
 
-        String invoiceId = event.getSource().getInvoiceId();
+        String invoiceId = machineEvent.getSourceId();
 
-        clientHandler.handle(stockEvent, "");
+        paymentMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(invoiceDao.get(invoiceId));
     }
@@ -140,11 +148,8 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         PaymentTerminal paymentTerminal = new PaymentTerminal();
         paymentTerminal.setTerminalType(TerminalPaymentProvider.euroset);
 
-        ContactInfo contactInfo = new ContactInfo();
-
-        CustomerPayer customerPayer = new CustomerPayer();
+        CustomerPayer customerPayer = random(CustomerPayer.class, "payment_tool");
         customerPayer.setPaymentTool(PaymentTool.payment_terminal(paymentTerminal));
-        customerPayer.setContactInfo(contactInfo);
 
         InvoicePayment payment = random(InvoicePayment.class, "status", "payer", "flow", "context");
         payment.setStatus(InvoicePaymentStatus.pending(new InvoicePaymentPending()));
@@ -163,17 +168,17 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         List<InvoiceChange> invoiceChanges = new ArrayList<>();
         invoiceChanges.add(InvoiceChange.invoice_payment_change(invoicePaymentChange));
 
-        Event event = new Event();
-        event.setId(generateLong());
-        event.setCreatedAt(generateDate());
-        event.setSource(EventSource.invoice_id(generateString()));
-        event.setPayload(EventPayload.invoice_changes(invoiceChanges));
+        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
 
-        StockEvent stockEvent = new StockEvent();
-        stockEvent.setSourceEvent(SourceEvent.processing_event(event));
+        MachineEvent machineEvent = new MachineEvent();
+        machineEvent.setSourceNs(generateString());
+        machineEvent.setSourceId(generateString());
+        machineEvent.setEventId(generateLong());
+        machineEvent.setCreatedAt(generateDate());
+        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
 
         String paymentId = invoicePaymentChange.getId();
-        String invoiceId = event.getSource().getInvoiceId();
+        String invoiceId = machineEvent.getSourceId();
 
         com.rbkmoney.reporter.domain.tables.pojos.Invoice invoice = random(com.rbkmoney.reporter.domain.tables.pojos.Invoice.class);
         invoice.setId(null);
@@ -181,7 +186,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         invoice.setInvoiceId(invoiceId);
         invoiceDao.save(invoice);
 
-        clientHandler.handle(stockEvent, "");
+        paymentMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(paymentDao.get(invoiceId, paymentId));
     }
@@ -213,7 +218,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
 
         String payoutId = event.getSource().getPayoutId();
 
-        clientHandler.handle(stockEvent, "");
+        stockEventHandler.handle(stockEvent, "");
 
         assertNotNull(payoutDao.get(payoutId));
     }
@@ -240,18 +245,18 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         List<InvoiceChange> invoiceChanges = new ArrayList<>();
         invoiceChanges.add(InvoiceChange.invoice_payment_change(invoicePaymentChange));
 
-        Event event = new Event();
-        event.setId(generateLong());
-        event.setCreatedAt(generateDate());
-        event.setSource(EventSource.invoice_id(generateString()));
-        event.setPayload(EventPayload.invoice_changes(invoiceChanges));
+        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
 
-        StockEvent stockEvent = new StockEvent();
-        stockEvent.setSourceEvent(SourceEvent.processing_event(event));
+        MachineEvent machineEvent = new MachineEvent();
+        machineEvent.setSourceNs(generateString());
+        machineEvent.setSourceId(generateString());
+        machineEvent.setEventId(generateLong());
+        machineEvent.setCreatedAt(generateDate());
+        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
 
         String refundId = invoicePaymentRefundChange.getId();
         String paymentId = invoicePaymentChange.getId();
-        String invoiceId = event.getSource().getInvoiceId();
+        String invoiceId = machineEvent.getSourceId();
 
         Payment payment = random(Payment.class, "paymentCashFlow");
         payment.setInvoiceId(invoiceId);
@@ -260,7 +265,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         payment.setCurrent(true);
         paymentDao.save(payment);
 
-        clientHandler.handle(stockEvent, "");
+        paymentMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(refundDao.get(invoiceId, paymentId, refundId));
     }

@@ -11,7 +11,6 @@ import java.util.UUID;
 public class PaymentRegistryReportData {
 
     private Long id;
-    private Long eventId;
     private LocalDateTime eventCreatedAt;
     private InvoiceEventType eventType;
     private UUID partyId;

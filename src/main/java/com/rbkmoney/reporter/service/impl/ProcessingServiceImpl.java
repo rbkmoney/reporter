@@ -1,6 +1,6 @@
 package com.rbkmoney.reporter.service.impl;
 
-import com.rbkmoney.reporter.dao.*;
+import com.rbkmoney.reporter.dao.PayoutDao;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.StorageException;
 import com.rbkmoney.reporter.service.ProcessingService;
@@ -20,10 +20,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProcessingServiceImpl implements ProcessingService {
 
-    private final InvoiceDao invoiceDao;
-    private final AdjustmentDao adjustmentDao;
-    private final PaymentDao paymentDao;
-    private final RefundDao refundDao;
     private final PayoutDao payoutDao;
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -32,10 +28,6 @@ public class ProcessingServiceImpl implements ProcessingService {
         try {
             log.info("Trying to get last processing event id");
             List<Long> lastEventIds = new ArrayList<>();
-            invoiceDao.getLastEventId().ifPresent(lastEventIds::add);
-            adjustmentDao.getLastEventId().ifPresent(lastEventIds::add);
-            paymentDao.getLastEventId().ifPresent(lastEventIds::add);
-            refundDao.getLastEventId().ifPresent(lastEventIds::add);
             payoutDao.getLastEventId().ifPresent(lastEventIds::add);
             Optional<Long> eventId = lastEventIds.stream()
                     .max(Comparator.comparing(aLong -> aLong));

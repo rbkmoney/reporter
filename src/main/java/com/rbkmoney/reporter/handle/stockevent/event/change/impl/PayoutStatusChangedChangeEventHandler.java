@@ -22,15 +22,15 @@ public class PayoutStatusChangedChangeEventHandler implements PayoutChangeEvents
     private final PayoutService payoutService;
 
     @Override
-    public boolean accept(PayoutChange specific) {
-        return specific.isSetPayoutStatusChanged();
+    public boolean accept(PayoutChange payload) {
+        return payload.isSetPayoutStatusChanged();
     }
 
     @Override
-    public void handle(PayoutChange specific, StockEvent stockEvent) {
-        Event event = stockEvent.getSourceEvent().getPayoutEvent();
+    public void handle(PayoutChange payload, StockEvent baseEvent) {
+        Event event = baseEvent.getSourceEvent().getPayoutEvent();
 
-        com.rbkmoney.damsel.payout_processing.PayoutStatus damselPayoutStatus = specific.getPayoutStatusChanged().getStatus();
+        com.rbkmoney.damsel.payout_processing.PayoutStatus damselPayoutStatus = payload.getPayoutStatusChanged().getStatus();
         String payoutId = event.getSource().getPayoutId();
 
         log.info("Start payout status changed handling, payoutId={}", payoutId);
@@ -42,7 +42,6 @@ public class PayoutStatusChangedChangeEventHandler implements PayoutChangeEvents
         payout.setEventId(event.getId());
         payout.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         payout.setEventType(PayoutEventType.PAYOUT_STATUS_CHANGED);
-//        payout.setSequenceId(event.getSequence());
         payout.setPayoutStatus(TBaseUtil.unionFieldToEnum(damselPayoutStatus, PayoutStatus.class));
         if (damselPayoutStatus.isSetCancelled()) {
             payout.setPayoutCancelDetails(damselPayoutStatus.getCancelled().getDetails());

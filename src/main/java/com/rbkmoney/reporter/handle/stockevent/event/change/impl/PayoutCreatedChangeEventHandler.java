@@ -27,15 +27,15 @@ public class PayoutCreatedChangeEventHandler implements PayoutChangeEventsHandle
     private final PayoutService payoutService;
 
     @Override
-    public boolean accept(PayoutChange specific) {
-        return specific.isSetPayoutCreated();
+    public boolean accept(PayoutChange payload) {
+        return payload.isSetPayoutCreated();
     }
 
     @Override
-    public void handle(PayoutChange specific, StockEvent stockEvent) {
-        Event event = stockEvent.getSourceEvent().getPayoutEvent();
+    public void handle(PayoutChange payload, StockEvent baseEvent) {
+        Event event = baseEvent.getSourceEvent().getPayoutEvent();
 
-        com.rbkmoney.damsel.payout_processing.Payout damselPayout = specific.getPayoutCreated().getPayout();
+        com.rbkmoney.damsel.payout_processing.Payout damselPayout = payload.getPayoutCreated().getPayout();
         com.rbkmoney.damsel.payout_processing.PayoutType damselPayoutType = damselPayout.getType();
         String payoutId = event.getSource().getPayoutId();
 
@@ -46,7 +46,6 @@ public class PayoutCreatedChangeEventHandler implements PayoutChangeEventsHandle
         payout.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
         payout.setEventType(PayoutEventType.PAYOUT_CREATED);
         payout.setEventCategory(PayoutEventCategory.PAYOUT);
-//        payout.setSequenceId(event.getSequence());
         payout.setPayoutId(payoutId);
         payout.setPartyId(UUID.fromString(damselPayout.getPartyId()));
         payout.setPartyShopId(damselPayout.getShopId());

@@ -11,7 +11,6 @@ import java.util.UUID;
 public class RefundPaymentRegistryReportData {
 
     private Long id;
-    private Long eventId;
     private LocalDateTime refundEventCreatedAt;
     private LocalDateTime paymentEventCreatedAt;
     private InvoiceEventType eventType;

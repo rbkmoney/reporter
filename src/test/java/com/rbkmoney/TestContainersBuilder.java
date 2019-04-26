@@ -1,6 +1,7 @@
 package com.rbkmoney;
 
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import static com.rbkmoney.TestContainersConstants.*;
@@ -11,6 +12,7 @@ public class TestContainersBuilder {
     private boolean postgreSQLTestContainerEnable;
     private boolean cephTestContainerEnable;
     private boolean fileStorageTestContainerEnable;
+    private boolean kafkaTestContainerEnable;
 
     private TestContainersBuilder(boolean dockerContainersEnable) {
         this.dockerContainersEnable = dockerContainersEnable;
@@ -35,6 +37,11 @@ public class TestContainersBuilder {
         return this;
     }
 
+    public TestContainersBuilder addKafkaTestContainer() {
+        kafkaTestContainerEnable = true;
+        return this;
+    }
+
     public TestContainers build() {
         TestContainers testContainers = new TestContainers();
 
@@ -55,6 +62,9 @@ public class TestContainersBuilder {
         }
         if (fileStorageTestContainerEnable) {
             testContainers.setFileStorageTestContainer(new GenericContainer<>("dr.rbkmoney.com/rbkmoney/file-storage:" + FILE_STORAGE_IMAGE_TAG));
+        }
+        if (kafkaTestContainerEnable) {
+            testContainers.setKafkaTestContainer(new KafkaContainer("5.0.1"));
         }
         testContainers.setDockerContainersEnable(false);
     }

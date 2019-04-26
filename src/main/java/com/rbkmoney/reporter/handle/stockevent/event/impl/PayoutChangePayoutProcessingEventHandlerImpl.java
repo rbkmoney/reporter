@@ -19,16 +19,16 @@ public class PayoutChangePayoutProcessingEventHandlerImpl implements PayoutProce
     private final List<PayoutChangeEventsHandler> eventHandlers;
 
     @Override
-    public boolean accept(Event specific) {
-        return specific.getPayload().isSetPayoutChanges();
+    public boolean accept(Event payload) {
+        return payload.getPayload().isSetPayoutChanges();
     }
 
     @Override
-    public void handle(Event specific, StockEvent stockEvent) {
-        for (PayoutChange change : specific.getPayload().getPayoutChanges()) {
+    public void handle(Event payload, StockEvent baseEvent) {
+        for (PayoutChange change : payload.getPayload().getPayoutChanges()) {
             for (PayoutChangeEventsHandler eventHandler : eventHandlers) {
                 if (eventHandler.accept(change)) {
-                    eventHandler.handle(change, stockEvent);
+                    eventHandler.handle(change, baseEvent);
                 }
             }
         }

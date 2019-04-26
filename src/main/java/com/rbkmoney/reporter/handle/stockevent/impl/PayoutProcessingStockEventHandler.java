@@ -18,16 +18,16 @@ public class PayoutProcessingStockEventHandler implements StockEventHandler {
     private final List<PayoutProcessingEventHandler> eventHandlers;
 
     @Override
-    public boolean accept(StockEvent specific) {
-        return specific.getSourceEvent().isSetPayoutEvent();
+    public boolean accept(StockEvent payload) {
+        return payload.getSourceEvent().isSetPayoutEvent();
     }
 
     @Override
-    public void handle(StockEvent specific, StockEvent stockEvent) {
-        Event payoutEvent = specific.getSourceEvent().getPayoutEvent();
+    public void handle(StockEvent payload, StockEvent baseEvent) {
+        Event payoutEvent = payload.getSourceEvent().getPayoutEvent();
         for (PayoutProcessingEventHandler eventHandler : eventHandlers) {
             if (eventHandler.accept(payoutEvent)) {
-                eventHandler.handle(payoutEvent, stockEvent);
+                eventHandler.handle(payoutEvent, baseEvent);
             }
         }
     }

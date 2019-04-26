@@ -39,17 +39,11 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public Optional<Long> getLastEventId() throws DaoException {
-        Query query = getDslContext().select(DSL.max(ADJUSTMENT.EVENT_ID)).from(ADJUSTMENT);
-        return Optional.ofNullable(fetchOne(query, Long.class));
-    }
-
-    @Override
     public Long save(Adjustment adjustment) throws DaoException {
         AdjustmentRecord record = getDslContext().newRecord(ADJUSTMENT, adjustment);
         Query query = getDslContext().insertInto(ADJUSTMENT)
                 .set(record)
-                .onConflict(ADJUSTMENT.EVENT_ID, ADJUSTMENT.EVENT_TYPE, ADJUSTMENT.ADJUSTMENT_STATUS)
+                .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.SEQUENCE_ID, ADJUSTMENT.CHANGE_ID)
                 .doUpdate()
                 .set(record)
                 .returning(ADJUSTMENT.ID);

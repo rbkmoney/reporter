@@ -43,17 +43,11 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     }
 
     @Override
-    public Optional<Long> getLastEventId() throws DaoException {
-        Query query = getDslContext().select(DSL.max(REFUND.EVENT_ID)).from(REFUND);
-        return Optional.ofNullable(fetchOne(query, Long.class));
-    }
-
-    @Override
     public Long save(Refund refund) throws DaoException {
         RefundRecord record = getDslContext().newRecord(REFUND, refund);
         Query query = getDslContext().insertInto(REFUND)
                 .set(record)
-                .onConflict(REFUND.EVENT_ID, REFUND.EVENT_TYPE, REFUND.REFUND_STATUS)
+                .onConflict(REFUND.INVOICE_ID, REFUND.SEQUENCE_ID, REFUND.CHANGE_ID)
                 .doUpdate()
                 .set(record)
                 .returning(REFUND.ID);
@@ -109,7 +103,6 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
         Query query = getDslContext()
                 .select(
                         REFUND.ID,
-                        REFUND.EVENT_ID,
                         REFUND.EVENT_CREATED_AT,
                         PAYMENT.EVENT_CREATED_AT,
                         REFUND.EVENT_TYPE,
