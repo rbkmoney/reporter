@@ -32,9 +32,6 @@ kafka:
       topic: mg-invoice-100-2
       enabled: false
   concurrency: 1
-  max-pool-records: 300
-  fetch-min-bytes: 1024
-  fetch-max-wait-ms: 1000
   ssl:
     enabled: false
     truststore:

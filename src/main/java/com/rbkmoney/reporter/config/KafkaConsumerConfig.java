@@ -31,19 +31,10 @@ public class KafkaConsumerConfig {
     private static final String PKCS_12 = "PKCS12";
 
     @Value("${kafka.bootstrap.servers}")
-    private String servers;
+    private String bootstrapServers;
 
     @Value("${kafka.concurrency}")
     private int concurrency;
-
-    @Value("${kafka.max-pool-records}")
-    private String maxPoolRecords;
-
-    @Value("${kafka.fetch-min-bytes}")
-    private String fetchMinBytes;
-
-    @Value("${kafka.fetch-max-wait-ms}")
-    private String fetchMaxWaitMs;
 
     @Value("${kafka.ssl.enabled}")
     private boolean sslEnable;
@@ -66,15 +57,12 @@ public class KafkaConsumerConfig {
     @Bean
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, MachineEventDeserializerImpl.class);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, GROUP_ID);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, EARLIEST);
-        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPoolRecords);
-        props.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, fetchMinBytes);
-        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, fetchMaxWaitMs);
         if (sslEnable) {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
             props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, new File(sslTruststoreLocationConfig).getAbsolutePath());
