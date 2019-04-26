@@ -28,50 +28,62 @@ public class KafkaConsumerConfig {
 
     private static final String GROUP_ID = "ReporterListener";
     private static final String EARLIEST = "earliest";
-    public static final String PKCS_12 = "PKCS12";
+    private static final String PKCS_12 = "PKCS12";
 
     @Value("${kafka.bootstrap.servers}")
-    private String bootstrapServers;
+    private String servers;
 
     @Value("${kafka.concurrency}")
     private int concurrency;
 
-    @Value("${kafka.ssl.server-password}")
-    private String serverStorePassword;
+    @Value("${kafka.max-pool-records}")
+    private String maxPoolRecords;
 
-    @Value("${kafka.ssl.server-keystore-location}")
-    private String serverStoreCertPath;
+    @Value("${kafka.fetch-min-bytes}")
+    private String fetchMinBytes;
 
-    @Value("${kafka.ssl.keystore-password}")
-    private String keyStorePassword;
-
-    @Value("${kafka.ssl.key-password}")
-    private String keyPassword;
-
-    @Value("${kafka.ssl.keystore-location}")
-    private String clientStoreCertPath;
+    @Value("${kafka.fetch-max-wait-ms}")
+    private String fetchMaxWaitMs;
 
     @Value("${kafka.ssl.enabled}")
-    private boolean kafkaSslEnable;
+    private boolean sslEnable;
+
+    @Value("${kafka.ssl.truststore.location-config}")
+    private String sslTruststoreLocationConfig;
+
+    @Value("${kafka.ssl.truststore.password-config}")
+    private String sslTruststorePasswordConfig;
+
+    @Value("${kafka.ssl.keystore.location-config}")
+    private String sslKeystoreLocationConfig;
+
+    @Value("${kafka.ssl.keystore.password-config}")
+    private String sslKeystorePasswordConfig;
+
+    @Value("${kafka.ssl.key.password-config}")
+    private String sslKeyPasswordConfig;
 
     @Bean
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, MachineEventDeserializerImpl.class);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, GROUP_ID);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, EARLIEST);
-        if (kafkaSslEnable) {
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPoolRecords);
+        props.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, fetchMinBytes);
+        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, fetchMaxWaitMs);
+        if (sslEnable) {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
-            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, new File(serverStoreCertPath).getAbsolutePath());
-            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, serverStorePassword);
+            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, new File(sslTruststoreLocationConfig).getAbsolutePath());
+            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, sslTruststorePasswordConfig);
             props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, PKCS_12);
             props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, PKCS_12);
-            props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, new File(clientStoreCertPath).getAbsolutePath());
-            props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keyStorePassword);
-            props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, keyPassword);
+            props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, new File(sslKeystoreLocationConfig).getAbsolutePath());
+            props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, sslKeystorePasswordConfig);
+            props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, sslKeyPasswordConfig);
         }
 
         return props;
