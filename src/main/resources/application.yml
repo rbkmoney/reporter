@@ -13,6 +13,9 @@ spring:
   output:
     ansi:
       enabled: always
+management:
+  security:
+    enabled: false
 jobs:
   synchronization:
     enabled: false
@@ -21,7 +24,6 @@ jobs:
 kafka:
   bootstrap:
     servers: localhost:9092
-  concurrency: 1
   processing:
     payout:
       topic: mg-payout-100-2
@@ -29,13 +31,17 @@ kafka:
     payment:
       topic: mg-invoice-100-2
       enabled: false
+  concurrency: 1
   ssl:
     enabled: false
-    keystore-location: src/main/resources/cert/kenny-k.struzhkin.p12
-    keystore-password: kenny
-    key-password: kenny
-    server-password: kenny12
-    server-keystore-location: src/main/resources/cert/truststore.p12
+    truststore:
+      location-config: "src/main/resources/cert/truststore.p12"
+      password-config: "kenny12"
+    keystore:
+      location-config: "src/main/resources/cert/keystore.p12"
+      password-config: "kenny"
+    key:
+      password-config: "kenny"
 report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
