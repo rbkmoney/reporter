@@ -1,8 +1,6 @@
 package com.rbkmoney.reporter.report;
 
-import com.rbkmoney.AbstractTestUtils;
-import com.rbkmoney.TestContainers;
-import com.rbkmoney.TestContainersBuilder;
+import com.rbkmoney.easyway.*;
 import com.rbkmoney.reporter.ReporterApplication;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -15,6 +13,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
@@ -23,9 +24,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractAppReportBuildingTests extends AbstractTestUtils {
 
-    private static TestContainers testContainers = TestContainersBuilder.builder(false)
-            .addPostgreSQLTestContainer()
-            // todo ceph-container -> file-storage
+    private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
+            .addPostgresqlTestContainer()
             .addCephTestContainer()
             .build();
 
@@ -46,8 +46,28 @@ public abstract class AbstractAppReportBuildingTests extends AbstractTestUtils {
             EnvironmentTestUtils.addEnvironment(
                     "testcontainers",
                     configurableApplicationContext.getEnvironment(),
-                    ReporterTestPropertyValuesBuilder.build(testContainers)
+                    testContainers.getEnvironmentProperties(getEnvironmentPropertiesConsumer())
             );
         }
+    }
+
+    private static Supplier<TestContainersParameters> getTestContainersParametersSupplier() {
+        return () -> {
+            TestContainersParameters testContainersParameters = new TestContainersParameters();
+            testContainersParameters.setPostgresqlJdbcUrl("jdbc:postgresql://localhost:5432/reporter");
+
+            return testContainersParameters;
+        };
+    }
+
+    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
+        return environmentProperties -> {
+            environmentProperties.put("kafka.topics.invoice.enabled", "false");
+            environmentProperties.put("bustermaze.payout.polling.enabled", "false");
+            environmentProperties.put("bustermaze.payment.polling.enabled", "false");
+            environmentProperties.put("jobs.synchronization.enabled", "false");
+            environmentProperties.put("jobs.report.enabled", "true");
+            environmentProperties.put("scheduled.initialDelay", "1500");
+        };
     }
 }
