@@ -1,10 +1,10 @@
 package com.rbkmoney.reporter.kafka;
 
 import com.rbkmoney.damsel.payment_processing.EventPayload;
+import com.rbkmoney.kafka.common.serialization.ThriftSerializer;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.machinegun.eventsink.SinkEvent;
-import com.rbkmoney.reporter.parser.impl.PaymentMachineEventParser;
-import com.rbkmoney.reporter.serialization.impl.MachineEventSerializerImpl;
+import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -27,17 +27,17 @@ import static org.mockito.Mockito.*;
 public class ConsumerTests extends AbstractAppKafkaTests {
 
     @MockBean
-    private PaymentMachineEventParser parser;
+    private MachineEventParser<EventPayload> paymentEventPayloadMachineEventParser;
 
-    @Value("${kafka.processing.payment.topic}")
+    @Value("${kafka.topics.invoice.id}")
     public String topic;
 
-    @Value("${kafka.bootstrap.servers}")
+    @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     @Test
     public void paymentProcessingKafkaListenerTest() throws InterruptedException {
-        when(parser.parse(any())).thenReturn(EventPayload.invoice_changes(Collections.emptyList()));
+        when(paymentEventPayloadMachineEventParser.parse(any())).thenReturn(EventPayload.invoice_changes(Collections.emptyList()));
 
         Producer<String, SinkEvent> producer = createProducer();
 
@@ -59,7 +59,7 @@ public class ConsumerTests extends AbstractAppKafkaTests {
 
         TimeUnit.SECONDS.sleep(1);
 
-        verify(parser, times(1)).parse(any());
+        verify(paymentEventPayloadMachineEventParser, times(1)).parse(any());
     }
 
     public Producer<String, SinkEvent> createProducer() {
@@ -67,7 +67,7 @@ public class ConsumerTests extends AbstractAppKafkaTests {
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.CLIENT_ID_CONFIG, "client_id");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, MachineEventSerializerImpl.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, new ThriftSerializer<SinkEvent>().getClass().getName());
         return new KafkaProducer<>(props);
     }
 }
