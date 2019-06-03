@@ -215,7 +215,7 @@ public class DaoTests extends AbstractAppDaoTests {
         assertEquals(contractMeta.getLastEventId(), contractMeta2.getLastEventId());
         assertEquals(contractMeta.getCalendarId(), contractMeta2.getCalendarId());
 
-        assertEquals(contractMeta.getLastEventId(), contractMetaDao.getLastEventId());
+        assertEquals(contractMeta.getLastEventId(), contractMetaDao.getLastEventId().get());
 
         assertEquals(contractMeta2, contractMetaDao.getAllActiveContracts().get(0));
 
