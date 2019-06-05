@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.tables.ContractMeta.CONTRACT_META;
 
@@ -30,9 +31,9 @@ public class ContractMetaDaoImpl extends AbstractGenericDao implements ContractM
     }
 
     @Override
-    public Long getLastEventId() throws DaoException {
+    public Optional<Long> getLastEventId() throws DaoException {
         Query query = getDslContext().select(DSL.max(CONTRACT_META.LAST_EVENT_ID)).from(CONTRACT_META);
-        return fetchOne(query, Long.class);
+        return Optional.ofNullable(fetchOne(query, Long.class));
     }
 
     @Override

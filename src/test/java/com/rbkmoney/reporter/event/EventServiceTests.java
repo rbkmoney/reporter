@@ -16,9 +16,9 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.machinegun.msgpack.Value;
 import com.rbkmoney.reporter.dao.*;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.handle.machineevent.impl.PaymentMachineEventHandler;
-import com.rbkmoney.reporter.handler.EventStockEventHandler;
-import com.rbkmoney.reporter.serialization.impl.PaymentEventPayloadSerializer;
+import com.rbkmoney.sink.common.handle.machineevent.MachineEventHandler;
+import com.rbkmoney.sink.common.handle.stockevent.StockEventHandler;
+import com.rbkmoney.sink.common.serialization.impl.PaymentEventPayloadSerializer;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
@@ -34,13 +34,12 @@ import static org.junit.Assert.assertNotNull;
 public class EventServiceTests extends AbstractAppEventServiceTests {
 
     @Autowired
-    private EventStockEventHandler stockEventHandler;
+    private MachineEventHandler<EventPayload> paymentEventMachineEventHandler;
 
     @Autowired
-    private PaymentMachineEventHandler paymentMachineEventHandler;
+    private StockEventHandler<StockEvent> payoutEventStockEventHandler;
 
-    @Autowired
-    private PaymentEventPayloadSerializer paymentEventPayloadSerializer;
+    private PaymentEventPayloadSerializer paymentEventPayloadSerializer = new PaymentEventPayloadSerializer();
 
     @Autowired
     private AdjustmentDao adjustmentDao;
@@ -103,7 +102,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         payment.setCurrent(true);
         paymentDao.save(payment);
 
-        paymentMachineEventHandler.handle(eventPayload, machineEvent);
+        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(adjustmentDao.get(invoiceId, paymentId, adjustmentId));
     }
@@ -137,7 +136,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
 
         String invoiceId = machineEvent.getSourceId();
 
-        paymentMachineEventHandler.handle(eventPayload, machineEvent);
+        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(invoiceDao.get(invoiceId));
     }
@@ -186,7 +185,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         invoice.setInvoiceId(invoiceId);
         invoiceDao.save(invoice);
 
-        paymentMachineEventHandler.handle(eventPayload, machineEvent);
+        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(paymentDao.get(invoiceId, paymentId));
     }
@@ -218,7 +217,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
 
         String payoutId = event.getSource().getPayoutId();
 
-        stockEventHandler.handle(stockEvent, "");
+        payoutEventStockEventHandler.handle(stockEvent, stockEvent);
 
         assertNotNull(payoutDao.get(payoutId));
     }
@@ -265,7 +264,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         payment.setCurrent(true);
         paymentDao.save(payment);
 
-        paymentMachineEventHandler.handle(eventPayload, machineEvent);
+        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
 
         assertNotNull(refundDao.get(invoiceId, paymentId, refundId));
     }

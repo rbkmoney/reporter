@@ -5,10 +5,11 @@ import com.rbkmoney.reporter.exception.DaoException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ContractMetaDao extends GenericDao {
 
-    Long getLastEventId() throws DaoException;
+    Optional<Long> getLastEventId() throws DaoException;
 
     void save(ContractMeta contractMeta) throws DaoException;
 
