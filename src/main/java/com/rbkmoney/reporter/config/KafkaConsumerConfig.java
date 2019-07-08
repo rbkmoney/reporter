@@ -22,6 +22,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.ErrorHandler;
+import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
@@ -36,34 +37,28 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class KafkaConsumerConfig {
 
-    private final KafkaSslProperties kafkaSslProperties;
-
     @Value("${kafka.consumer.auto-offset-reset}")
     private String autoOffsetReset;
-
     @Value("${kafka.consumer.enable-auto-commit}")
     private boolean enableAutoCommit;
-
     @Value("${kafka.consumer.group-id}")
     private String groupId;
-
     @Value("${kafka.client-id}")
     private String clientId;
-
     @Value("${kafka.consumer.max-poll-records}")
     private int maxPollRecords;
 
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
-
     @Value("${kafka.consumer.concurrency}")
     private int concurrency;
+
 
     @Value("${retry-policy.maxAttempts}")
     private int maxAttempts;
 
     @Bean
-    public Map<String, Object> consumerConfigs() {
+    public Map<String, Object> consumerConfigs(KafkaSslProperties kafkaSslProperties) {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -74,20 +69,19 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
 
-        configureSsl(props);
+        configureSsl(props, kafkaSslProperties);
 
         return props;
     }
 
     @Bean
-    public ConsumerFactory<String, MachineEvent> consumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
+    public ConsumerFactory<String, MachineEvent> consumerFactory(KafkaSslProperties kafkaSslProperties) {
+        return new DefaultKafkaConsumerFactory<>(consumerConfigs(kafkaSslProperties));
     }
 
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>> kafkaListenerContainerFactory(
-            ConsumerFactory<String, MachineEvent> consumerFactory,
-            RetryTemplate kafkaRetryTemplate
+            ConsumerFactory<String, MachineEvent> consumerFactory
     ) {
         ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
@@ -95,7 +89,6 @@ public class KafkaConsumerConfig {
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         factory.setErrorHandler(kafkaErrorHandler());
         factory.setConcurrency(concurrency);
-        factory.setRetryTemplate(kafkaRetryTemplate);
         return factory;
     }
 
@@ -110,7 +103,7 @@ public class KafkaConsumerConfig {
         return retryTemplate;
     }
 
-    private void configureSsl(Map<String, Object> props) {
+    private void configureSsl(Map<String, Object> props, KafkaSslProperties kafkaSslProperties) {
         if (kafkaSslProperties.isEnabled()) {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
             props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, new File(kafkaSslProperties.getTrustStoreLocation()).getAbsolutePath());
@@ -124,15 +117,6 @@ public class KafkaConsumerConfig {
     }
 
     private ErrorHandler kafkaErrorHandler() {
-        return (thrownException, data) -> {
-            if (data != null) {
-                log.error(
-                        "Error while processing: data-key: {}, data-offset: {}, data-partition: {}",
-                        data.key(), data.offset(), data.partition(), thrownException
-                );
-            } else {
-                log.error("Error while processing", thrownException);
-            }
-        };
+        return new SeekToCurrentErrorHandler(-1);
     }
 }
