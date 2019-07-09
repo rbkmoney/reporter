@@ -1,7 +1,7 @@
 # @dockerfile.Template@
 
-FROM dr.rbkmoney.com/rbkmoney/service-java:@dockerfile.base.service.tag@ as service-java
-FROM dr.rbkmoney.com/rbkmoney/build:@dockerfile.build.tag@ as build
+FROM @dockerfile.registry@/rbkmoney/service-java:@dockerfile.base.service.tag@ as service-java
+FROM @dockerfile.registry@/rbkmoney/build:@dockerfile.build.tag@ as build
 
 COPY --from=service-java / /tmp/portage-root/
 
