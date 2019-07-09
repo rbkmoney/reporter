@@ -1,6 +1,19 @@
+info:
+  version: @project.version@
+  stage: dev
 server:
   port: @server.port@
+management:
+  metrics:
+    export:
+      statsd:
+        flavor: etsy
+        enabled: false
+  security:
+    flag: false
 spring:
+  application:
+    name: @project.name@
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: org.postgresql.Driver
@@ -8,15 +21,13 @@ spring:
     username: @db.user@
     password: @db.password@
     hikari:
-      maximum-pool-size: 3
       idle-timeout: 30000
+      maximum-pool-size: 3
+  flyway:
+    schemas: @db.schema@
   output:
     ansi:
       enabled: always
----
-management:
-  security:
-    enabled: false
 ---
 jobs:
   synchronization:

@@ -70,7 +70,7 @@ public class CashFlowTests extends AbstractAppDaoTests {
         payout.setEventCategory(PayoutEventCategory.PAYOUT);
         id = payoutDao.save(payout);
         payout.setId(id);
-        assertEquals(payout.getPayoutSummary().getPayoutSummaryItems().get(0).getFromTime(), payoutDao.get(payout.getPayoutId()).getPayoutSummary().getPayoutSummaryItems().get(0).getFromTime());
+        assertEquals(payout.getPayoutSummary().getPayoutSummaryItems().get(0).getFromTime().getSecond(), payoutDao.get(payout.getPayoutId()).getPayoutSummary().getPayoutSummaryItems().get(0).getFromTime().getSecond());
     }
 
     @Test
