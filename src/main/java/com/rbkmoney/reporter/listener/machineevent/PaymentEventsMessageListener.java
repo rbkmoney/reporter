@@ -9,21 +9,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @RequiredArgsConstructor
+@Component
 public class PaymentEventsMessageListener {
 
-    private final Parser<MachineEvent, EventPayload> parser;
-    private final MachineEventHandler<EventPayload> handler;
+    private final Parser<MachineEvent, EventPayload> paymentEventPayloadMachineEventParser;
+    private final MachineEventHandler<EventPayload> paymentEventMachineEventHandler;
 
     @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "kafkaListenerContainerFactory")
     public void listen(SinkEvent event, Acknowledgment ack) {
         MachineEvent machineEvent = event.getEvent();
 
-        EventPayload payload = parser.parse(machineEvent);
+        EventPayload payload = paymentEventPayloadMachineEventParser.parse(machineEvent);
 
-        handler.handle(payload, machineEvent);
+        paymentEventMachineEventHandler.handle(payload, machineEvent);
 
         ack.acknowledge();
     }

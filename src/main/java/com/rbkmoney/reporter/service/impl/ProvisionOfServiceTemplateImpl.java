@@ -16,6 +16,7 @@ import com.rbkmoney.reporter.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jxls.common.Context;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ import java.time.ZoneOffset;
 import java.util.Map;
 
 @Component
+@Qualifier("provisionOfServiceTemplate")
 @Slf4j
 @RequiredArgsConstructor
 public class ProvisionOfServiceTemplateImpl implements TemplateService {

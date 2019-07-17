@@ -11,25 +11,26 @@
     </parent>
 
     <artifactId>reporter</artifactId>
-    <version>1.9.24-SNAPSHOT</version>
+    <version>1.10.24-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <name>reporter</name>
     <description>Reporter service</description>
 
     <properties>
-        <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
         <postgresql.version>42.2.5</postgresql.version>
         <lombok.version>1.18.4</lombok.version>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
-        <jxls.version>2.4.0</jxls.version>
-        <jxls.poi.version>1.0.14</jxls.poi.version>
         <hikari.version>3.1.0</hikari.version>
         <spring.kafka.version>2.2.3.RELEASE</spring.kafka.version>
+        <jxls.version>2.4.0</jxls.version>
+        <jxls.poi.version>1.0.14</jxls.poi.version>
         <!---->
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
         <dockerfile.base.service.tag>c0d0900ec19c907d866f8360031a836049985110</dockerfile.base.service.tag>
         <dockerfile.build.tag>a3d509385d655f6a5ada4b37c5884d5423aeb78b</dockerfile.build.tag>
+        <!--        <dockerfile.registry>dr2.rbkmoney.com</dockerfile.registry>-->
         <dockerfile.registry>${env.REGISTRY}</dockerfile.registry>
         <metrics.version>1.1.0</metrics.version>
         <shared.resources.version>0.3.6</shared.resources.version>
@@ -239,8 +240,21 @@
 
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.2</version>
+                <configuration>
+                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                    <append>true</append>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -267,6 +281,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.flywaydb</groupId>
@@ -413,23 +435,6 @@
                         <phase>compile</phase>
                         <goals>
                             <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.2</version>
-                <configuration>
-                    <destFile>${sonar.jacoco.reportPath}</destFile>
-                    <append>true</append>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
                         </goals>
                     </execution>
                 </executions>

@@ -1,51 +1,76 @@
 package com.rbkmoney.reporter.kafka;
 
-import com.rbkmoney.easyway.*;
-import com.rbkmoney.reporter.ReporterApplication;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import com.rbkmoney.easyway.AbstractTestUtils;
+import com.rbkmoney.easyway.TestContainers;
+import com.rbkmoney.easyway.TestContainersBuilder;
+import com.rbkmoney.easyway.TestContainersParameters;
+import com.rbkmoney.reporter.config.KafkaConsumerConfig;
+import com.rbkmoney.reporter.config.KafkaPaymentMachineEventConfig;
+import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
+import com.rbkmoney.reporter.listener.machineevent.PaymentEventsMessageListener;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.ClassRule;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.containers.FailureDetectingExternalResource;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-@ContextConfiguration(classes = ReporterApplication.class, initializers = AbstractAppKafkaTests.Initializer.class)
+@ContextConfiguration(
+        classes = {
+                KafkaSslProperties.class,
+                KafkaConsumerConfig.class,
+                KafkaPaymentMachineEventConfig.class,
+                PaymentEventsMessageListener.class
+        },
+        initializers = AbstractAppKafkaTests.Initializer.class
+)
+@TestPropertySource("classpath:application.yml")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Slf4j
 public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addKafkaTestContainer()
-            .addPostgresqlTestContainer()
-            .addCephTestContainer()
             .build();
 
-    @BeforeClass
-    public static void beforeClass() {
-        testContainers.startTestContainers();
-    }
+    @ClassRule
+    public static final FailureDetectingExternalResource resource = new FailureDetectingExternalResource() {
 
-    @AfterClass
-    public static void afterClass() {
-        testContainers.stopTestContainers();
-    }
+        @Override
+        protected void starting(Description description) {
+            testContainers.startTestContainers();
+        }
 
-    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.warn("Test Container running was failed ", e);
+        }
+
+        @Override
+        protected void finished(Description description) {
+            testContainers.stopTestContainers();
+        }
+    };
+
+    public static class Initializer extends ConfigFileApplicationContextInitializer {
 
         @Override
         public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+            super.initialize(configurableApplicationContext);
             TestPropertyValues.of(
-                    testContainers.getEnvironmentProperties(getEnvironmentPropertiesConsumer())
+                    testContainers.getEnvironmentProperties(
+                            environmentProperties -> {
+                            }
+                    )
             )
                     .applyTo(configurableApplicationContext);
         }
@@ -57,16 +82,6 @@ public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
             testContainersParameters.setPostgresqlJdbcUrl("jdbc:postgresql://localhost:5432/reporter");
 
             return testContainersParameters;
-        };
-    }
-
-    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
-        return environmentProperties -> {
-            environmentProperties.put("kafka.topics.invoice.enabled", "true");
-            environmentProperties.put("bustermaze.payout.polling.enabled", "false");
-            environmentProperties.put("bustermaze.payment.polling.enabled", "false");
-            environmentProperties.put("jobs.synchronization.enabled", "false");
-            environmentProperties.put("jobs.report.enabled", "false");
         };
     }
 }

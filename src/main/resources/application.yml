@@ -29,12 +29,6 @@ spring:
     ansi:
       enabled: always
 ---
-jobs:
-  synchronization:
-    enabled: false
-  report:
-    enabled: false
----
 kafka:
   bootstrap-servers: kenny-kafka1.bst1.rbkmoney.net:9092
   client-id: reporter
@@ -56,7 +50,6 @@ kafka:
   topics:
     invoice:
       id: mg-invoice-100-2
-      enabled: false
 ---
 report:
   defaultTimeZone: Europe/Moscow
@@ -88,7 +81,6 @@ bustermaze:
       maxQuerySize: 1000
       delay: 10000
       retryDelay: 1000
-      enabled: false
   payment:
     polling:
       url: http://localhost:8026/repo
@@ -97,7 +89,6 @@ bustermaze:
       maxQuerySize: 1000
       delay: 10000
       retryDelay: 1000
-      enabled: false
 ---
 domainConfig:
   url: http://dominant:8022/v1/domain/repository

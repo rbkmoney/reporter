@@ -15,6 +15,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -25,8 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-@SuppressWarnings("Duplicates")
 @Component
+@Qualifier("paymentRegistryTemplate")
 @Slf4j
 @RequiredArgsConstructor
 public class PaymentRegistryTemplateImpl implements TemplateService {

@@ -5,7 +5,6 @@ import com.rbkmoney.eventstock.client.EventConstraint;
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.SubscriberConfig;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
-import com.rbkmoney.reporter.config.properties.BustermazePaymentProperties;
 import com.rbkmoney.reporter.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -22,13 +21,9 @@ public class PaymentOnStart implements ApplicationListener<ApplicationReadyEvent
 
     private final EventService eventService;
 
-    private final BustermazePaymentProperties properties;
-
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (properties.isEnabled()) {
-            paymentEventPublisher.subscribe(buildSubscriberConfig(eventService.getPaymentLastEventId()));
-        }
+        paymentEventPublisher.subscribe(buildSubscriberConfig(eventService.getPaymentLastEventId()));
     }
 
     private SubscriberConfig buildSubscriberConfig(Optional<Long> lastEventIdOptional) {
