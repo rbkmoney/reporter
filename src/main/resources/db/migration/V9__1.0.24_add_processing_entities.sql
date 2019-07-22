@@ -136,7 +136,7 @@ CREATE INDEX payment_payment_created_at_idx ON rpt.payment (payment_created_at);
 
 -- adjustment
 
-CREATE TYPE rpt.adjustment_status AS ENUM ('pending', 'captured', 'cancelled');
+CREATE TYPE rpt.adjustment_status AS ENUM ('pending', 'captured', 'cancelled', 'processed');
 
 CREATE TABLE rpt.adjustment
 (
