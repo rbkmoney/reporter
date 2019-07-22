@@ -8,7 +8,7 @@ COPY --from=service-java / /tmp/portage-root/
 ENV ROOT=/tmp/portage-root
 RUN git clone git://git.bakka.su/gentoo-mirror --depth 1 /usr/portage && emerge fontconfig
 
-FROM dr.rbkmoney.com/rbkmoney/service-java:@dockerfile.base.service.tag@
+FROM @dockerfile.registry@/rbkmoney/service-java:@dockerfile.base.service.tag@
 COPY --from=build /tmp/portage-root/ /
 
 COPY @artifactId@-@version@.jar /opt/@artifactId@/@artifactId@.jar
