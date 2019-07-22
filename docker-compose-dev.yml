@@ -1,9 +1,23 @@
 version: '3'
 services:
+  reporter:
+    build: target/
+    image: reporter:1.10.24-SNAPSHOT
+    networks:
+      - reporternet
+    ports:
+      - "8022:8022"
+    depends_on:
+      - postgresql
+      - ceph
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/reporter
+
   postgresql:
     image: postgres:9.6
-    hostname: postgresql
-    container_name: postgresql
+    networks:
+      - reporternet
     ports:
       - 5432:5432
     environment:
@@ -15,8 +29,8 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:5.0.1
-    hostname: zookeeper
-    container_name: zookeeper
+    networks:
+      - reporternet
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -26,8 +40,8 @@ services:
 
   kafka:
     image: confluentinc/cp-enterprise-kafka:5.0.1
-    hostname: kafka
-    container_name: kafka
+    networks:
+      - reporternet
     depends_on:
       - zookeeper
     ports:
@@ -50,8 +64,8 @@ services:
 
   ceph:
     image: dr.rbkmoney.com/ceph-demo:latest
-    hostname: ceph
-    container_name: ceph
+    networks:
+      - reporternet
     ports:
       - 42827:80
     environment:
@@ -62,6 +76,9 @@ services:
       CEPH_DEMO_ACCESS_KEY: test
       CEPH_DEMO_SECRET_KEY: test
       CEPH_DEMO_BUCKET: test
+
+networks:
+  reporternet:
 
 #  file-storage:
 #    image: dr.rbkmoney.com/rbkmoney/file-storage:replace_me_on_last_tag

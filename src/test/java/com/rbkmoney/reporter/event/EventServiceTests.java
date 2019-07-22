@@ -225,7 +225,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
     @Test
     @Sql("classpath:data/sql/truncate.sql")
     public void refundEventServiceTest() throws Exception {
-        InvoicePaymentRefund refund = random(InvoicePaymentRefund.class, "cash", "status");
+        InvoicePaymentRefund refund = random(InvoicePaymentRefund.class, "cart", "status");
         refund.setStatus(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending()));
         refund.setCreatedAt(generateDate());
 

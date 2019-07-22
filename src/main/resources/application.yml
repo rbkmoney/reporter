@@ -1,6 +1,19 @@
+info:
+  version: @project.version@
+  stage: dev
 server:
   port: @server.port@
+management:
+  metrics:
+    export:
+      statsd:
+        flavor: etsy
+        enabled: false
+  security:
+    flag: false
 spring:
+  application:
+    name: @project.name@
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: org.postgresql.Driver
@@ -8,25 +21,17 @@ spring:
     username: @db.user@
     password: @db.password@
     hikari:
-      maximum-pool-size: 3
       idle-timeout: 30000
+      maximum-pool-size: 3
+  flyway:
+    schemas: @db.schema@
   output:
     ansi:
       enabled: always
 ---
-management:
-  security:
-    enabled: false
----
-jobs:
-  synchronization:
-    enabled: false
-  report:
-    enabled: false
----
 kafka:
   bootstrap-servers: kenny-kafka1.bst1.rbkmoney.net:9092
-  client-id: kafkaClient
+  client-id: reporter
   ssl:
     enabled: false
     trust-store-location: "test"
@@ -45,7 +50,6 @@ kafka:
   topics:
     invoice:
       id: mg-invoice-100-2
-      enabled: false
 ---
 report:
   defaultTimeZone: Europe/Moscow
@@ -77,7 +81,6 @@ bustermaze:
       maxQuerySize: 1000
       delay: 10000
       retryDelay: 1000
-      enabled: false
   payment:
     polling:
       url: http://localhost:8026/repo
@@ -86,7 +89,6 @@ bustermaze:
       maxQuerySize: 1000
       delay: 10000
       retryDelay: 1000
-      enabled: false
 ---
 domainConfig:
   url: http://dominant:8022/v1/domain/repository

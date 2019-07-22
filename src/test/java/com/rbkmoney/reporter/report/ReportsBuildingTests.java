@@ -14,36 +14,28 @@ import com.rbkmoney.reporter.dao.mapper.dto.RefundPaymentRegistryReportData;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
-import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.service.ReportingService;
-import com.rbkmoney.reporter.service.TaskService;
-import com.rbkmoney.reporter.service.impl.PaymentRegistryTemplateImpl;
-import com.rbkmoney.reporter.service.impl.ProvisionOfServiceTemplateImpl;
+import com.rbkmoney.reporter.service.TemplateService;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.thrift.TException;
-import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -53,14 +45,14 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 
 @Slf4j
 public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
@@ -74,8 +66,6 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
     private final String partyId = generateString();
     private final String shopId = generateString();
     private final String contractId = generateString();
-    private final Instant fromTime = random(Instant.class);
-    private final Instant toTime = random(Instant.class);
 
     private final Shop shop = getShop(shopId, contractId);
     private final RussianLegalEntity russianLegalEntity = getRussianLegalEntity();
@@ -96,16 +86,12 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
     private ReportingService reportingService;
 
     @Autowired
-    private ReportService reportService;
+    @Qualifier("paymentRegistryTemplate")
+    private TemplateService paymentRegistryTemplate;
 
     @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private PaymentRegistryTemplateImpl paymentRegistryTemplate;
-
-    @Autowired
-    private ProvisionOfServiceTemplateImpl provisionOfServiceTemplate;
+    @Qualifier("provisionOfServiceTemplate")
+    private TemplateService provisionOfServiceTemplate;
 
     @Autowired
     private ContractMetaDao contractMetaDao;
@@ -267,45 +253,6 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
             assertTrue(FormatUtil.formatCurrency(expectedRefundSum) - refundsTotalSum.getNumericCellValue() < 0.00001);
         } finally {
             Files.deleteIfExists(tempFile);
-        }
-    }
-
-    @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void pendingReportScheduledJobTest() throws IOException, InterruptedException {
-        taskService.registerProvisionOfServiceJob(
-                partyId,
-                contractId,
-                1L,
-                new BusinessScheduleRef(1),
-                new Representative("test", "test", RepresentativeDocument.articles_of_association(new ArticlesOfAssociation()))
-        );
-
-        long reportId = reportService.createReport(partyId, shopId, fromTime, toTime, ReportType.provision_of_service);
-
-        log.info("################### 4 seconds sleep now on main thread; ##########################");
-        TimeUnit.SECONDS.sleep(10);
-        log.info("################### Trying getReport on main thread; ##########################");
-        Report report = reportService.getReport(partyId, shopId, reportId);
-
-        assertEquals(ReportStatus.created, report.getStatus());
-
-        List<FileMeta> reportFiles = reportService.getReportFiles(report.getId());
-
-        assertEquals(2, reportFiles.size());
-
-        for (FileMeta fileMeta : reportFiles) {
-            URL url = reportService.generatePresignedUrl(fileMeta.getFileId(), LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.UTC));
-            assertNotNull(url);
-            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                try (InputStream inputStream = url.openStream()) {
-                    Streams.copy(inputStream, outputStream, true);
-                    byte[] actualBytes = outputStream.toByteArray();
-
-                    assertEquals(fileMeta.getMd5(), DigestUtils.md5Hex(actualBytes));
-                    assertEquals(fileMeta.getSha256(), DigestUtils.sha256Hex(actualBytes));
-                }
-            }
         }
     }
 

@@ -1,53 +1,64 @@
 package com.rbkmoney.reporter.dao;
 
-import com.rbkmoney.easyway.*;
-import com.rbkmoney.reporter.ReporterApplication;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import com.rbkmoney.easyway.AbstractTestUtils;
+import com.rbkmoney.easyway.TestContainers;
+import com.rbkmoney.easyway.TestContainersBuilder;
+import com.rbkmoney.easyway.TestContainersParameters;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.ClassRule;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.EnvironmentTestUtils;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.containers.FailureDetectingExternalResource;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-@ContextConfiguration(classes = ReporterApplication.class, initializers = AbstractAppDaoTests.Initializer.class)
+@ContextConfiguration(initializers = AbstractAppDaoTests.Initializer.class)
+@AutoConfigureJdbc
+@ComponentScan
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Slf4j
 public abstract class AbstractAppDaoTests extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addPostgresqlTestContainer()
-            .addCephTestContainer()
             .build();
 
-    @BeforeClass
-    public static void beforeClass() {
-        testContainers.startTestContainers();
-    }
+    @ClassRule
+    public static final FailureDetectingExternalResource resource = new FailureDetectingExternalResource() {
 
-    @AfterClass
-    public static void afterClass() {
-        testContainers.stopTestContainers();
-    }
+        @Override
+        protected void starting(Description description) {
+            testContainers.startTestContainers();
+        }
+
+        @Override
+        protected void failed(Throwable e, Description description) {
+            log.warn("Test Container running was failed ", e);
+        }
+
+        @Override
+        protected void finished(Description description) {
+            testContainers.stopTestContainers();
+        }
+    };
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
         @Override
         public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            EnvironmentTestUtils.addEnvironment(
-                    "testcontainers",
-                    configurableApplicationContext.getEnvironment(),
-                    testContainers.getEnvironmentProperties(getEnvironmentPropertiesConsumer())
-            );
+            TestPropertyValues.of(
+                    testContainers.getEnvironmentProperties(environmentProperties -> {
+                    })
+            ).applyTo(configurableApplicationContext);
         }
     }
 
@@ -57,16 +68,6 @@ public abstract class AbstractAppDaoTests extends AbstractTestUtils {
             testContainersParameters.setPostgresqlJdbcUrl("jdbc:postgresql://localhost:5432/reporter");
 
             return testContainersParameters;
-        };
-    }
-
-    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
-        return environmentProperties -> {
-            environmentProperties.put("kafka.topics.invoice.enabled", "false");
-            environmentProperties.put("bustermaze.payout.polling.enabled", "false");
-            environmentProperties.put("bustermaze.payment.polling.enabled", "false");
-            environmentProperties.put("jobs.synchronization.enabled", "false");
-            environmentProperties.put("jobs.report.enabled", "false");
         };
     }
 }
