@@ -226,7 +226,9 @@ public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport im
         MapSqlParameterSource sqlParameterSource = new MapSqlParameterSource();
         for (Map.Entry<String, Param<?>> entry : params.entrySet()) {
             Param<?> param = entry.getValue();
-            if (param.getValue() instanceof LocalDateTime || param.getValue() instanceof EnumType) {
+            if (param.getValue() instanceof String) {
+                sqlParameterSource.addValue(entry.getKey(), ((String) param.getValue()).replace("\u0000", "\\u0000"));
+            } else if (param.getValue() instanceof LocalDateTime || param.getValue() instanceof EnumType) {
                 sqlParameterSource.addValue(entry.getKey(), param.getValue(), Types.OTHER);
             } else {
                 sqlParameterSource.addValue(entry.getKey(), param.getValue());
