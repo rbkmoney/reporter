@@ -1,9 +1,6 @@
 package com.rbkmoney.reporter.kafka;
 
-import com.rbkmoney.easyway.AbstractTestUtils;
-import com.rbkmoney.easyway.TestContainers;
-import com.rbkmoney.easyway.TestContainersBuilder;
-import com.rbkmoney.easyway.TestContainersParameters;
+import com.rbkmoney.easyway.*;
 import com.rbkmoney.reporter.config.KafkaConsumerConfig;
 import com.rbkmoney.reporter.config.KafkaPaymentMachineEventConfig;
 import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
@@ -21,6 +18,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.FailureDetectingExternalResource;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @RunWith(SpringRunner.class)
@@ -68,12 +66,15 @@ public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
             super.initialize(configurableApplicationContext);
             TestPropertyValues.of(
                     testContainers.getEnvironmentProperties(
-                            environmentProperties -> {
-                            }
+                            getEnvironmentPropertiesConsumer()
                     )
             )
                     .applyTo(configurableApplicationContext);
         }
+    }
+
+    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
+        return environmentProperties -> environmentProperties.put("info.single-instance-mode", "false");
     }
 
     private static Supplier<TestContainersParameters> getTestContainersParametersSupplier() {
