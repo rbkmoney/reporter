@@ -16,13 +16,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class ScheduledJobsBeanEnableConfig {
 
     @Bean
-    @ConditionalOnProperty(value = "beans.enabled.job-synchronization-scheduler", havingValue = "true")
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "true")
     public ScheduledJob synchronizationInnerJobsScheduledJob(ContractMetaDao contractMetaDao, JobService jobService) {
         return new SynchronizationInnerJobsScheduledJobImpl(contractMetaDao, jobService);
     }
 
     @Bean
-    @ConditionalOnProperty(value = "beans.enabled.report-synchronization-scheduler", havingValue = "true")
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "true")
     public ScheduledJob pendingReportScheduledJob(ReportService reportService) {
         return new PendingReportScheduledJobImpl(reportService);
     }

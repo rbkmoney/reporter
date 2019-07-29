@@ -49,14 +49,14 @@ public class EventPublisherConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "beans.enabled.bustermaze-payment-polling", havingValue = "true")
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "true")
     public ApplicationListener<ApplicationReadyEvent> paymentOnStart(EventPublisher paymentEventPublisher,
                                                                      EventService eventService) {
         return new PaymentOnStart(paymentEventPublisher, eventService);
     }
 
     @Bean
-    @ConditionalOnProperty(value = "beans.enabled.bustermaze-payout-polling", havingValue = "true")
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "true")
     public ApplicationListener<ApplicationReadyEvent> payoutOnStart(EventPublisher payoutEventPublisher,
                                                                     EventService eventService) {
         return new PayoutOnStart(payoutEventPublisher, eventService);

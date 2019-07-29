@@ -43,7 +43,7 @@ public class KafkaPaymentMachineEventConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "beans.enabled.kafka-invoice-polling", havingValue = "true")
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "false")
     public PaymentEventsMessageListener paymentEventsKafkaListener(MachineEventParser<EventPayload> paymentEventPayloadMachineEventParser,
                                                                    MachineEventHandler<EventPayload> paymentEventMachineEventHandler) {
         return new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, paymentEventMachineEventHandler);
