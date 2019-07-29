@@ -6,6 +6,12 @@ import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.poll.PollingEventPublisherBuilder;
 import com.rbkmoney.reporter.config.properties.BustermazePaymentProperties;
 import com.rbkmoney.reporter.config.properties.BustermazePayoutProperties;
+import com.rbkmoney.reporter.listener.stockevent.PaymentOnStart;
+import com.rbkmoney.reporter.listener.stockevent.PayoutOnStart;
+import com.rbkmoney.reporter.service.EventService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,5 +46,19 @@ public class EventPublisherConfig {
                 .withPollDelay(properties.getDelay())
                 .withEventRetryDelay(properties.getRetryDelay())
                 .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "true")
+    public ApplicationListener<ApplicationReadyEvent> paymentOnStart(EventPublisher paymentEventPublisher,
+                                                                     EventService eventService) {
+        return new PaymentOnStart(paymentEventPublisher, eventService);
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "true")
+    public ApplicationListener<ApplicationReadyEvent> payoutOnStart(EventPublisher payoutEventPublisher,
+                                                                    EventService eventService) {
+        return new PayoutOnStart(payoutEventPublisher, eventService);
     }
 }

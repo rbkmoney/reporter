@@ -1,6 +1,8 @@
 info:
   version: @project.version@
   stage: dev
+  scheduler-pool-size: 5
+  single-instance-mode: true
 server:
   port: @server.port@
 management:
@@ -30,7 +32,7 @@ spring:
       enabled: always
 ---
 kafka:
-  bootstrap-servers: kenny-kafka1.bst1.rbkmoney.net:9092
+  bootstrap-servers: localhost:9092
   client-id: reporter
   ssl:
     enabled: false

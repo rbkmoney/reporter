@@ -1,18 +1,18 @@
 version: '3'
 services:
-  reporter:
-    build: target/
-    image: reporter:1.10.24-SNAPSHOT
-    networks:
-      - reporternet
-    ports:
-      - "8022:8022"
-    depends_on:
-      - postgresql
-      - ceph
-      - kafka
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/reporter
+  #  reporter:
+  #    build: target/
+  #    image: reporter:1.10.24-SNAPSHOT
+  #    networks:
+  #      - reporternet
+  #    ports:
+  #      - "8022:8022"
+  #    depends_on:
+  #      - postgresql
+  #      - ceph
+  #      - kafka
+  #    environment:
+  #      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/reporter
 
   postgresql:
     image: postgres:9.6

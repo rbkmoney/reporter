@@ -16,7 +16,6 @@ public class StockEventHandlerClientImpl implements EventHandler<StockEvent> {
     @Override
     public EventAction handle(StockEvent stockEvent, String s) throws Exception {
         try {
-            log.info("Start handling stock events, eventId={}", stockEvent.getId());
             if (eventHandler.accept(stockEvent)) {
                 eventHandler.handle(stockEvent, stockEvent);
             }

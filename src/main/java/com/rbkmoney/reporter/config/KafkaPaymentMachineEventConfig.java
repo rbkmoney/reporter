@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.config;
 
 import com.rbkmoney.damsel.payment_processing.EventPayload;
+import com.rbkmoney.reporter.listener.machineevent.PaymentEventsMessageListener;
 import com.rbkmoney.sink.common.handle.machineevent.MachineEventHandler;
 import com.rbkmoney.sink.common.handle.machineevent.eventpayload.PaymentEventHandler;
 import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
@@ -10,6 +11,7 @@ import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
 import com.rbkmoney.sink.common.parser.impl.PaymentEventPayloadMachineEventParser;
 import com.rbkmoney.sink.common.serialization.BinaryDeserializer;
 import com.rbkmoney.sink.common.serialization.impl.PaymentEventPayloadDeserializer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -40,4 +42,10 @@ public class KafkaPaymentMachineEventConfig {
         return new PaymentEventPayloadMachineEventParser(paymentEventPayloadDeserializer);
     }
 
+    @Bean
+    @ConditionalOnProperty(value = "info.single-instance-mode", havingValue = "false")
+    public PaymentEventsMessageListener paymentEventsKafkaListener(MachineEventParser<EventPayload> paymentEventPayloadMachineEventParser,
+                                                                   MachineEventHandler<EventPayload> paymentEventMachineEventHandler) {
+        return new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, paymentEventMachineEventHandler);
+    }
 }

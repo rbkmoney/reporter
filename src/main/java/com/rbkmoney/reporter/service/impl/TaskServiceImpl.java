@@ -43,6 +43,8 @@ public class TaskServiceImpl implements TaskService {
         CalendarRef calendarRef = paymentInstitution.getCalendar();
 
         try {
+            log.info("Start ContractMeta handling, partyId='{}', contractId='{}'", partyId, contractId);
+
             ContractMeta contractMeta = new ContractMeta();
             contractMeta.setPartyId(partyId);
             contractMeta.setContractId(contractId);
@@ -61,7 +63,11 @@ public class TaskServiceImpl implements TaskService {
             }
 
             contractMetaDao.save(contractMeta);
+
+            log.info("ContractMeta has been saved,, partyId='{}', contractId='{}'", partyId, contractId);
+
             jobService.createJob(partyId, contractId, calendarRef, scheduleRef);
+
             log.info(
                     "Job have been successfully enabled, partyId='{}', contractId='{}', scheduleRef='{}', calendarRef='{}'",
                     partyId, contractId, scheduleRef, calendarRef
