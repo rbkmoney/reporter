@@ -9,11 +9,9 @@ import com.rbkmoney.reporter.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component
 @RequiredArgsConstructor
 public class PaymentOnStart implements ApplicationListener<ApplicationReadyEvent> {
 

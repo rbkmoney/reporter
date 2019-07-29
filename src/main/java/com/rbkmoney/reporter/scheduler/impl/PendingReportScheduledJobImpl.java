@@ -6,7 +6,6 @@ import com.rbkmoney.reporter.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,6 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@Component
 public class PendingReportScheduledJobImpl implements ScheduledJob {
 
     private final ReportService reportService;

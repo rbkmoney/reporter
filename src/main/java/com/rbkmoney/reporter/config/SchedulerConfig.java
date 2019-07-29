@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.config;
 
 import com.rbkmoney.reporter.factory.AutowiringSpringBeanJobFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +19,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Configuration
 public class SchedulerConfig {
 
+    @Value("${info.scheduler-pool-size}")
+    private int schedulerPoolSize;
+
     @Bean
     @DependsOn("dataSource")
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setDaemon(true);
+        taskScheduler.setPoolSize(schedulerPoolSize);
         ThreadGroup threadGroup = new ThreadGroup("Schedulers");
         taskScheduler.setThreadFactory(
                 new ThreadFactory() {

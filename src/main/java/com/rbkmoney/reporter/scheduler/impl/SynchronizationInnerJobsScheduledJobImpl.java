@@ -10,13 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@Component
 public class SynchronizationInnerJobsScheduledJobImpl implements ScheduledJob {
 
     private final ContractMetaDao contractMetaDao;

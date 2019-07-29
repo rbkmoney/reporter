@@ -16,6 +16,5 @@ public class BustermazePayoutProperties {
     private int maxQuerySize;
     private int delay;
     private int retryDelay;
-    private boolean enabled;
 
 }
