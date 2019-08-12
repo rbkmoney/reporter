@@ -46,12 +46,6 @@ import static org.mockito.BDDMockito.given;
 
 public class ServiceTests extends AbstractAppServiceTests {
 
-    private static final String FUNDS_ACQUIRED = "funds_acquired";
-    private static final String FUNDS_ADJUSTED = "funds_adjusted";
-    private static final String FEE_CHARGED = "fee_charged";
-    private static final String FUNDS_PAID_OUT = "funds_paid_out";
-    private static final String FUNDS_REFUNDED = "funds_refunded";
-
     private final String partyId = UUID.randomUUID().toString();
     private final String shopId = generateString();
     private final String contractId = generateString();

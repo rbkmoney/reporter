@@ -10,5 +10,4 @@ public interface RefundService {
 
     Refund get(String invoiceId, String paymentId, String refundId) throws StorageException, NotFoundException;
 
-    void updateNotCurrent(String invoiceId, String paymentId, String refundId) throws StorageException;
 }

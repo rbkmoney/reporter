@@ -47,7 +47,6 @@ public class PayoutStatusChangedChangeEventHandler implements PayoutChangeEventH
             payout.setPayoutCancelDetails(damselPayoutStatus.getCancelled().getDetails());
         }
 
-        payoutService.updateNotCurrent(payoutId);
         payoutService.save(payout);
         log.info("Payout status has been changed, payoutId={}", payoutId);
     }

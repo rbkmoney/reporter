@@ -1,6 +1,6 @@
 package com.rbkmoney.reporter.config;
 
-import com.rbkmoney.kafka.common.retry.ConfigurableRetryPolicy;
+import com.rbkmoney.kafka.common.exception.handler.SeekToCurrentWithSleepBatchErrorHandler;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
 import com.rbkmoney.reporter.serialization.SinkEventDeserializer;
@@ -19,15 +19,11 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.BatchErrorHandler;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.ErrorHandler;
-import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.support.RetryTemplate;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,9 +49,10 @@ public class KafkaConsumerConfig {
     @Value("${kafka.consumer.concurrency}")
     private int concurrency;
 
-
-    @Value("${retry-policy.maxAttempts}")
-    private int maxAttempts;
+    @Bean
+    public ConsumerFactory<String, MachineEvent> consumerFactory(KafkaSslProperties kafkaSslProperties) {
+        return new DefaultKafkaConsumerFactory<>(consumerConfigs(kafkaSslProperties));
+    }
 
     @Bean
     public Map<String, Object> consumerConfigs(KafkaSslProperties kafkaSslProperties) {
@@ -75,32 +72,17 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, MachineEvent> consumerFactory(KafkaSslProperties kafkaSslProperties) {
-        return new DefaultKafkaConsumerFactory<>(consumerConfigs(kafkaSslProperties));
-    }
-
-    @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>> kafkaListenerContainerFactory(
             ConsumerFactory<String, MachineEvent> consumerFactory
     ) {
         ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true);
         factory.getContainerProperties().setAckOnError(false);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setErrorHandler(kafkaErrorHandler());
+        factory.setBatchErrorHandler(kafkaErrorHandler());
         factory.setConcurrency(concurrency);
         return factory;
-    }
-
-    @Bean
-    public RetryTemplate kafkaRetryTemplate() {
-        RetryTemplate retryTemplate = new RetryTemplate();
-        retryTemplate.setRetryPolicy(
-                new ConfigurableRetryPolicy(maxAttempts, Collections.singletonMap(RuntimeException.class, true))
-        );
-        retryTemplate.setBackOffPolicy(new ExponentialBackOffPolicy());
-
-        return retryTemplate;
     }
 
     private void configureSsl(Map<String, Object> props, KafkaSslProperties kafkaSslProperties) {
@@ -116,7 +98,7 @@ public class KafkaConsumerConfig {
         }
     }
 
-    private ErrorHandler kafkaErrorHandler() {
-        return new SeekToCurrentErrorHandler(-1);
+    private BatchErrorHandler kafkaErrorHandler() {
+        return new SeekToCurrentWithSleepBatchErrorHandler();
     }
 }

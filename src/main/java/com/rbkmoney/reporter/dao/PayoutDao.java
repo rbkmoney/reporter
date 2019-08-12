@@ -17,6 +17,4 @@ public interface PayoutDao {
 
     Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException;
 
-    void updateNotCurrent(String payoutId) throws DaoException;
-
 }

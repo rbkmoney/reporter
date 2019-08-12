@@ -10,6 +10,7 @@ import com.rbkmoney.reporter.domain.enums.PayoutStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payout;
 import com.rbkmoney.reporter.domain.tables.records.PayoutRecord;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.AggregateFunction;
 import org.jooq.Condition;
 import org.jooq.Field;
@@ -20,7 +21,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +34,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     private final RowMapper<Payout> rowMapper;
 
     @Autowired
-    public PayoutDaoImpl(DataSource dataSource) {
+    public PayoutDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         rowMapper = new RecordRowMapper<>(PAYOUT, Payout.class);
     }
@@ -65,8 +65,10 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .where(
                         PAYOUT.PAYOUT_ID.eq(payoutId)
                                 .and(PAYOUT.EVENT_CATEGORY.eq(PayoutEventCategory.PAYOUT))
-                                .and(PAYOUT.CURRENT)
-                );
+                )
+                .orderBy(PAYOUT.ID.desc())
+                .limit(1);
+
         return fetchOne(query, rowMapper);
     }
 
@@ -113,17 +115,6 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                         .put(key, 0L)
                         .build()
         );
-    }
-
-    @Override
-    public void updateNotCurrent(String payoutId) throws DaoException {
-        Query query = getDslContext().update(PAYOUT).set(PAYOUT.CURRENT, false)
-                .where(
-                        PAYOUT.PAYOUT_ID.eq(payoutId)
-                                .and(PAYOUT.EVENT_CATEGORY.eq(PayoutEventCategory.PAYOUT))
-                                .and(PAYOUT.CURRENT)
-                );
-        executeOne(query);
     }
 
     private Condition getPayoutAccountingDataCondition(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime, PayoutStatus payoutStatus) {

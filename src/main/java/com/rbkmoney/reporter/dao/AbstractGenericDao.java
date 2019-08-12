@@ -15,9 +15,9 @@ import org.springframework.jdbc.support.KeyHolder;
 
 import javax.sql.DataSource;
 import java.sql.Types;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport implements GenericDao {
 
@@ -222,13 +222,17 @@ public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport im
         }
     }
 
-    public SqlParameterSource toSqlParameterSource(Map<String, Param<?>> params) {
+    protected SqlParameterSource toSqlParameterSource(Map<String, Param<?>> params) {
         MapSqlParameterSource sqlParameterSource = new MapSqlParameterSource();
         for (Map.Entry<String, Param<?>> entry : params.entrySet()) {
             Param<?> param = entry.getValue();
-            if (param.getValue() instanceof String) {
-                sqlParameterSource.addValue(entry.getKey(), ((String) param.getValue()).replace("\u0000", "\\u0000"));
-            } else if (param.getValue() instanceof LocalDateTime || param.getValue() instanceof EnumType) {
+            Class<?> type = param.getDataType().getType();
+            if (String.class.isAssignableFrom(type)) {
+                String value = Optional.ofNullable(param.getValue())
+                        .map(stringValue -> ((String) stringValue).replace("\u0000", "\\u0000"))
+                        .orElse(null);
+                sqlParameterSource.addValue(entry.getKey(), value);
+            } else if (EnumType.class.isAssignableFrom(type)) {
                 sqlParameterSource.addValue(entry.getKey(), param.getValue(), Types.OTHER);
             } else {
                 sqlParameterSource.addValue(entry.getKey(), param.getValue());

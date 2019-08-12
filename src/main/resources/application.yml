@@ -67,9 +67,6 @@ storage:
   secretKey: test
   clientProtocol: HTTP
 ---
-retry-policy:
-  maxAttempts: -1
----
 partyManagement:
   url: http://hellgate:8022/v1/processing/partymgmt
   timeout: 5000

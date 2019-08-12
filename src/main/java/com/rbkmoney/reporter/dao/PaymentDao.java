@@ -19,6 +19,4 @@ public interface PaymentDao {
 
     List<PaymentRegistryReportData> getPaymentRegistryReportData(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
 
-    void updateNotCurrent(String invoiceId, String paymentId) throws DaoException;
-
 }

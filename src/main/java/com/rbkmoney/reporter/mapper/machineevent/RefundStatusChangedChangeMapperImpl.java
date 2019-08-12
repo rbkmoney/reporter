@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.domain.Failure;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefundStatus;
@@ -15,40 +15,41 @@ import com.rbkmoney.reporter.domain.enums.FailureClass;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
-import com.rbkmoney.reporter.service.RefundService;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class RefundStatusChangedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final RefundService refundService;
+public class RefundStatusChangedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
+                "refundStatus", "refundOperationFailureClass", "refundExternalFailure", "refundExternalFailureReason"};
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRefundChange()
                 && payload.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange().getPayload().isSetInvoicePaymentRefundStatusChanged();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentRefundChange invoicePaymentRefundChange = getInvoicePaymentRefundChange(invoicePaymentChange);
         InvoicePaymentRefundStatusChanged invoicePaymentRefundStatusChanged = getInvoicePaymentRefundStatusChanged(invoicePaymentRefundChange);
         InvoicePaymentRefundStatus invoicePaymentRefundStatus = invoicePaymentRefundStatusChanged.getStatus();
+        RefundStatus refundStatus = TBaseUtil.unionFieldToEnum(invoicePaymentRefundStatus, RefundStatus.class);
 
         String refundId = invoicePaymentRefundChange.getId();
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        log.info("Start invoice payment refund status changed handling, refundId={}, invoiceId={}, paymentId={}", refundId, invoiceId, paymentId);
-
-        Refund refund = refundService.get(invoiceId, paymentId, refundId);
+        Refund refund = new Refund();
 
         refund.setId(null);
         refund.setWtime(null);
@@ -56,7 +57,7 @@ public class RefundStatusChangedChangeMachineEventHandler implements InvoiceChan
         refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_STATUS_CHANGED);
         refund.setSequenceId(baseEvent.getEventId());
         refund.setChangeId(changeId);
-        refund.setRefundStatus(TBaseUtil.unionFieldToEnum(invoicePaymentRefundStatus, RefundStatus.class));
+        refund.setRefundStatus(refundStatus);
         if (invoicePaymentRefundStatus.isSetFailed()) {
             OperationFailure operationFailure = invoicePaymentRefundStatus.getFailed().getFailure();
 
@@ -69,9 +70,9 @@ public class RefundStatusChangedChangeMachineEventHandler implements InvoiceChan
             }
         }
 
-        refundService.updateNotCurrent(invoiceId, paymentId, refundId);
-        refundService.save(refund);
-        log.info("Invoice payment refund status has been changed, refundId={}, invoiceId={}, paymentId={}", refundId, invoiceId, paymentId);
+        log.info("Refund with eventType=statusChanged and status {} has been mapped, invoiceId={}, paymentId={}, refundId={}", refundStatus, invoiceId, paymentId, refundId);
+
+        return new MapperResult(refund);
     }
 
     private InvoicePaymentRefundStatusChanged getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundChange invoicePaymentRefundChange) {

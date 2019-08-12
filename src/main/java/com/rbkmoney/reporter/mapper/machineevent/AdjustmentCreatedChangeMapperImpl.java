@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustment;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
@@ -10,13 +10,10 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.service.AdjustmentService;
-import com.rbkmoney.reporter.service.PaymentService;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import com.rbkmoney.reporter.util.DamselUtil;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -24,21 +21,22 @@ import java.time.LocalDateTime;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class AdjustmentCreatedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final AdjustmentService adjustmentService;
-    private final PaymentService paymentService;
+public class AdjustmentCreatedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[0];
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
                 && payload.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getPayload().isSetInvoicePaymentAdjustmentCreated();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentAdjustmentChange invoicePaymentAdjustmentChange = getInvoicePaymentAdjustmentChange(invoicePaymentChange);
         InvoicePaymentAdjustment invoicePaymentAdjustment = getInvoicePaymentAdjustment(invoicePaymentAdjustmentChange);
@@ -47,19 +45,14 @@ public class AdjustmentCreatedChangeMachineEventHandler implements InvoiceChange
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        Payment payment = paymentService.get(invoiceId, paymentId);
-
-        log.info("Start invoice payment adjustment created handling, adjustmentId={}, invoiceId={}, paymentId={}", adjustmentId, invoiceId, paymentId);
-
         Adjustment adjustment = new Adjustment();
+
         adjustment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED);
         adjustment.setInvoiceId(invoiceId);
         adjustment.setSequenceId(baseEvent.getEventId());
         adjustment.setChangeId(changeId);
         adjustment.setPaymentId(paymentId);
-        adjustment.setPartyId(payment.getPartyId());
-        adjustment.setPartyShopId(payment.getPartyShopId());
         adjustment.setAdjustmentId(adjustmentId);
         fillAdjustmentStatus(invoicePaymentAdjustment, adjustment);
         adjustment.setAdjustmentCreatedAt(getAdjustmentCreatedAt(invoicePaymentAdjustment));
@@ -71,8 +64,9 @@ public class AdjustmentCreatedChangeMachineEventHandler implements InvoiceChange
             adjustment.setAdjustmentPartyRevision(invoicePaymentAdjustment.getPartyRevision());
         }
 
-        adjustmentService.save(adjustment);
-        log.info("Invoice payment adjustment has been created, adjustmentId={}, invoiceId={}, paymentId={}", adjustmentId, invoiceId, paymentId);
+        log.info("Adjustment with eventType=created has been mapped, invoiceId={}, paymentId={}, adjustmentId={}", invoiceId, paymentId, adjustmentId);
+
+        return new MapperResult(adjustment);
     }
 
     private void fillAdjustmentStatus(InvoicePaymentAdjustment invoicePaymentAdjustment, Adjustment adjustment) {

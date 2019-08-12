@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -7,21 +7,23 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.service.PaymentService;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class PaymentTerminalRecieptChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final PaymentService paymentService;
+public class PaymentTerminalRecieptChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
+                "paymentShortId"};
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentSessionChange()
                 && payload.getInvoicePaymentChange().getPayload().getInvoicePaymentSessionChange().getPayload().isSetSessionInteractionRequested()
@@ -29,16 +31,14 @@ public class PaymentTerminalRecieptChangeMachineEventHandler implements InvoiceC
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         PaymentTerminalReceipt paymentTerminalReceipt = getPaymentTerminalReciept(invoicePaymentChange);
 
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        log.info("Start invoice payment terminal reciept changed handling, paymentId={}, invoiceId={}", paymentId, invoiceId);
-
-        Payment payment = paymentService.get(invoiceId, paymentId);
+        Payment payment = new Payment();
 
         payment.setId(null);
         payment.setWtime(null);
@@ -48,9 +48,9 @@ public class PaymentTerminalRecieptChangeMachineEventHandler implements InvoiceC
         payment.setChangeId(changeId);
         payment.setPaymentShortId(paymentTerminalReceipt.getShortPaymentId());
 
-        paymentService.updateNotCurrent(invoiceId, paymentId);
-        paymentService.save(payment);
-        log.info("Invoice payment terminal reciept has been changed, paymentId={}, invoiceId={}", paymentId, invoiceId);
+        log.info("Payment with eventType=terminalReciept has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
+
+        return new MapperResult(payment);
     }
 
     private PaymentTerminalReceipt getPaymentTerminalReciept(InvoicePaymentChange invoicePaymentChange) {

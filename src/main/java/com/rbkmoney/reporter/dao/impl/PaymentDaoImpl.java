@@ -1,7 +1,9 @@
 package com.rbkmoney.reporter.dao.impl;
 
 import com.google.common.collect.ImmutableMap;
+import com.rbkmoney.reporter.batch.InvoiceBatchType;
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
+import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.mapper.PaymentRegistryReportDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
@@ -12,6 +14,8 @@ import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.rbkmoney.reporter.mapper.MapperResult;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +23,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +33,13 @@ import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 
 @Component
-public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
+public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, BatchDao {
 
     private final RowMapper<Payment> paymentRowMapper;
     private final PaymentRegistryReportDataRowMapper reportDataRowMapper;
 
     @Autowired
-    public PaymentDaoImpl(DataSource dataSource) {
+    public PaymentDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         paymentRowMapper = new RecordRowMapper<>(PAYMENT, Payment.class);
         reportDataRowMapper = new PaymentRegistryReportDataRowMapper();
@@ -62,8 +65,10 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                 .where(
                         PAYMENT.INVOICE_ID.eq(invoiceId)
                                 .and(PAYMENT.PAYMENT_ID.eq(paymentId))
-                                .and(PAYMENT.CURRENT)
-                );
+                )
+                .orderBy(PAYMENT.ID.desc())
+                .limit(1);
+
         return fetchOne(query, paymentRowMapper);
     }
 
@@ -141,13 +146,18 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
-    public void updateNotCurrent(String invoiceId, String paymentId) throws DaoException {
-        Query query = getDslContext().update(PAYMENT).set(PAYMENT.CURRENT, false)
-                .where(
-                        PAYMENT.INVOICE_ID.eq(invoiceId)
-                                .and(PAYMENT.PAYMENT_ID.eq(paymentId))
-                                .and(PAYMENT.CURRENT)
-                );
-        executeOne(query);
+    public boolean isInvoiceChangeType(InvoiceBatchType invoiceChangeTypeEnum) {
+        return invoiceChangeTypeEnum.equals(InvoiceBatchType.PAYMENT);
+    }
+
+    @Override
+    public Query getSaveEventQuery(MapperResult entity) {
+        PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, entity.getPayment());
+        return getDslContext().insertInto(PAYMENT)
+                .set(paymentRecord)
+                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
+                .doUpdate()
+                .set(paymentRecord)
+                .returning(PAYMENT.ID);
     }
 }

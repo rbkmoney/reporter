@@ -10,5 +10,4 @@ public interface PayoutService {
 
     Payout get(String payoutId) throws StorageException, NotFoundException;
 
-    void updateNotCurrent(String payoutId) throws StorageException;
 }

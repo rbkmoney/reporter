@@ -12,34 +12,65 @@ import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.damsel.payout_processing.Wallet;
 import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.machinegun.msgpack.Value;
+import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.dao.*;
+import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
+import com.rbkmoney.reporter.domain.enums.RefundStatus;
+import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.sink.common.handle.machineevent.MachineEventHandler;
+import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.handle.InvoiceBatchHandler;
+import com.rbkmoney.reporter.listener.machineevent.PaymentEventsMessageListener;
+import com.rbkmoney.reporter.service.BatchService;
 import com.rbkmoney.sink.common.handle.stockevent.StockEventHandler;
+import com.rbkmoney.sink.common.parser.Parser;
 import com.rbkmoney.sink.common.serialization.impl.PaymentEventPayloadSerializer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class EventServiceTests extends AbstractAppEventServiceTests {
 
-    @Autowired
-    private MachineEventHandler<EventPayload> paymentEventMachineEventHandler;
+    private PaymentEventPayloadSerializer paymentEventPayloadSerializer = new PaymentEventPayloadSerializer();
 
     @Autowired
     private StockEventHandler<StockEvent> payoutEventStockEventHandler;
 
-    private PaymentEventPayloadSerializer paymentEventPayloadSerializer = new PaymentEventPayloadSerializer();
+    @Autowired
+    private Parser<MachineEvent, EventPayload> paymentEventPayloadMachineEventParser;
+
+    @Autowired
+    private InvoiceBatchManager invoiceBatchManager;
+
+    @Autowired
+    private BatchService batchService;
+
+    @Autowired
+    private InvoiceBatchHandler<com.rbkmoney.reporter.domain.tables.pojos.Invoice, Void> invoiceBatchHandler;
+
+    @Autowired
+    private InvoiceBatchHandler<Payment, com.rbkmoney.reporter.domain.tables.pojos.Invoice> paymentInvoiceBatchHandler;
+
+    @Autowired
+    private InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
+
+    @Autowired
+    private InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;
 
     @Autowired
     private AdjustmentDao adjustmentDao;
@@ -58,10 +89,148 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
 
     @Test
     @Sql("classpath:data/sql/truncate.sql")
-    public void adjustmentEventServiceTest() throws Exception {
+    public void batchHandlingTest() {
+        String invoiceId = generateString();
+        String paymentId = generateString();
+        String adjustmentId = generateString();
+        String refundId = generateString();
+
+        List<ConsumerRecord<String, SinkEvent>> messages = new ArrayList<>();
+
+        messages.add(getConsumerRecord(getSinkEvent(1L, invoiceId, getInvoiceCreated(InvoiceStatus.unpaid(new InvoiceUnpaid())))));
+        messages.add(getConsumerRecord(getPaymentMachineEvent(2L, invoiceId, paymentId, getInvoicePaymentStarted(InvoicePaymentStatus.pending(new InvoicePaymentPending())))));
+        messages.add(getConsumerRecord(getPaymentMachineEvent(3L, invoiceId, paymentId, getInvoicePaymentStatusChanged(getCaptured()))));
+        messages.add(getConsumerRecord(getRefundMachineEvent(4L, invoiceId, paymentId, refundId, getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending())))));
+        messages.add(getConsumerRecord(getRefundMachineEvent(5L, invoiceId, paymentId, refundId, getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())))));
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(6L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(7L, invoiceId, paymentId, adjustmentId, getAdjustmentStatusChanged(InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured(TypeUtil.temporalToString(LocalDateTime.now().plusDays(1))))))));
+        messages.add(getConsumerRecord(getSinkEvent(7L, invoiceId, getInvoiceStatusChanged(InvoiceStatus.paid(new InvoicePaid())))));
+
+        PaymentEventsMessageListener paymentEventsMessageListener = new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, invoiceBatchManager, batchService, invoiceBatchHandler, paymentInvoiceBatchHandler, adjustmentInvoiceBatchHandler, refundInvoiceBatchHandler);
+        paymentEventsMessageListener.listen(messages, () -> {
+        });
+
+        Adjustment adjustment = adjustmentDao.get(invoiceId, paymentId, adjustmentId);
+        Refund refund = refundDao.get(invoiceId, paymentId, refundId);
+        Payment payment = paymentDao.get(invoiceId, paymentId);
+        com.rbkmoney.reporter.domain.tables.pojos.Invoice invoice = invoiceDao.get(invoiceId);
+
+        assertEquals(AdjustmentStatus.captured, adjustment.getAdjustmentStatus());
+        assertEquals(RefundStatus.succeeded, refund.getRefundStatus());
+        assertEquals(com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus.captured, payment.getPaymentStatus());
+        assertEquals(com.rbkmoney.reporter.domain.enums.InvoiceStatus.paid, invoice.getInvoiceStatus());
+    }
+
+    private InvoicePaymentStatus getCaptured() {
+        Cash cash = new Cash();
+        cash.setAmount(1L);
+        cash.setCurrency(new CurrencyRef("USD"));
+        InvoicePaymentCaptured captured = new InvoicePaymentCaptured();
+        captured.setCost(cash);
+        return InvoicePaymentStatus.captured(captured);
+    }
+
+    private InvoicePaymentRefundChangePayload getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus status) {
+        InvoicePaymentRefundStatusChanged invoicePaymentRefundStatusChanged = new InvoicePaymentRefundStatusChanged();
+        invoicePaymentRefundStatusChanged.setStatus(status);
+        return InvoicePaymentRefundChangePayload.invoice_payment_refund_status_changed(invoicePaymentRefundStatusChanged);
+    }
+
+    private InvoicePaymentRefundChangePayload getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus status) {
+        InvoicePaymentRefund refund = random(InvoicePaymentRefund.class, "cart", "status");
+        refund.setStatus(status);
+        refund.setCreatedAt(generateDate());
+
+        InvoicePaymentRefundCreated invoicePaymentRefundCreated = new InvoicePaymentRefundCreated();
+        invoicePaymentRefundCreated.setRefund(refund);
+        invoicePaymentRefundCreated.setCashFlow(getCashFlows());
+
+        return InvoicePaymentRefundChangePayload.invoice_payment_refund_created(invoicePaymentRefundCreated);
+    }
+
+    private SinkEvent getRefundMachineEvent(Long eventId, String invoiceId, String paymentId, String refundId, InvoicePaymentRefundChangePayload payload) {
+        InvoicePaymentRefundChange invoicePaymentRefundChange = new InvoicePaymentRefundChange();
+        invoicePaymentRefundChange.setId(refundId);
+        invoicePaymentRefundChange.setPayload(payload);
+
+        InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
+        invoicePaymentChange.setId(paymentId);
+        invoicePaymentChange.setPayload(InvoicePaymentChangePayload.invoice_payment_refund_change(invoicePaymentRefundChange));
+
+        InvoiceChange invoiceChange = InvoiceChange.invoice_payment_change(invoicePaymentChange);
+
+        return getSinkEvent(eventId, invoiceId, invoiceChange);
+    }
+
+    private InvoicePaymentChangePayload getInvoicePaymentStatusChanged(InvoicePaymentStatus status) {
+        InvoicePaymentStatusChanged statusChanged = new InvoicePaymentStatusChanged();
+        statusChanged.setStatus(status);
+        return InvoicePaymentChangePayload.invoice_payment_status_changed(statusChanged);
+    }
+
+    private SinkEvent getPaymentMachineEvent(Long eventId, String invoiceId, String paymentId, InvoicePaymentChangePayload payload) {
+        InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
+        invoicePaymentChange.setId(paymentId);
+        invoicePaymentChange.setPayload(payload);
+
+        InvoiceChange invoiceChange = InvoiceChange.invoice_payment_change(invoicePaymentChange);
+
+        return getSinkEvent(eventId, invoiceId, invoiceChange);
+    }
+
+    private InvoicePaymentChangePayload getInvoicePaymentStarted(InvoicePaymentStatus status) {
+        PaymentTerminal paymentTerminal = new PaymentTerminal();
+        paymentTerminal.setTerminalType(TerminalPaymentProvider.euroset);
+
+        CustomerPayer customerPayer = random(CustomerPayer.class, "payment_tool");
+        customerPayer.setPaymentTool(PaymentTool.payment_terminal(paymentTerminal));
+
+        InvoicePayment payment = random(InvoicePayment.class, "status", "payer", "flow", "context");
+        payment.setStatus(status);
+        payment.setCreatedAt(generateDate());
+        payment.setPayer(Payer.customer(customerPayer));
+        payment.setFlow(InvoicePaymentFlow.instant(new InvoicePaymentFlowInstant()));
+
+        InvoicePaymentStarted invoicePaymentStarted = new InvoicePaymentStarted();
+        invoicePaymentStarted.setCashFlow(getCashFlows());
+        invoicePaymentStarted.setPayment(payment);
+        return InvoicePaymentChangePayload.invoice_payment_started(invoicePaymentStarted);
+    }
+
+    private InvoiceChange getInvoiceCreated(InvoiceStatus status) {
+        Invoice invoice = random(Invoice.class, "status", "details", "context");
+        invoice.setStatus(status);
+        invoice.setDetails(random(InvoiceDetails.class, "cart"));
+        invoice.setOwnerId(UUID.randomUUID().toString());
+        invoice.setCreatedAt(generateDate());
+        invoice.setDue(generateDate());
+
+        InvoiceCreated invoiceCreated = new InvoiceCreated();
+        invoiceCreated.setInvoice(invoice);
+
+        return InvoiceChange.invoice_created(invoiceCreated);
+    }
+
+    private InvoiceChange getInvoiceStatusChanged(InvoiceStatus status) {
+        InvoiceStatusChanged invoiceStatusChanged = new InvoiceStatusChanged();
+        invoiceStatusChanged.setStatus(status);
+        return InvoiceChange.invoice_status_changed(invoiceStatusChanged);
+    }
+
+    private ConsumerRecord<String, SinkEvent> getConsumerRecord(SinkEvent sinkEvent) {
+        return new ConsumerRecord<>("asad", 1, 1, "asd", sinkEvent);
+    }
+
+    private InvoicePaymentAdjustmentChangePayload getAdjustmentStatusChanged(InvoicePaymentAdjustmentStatus status) {
+        InvoicePaymentAdjustmentStatusChanged invoicePaymentAdjustmentStatusChanged = new InvoicePaymentAdjustmentStatusChanged();
+        invoicePaymentAdjustmentStatusChanged.setStatus(status);
+        return InvoicePaymentAdjustmentChangePayload.invoice_payment_adjustment_status_changed(invoicePaymentAdjustmentStatusChanged);
+    }
+
+    private InvoicePaymentAdjustmentChangePayload getAdjustmentCreated(InvoicePaymentAdjustmentStatus status) {
         InvoicePaymentAdjustment adjustment = new InvoicePaymentAdjustment();
         adjustment.setId(generateString());
-        adjustment.setStatus(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending()));
+        adjustment.setStatus(status);
         adjustment.setCreatedAt(generateDate());
         adjustment.setDomainRevision(generateLong());
         adjustment.setReason(generateString());
@@ -70,124 +239,39 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
 
         InvoicePaymentAdjustmentCreated invoicePaymentAdjustmentCreated = new InvoicePaymentAdjustmentCreated();
         invoicePaymentAdjustmentCreated.setAdjustment(adjustment);
+        return InvoicePaymentAdjustmentChangePayload.invoice_payment_adjustment_created(invoicePaymentAdjustmentCreated);
+    }
 
+    private SinkEvent getAdjustmentMachineEvent(Long eventId, String invoiceId, String paymentId, String adjustmentId, InvoicePaymentAdjustmentChangePayload payload) {
         InvoicePaymentAdjustmentChange invoicePaymentAdjustmentChange = new InvoicePaymentAdjustmentChange();
-        invoicePaymentAdjustmentChange.setId(generateString());
-        invoicePaymentAdjustmentChange.setPayload(InvoicePaymentAdjustmentChangePayload.invoice_payment_adjustment_created(invoicePaymentAdjustmentCreated));
+        invoicePaymentAdjustmentChange.setId(adjustmentId);
+        invoicePaymentAdjustmentChange.setPayload(payload);
 
         InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
-        invoicePaymentChange.setId(generateString());
+        invoicePaymentChange.setId(paymentId);
         invoicePaymentChange.setPayload(InvoicePaymentChangePayload.invoice_payment_adjustment_change(invoicePaymentAdjustmentChange));
 
-        List<InvoiceChange> invoiceChanges = new ArrayList<>();
-        invoiceChanges.add(InvoiceChange.invoice_payment_change(invoicePaymentChange));
+        InvoiceChange invoiceChange = InvoiceChange.invoice_payment_change(invoicePaymentChange);
 
-        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
-
-        MachineEvent machineEvent = new MachineEvent();
-        machineEvent.setSourceNs(generateString());
-        machineEvent.setSourceId(generateString());
-        machineEvent.setEventId(generateLong());
-        machineEvent.setCreatedAt(generateDate());
-        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
-
-        String adjustmentId = invoicePaymentAdjustmentChange.getId();
-        String paymentId = invoicePaymentChange.getId();
-        String invoiceId = machineEvent.getSourceId();
-
-        Payment payment = random(Payment.class, "paymentCashFlow");
-        payment.setInvoiceId(invoiceId);
-        payment.setPaymentId(paymentId);
-        payment.setId(null);
-        payment.setCurrent(true);
-        paymentDao.save(payment);
-
-        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
-
-        assertNotNull(adjustmentDao.get(invoiceId, paymentId, adjustmentId));
+        return getSinkEvent(eventId, invoiceId, invoiceChange);
     }
 
-    @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void invoiceEventServiceTest() throws Exception {
-        InvoiceDetails details = random(InvoiceDetails.class, "cart");
-
-        Invoice invoice = random(Invoice.class, "status", "details", "context");
-        invoice.setStatus(InvoiceStatus.paid(new InvoicePaid()));
-        invoice.setDetails(details);
-        invoice.setOwnerId(UUID.randomUUID().toString());
-        invoice.setCreatedAt(generateDate());
-        invoice.setDue(generateDate());
-
-        InvoiceCreated invoiceCreated = new InvoiceCreated();
-        invoiceCreated.setInvoice(invoice);
-
+    private SinkEvent getSinkEvent(Long eventId, String invoiceId, InvoiceChange invoiceChange) {
         List<InvoiceChange> invoiceChanges = new ArrayList<>();
-        invoiceChanges.add(InvoiceChange.invoice_created(invoiceCreated));
+        invoiceChanges.add(invoiceChange);
 
         EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
 
         MachineEvent machineEvent = new MachineEvent();
         machineEvent.setSourceNs(generateString());
-        machineEvent.setSourceId(generateString());
-        machineEvent.setEventId(generateLong());
+        machineEvent.setSourceId(invoiceId);
+        machineEvent.setEventId(eventId);
         machineEvent.setCreatedAt(generateDate());
         machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
 
-        String invoiceId = machineEvent.getSourceId();
-
-        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
-
-        assertNotNull(invoiceDao.get(invoiceId));
-    }
-
-    @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void paymentEventServiceTest() throws Exception {
-        PaymentTerminal paymentTerminal = new PaymentTerminal();
-        paymentTerminal.setTerminalType(TerminalPaymentProvider.euroset);
-
-        CustomerPayer customerPayer = random(CustomerPayer.class, "payment_tool");
-        customerPayer.setPaymentTool(PaymentTool.payment_terminal(paymentTerminal));
-
-        InvoicePayment payment = random(InvoicePayment.class, "status", "payer", "flow", "context");
-        payment.setStatus(InvoicePaymentStatus.pending(new InvoicePaymentPending()));
-        payment.setCreatedAt(generateDate());
-        payment.setPayer(Payer.customer(customerPayer));
-        payment.setFlow(InvoicePaymentFlow.instant(new InvoicePaymentFlowInstant()));
-
-        InvoicePaymentStarted invoicePaymentStarted = new InvoicePaymentStarted();
-        invoicePaymentStarted.setCashFlow(getCashFlows());
-        invoicePaymentStarted.setPayment(payment);
-
-        InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
-        invoicePaymentChange.setId(generateString());
-        invoicePaymentChange.setPayload(InvoicePaymentChangePayload.invoice_payment_started(invoicePaymentStarted));
-
-        List<InvoiceChange> invoiceChanges = new ArrayList<>();
-        invoiceChanges.add(InvoiceChange.invoice_payment_change(invoicePaymentChange));
-
-        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
-
-        MachineEvent machineEvent = new MachineEvent();
-        machineEvent.setSourceNs(generateString());
-        machineEvent.setSourceId(generateString());
-        machineEvent.setEventId(generateLong());
-        machineEvent.setCreatedAt(generateDate());
-        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
-
-        String paymentId = invoicePaymentChange.getId();
-        String invoiceId = machineEvent.getSourceId();
-
-        com.rbkmoney.reporter.domain.tables.pojos.Invoice invoice = random(com.rbkmoney.reporter.domain.tables.pojos.Invoice.class);
-        invoice.setId(null);
-        invoice.setCurrent(true);
-        invoice.setInvoiceId(invoiceId);
-        invoiceDao.save(invoice);
-
-        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
-
-        assertNotNull(paymentDao.get(invoiceId, paymentId));
+        SinkEvent sinkEvent = new SinkEvent();
+        sinkEvent.setEvent(machineEvent);
+        return sinkEvent;
     }
 
     @Test
@@ -220,53 +304,6 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         payoutEventStockEventHandler.handle(stockEvent, stockEvent);
 
         assertNotNull(payoutDao.get(payoutId));
-    }
-
-    @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void refundEventServiceTest() throws Exception {
-        InvoicePaymentRefund refund = random(InvoicePaymentRefund.class, "cart", "status");
-        refund.setStatus(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending()));
-        refund.setCreatedAt(generateDate());
-
-        InvoicePaymentRefundCreated invoicePaymentRefundCreated = new InvoicePaymentRefundCreated();
-        invoicePaymentRefundCreated.setRefund(refund);
-        invoicePaymentRefundCreated.setCashFlow(getCashFlows());
-
-        InvoicePaymentRefundChange invoicePaymentRefundChange = new InvoicePaymentRefundChange();
-        invoicePaymentRefundChange.setId(generateString());
-        invoicePaymentRefundChange.setPayload(InvoicePaymentRefundChangePayload.invoice_payment_refund_created(invoicePaymentRefundCreated));
-
-        InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
-        invoicePaymentChange.setId(generateString());
-        invoicePaymentChange.setPayload(InvoicePaymentChangePayload.invoice_payment_refund_change(invoicePaymentRefundChange));
-
-        List<InvoiceChange> invoiceChanges = new ArrayList<>();
-        invoiceChanges.add(InvoiceChange.invoice_payment_change(invoicePaymentChange));
-
-        EventPayload eventPayload = EventPayload.invoice_changes(invoiceChanges);
-
-        MachineEvent machineEvent = new MachineEvent();
-        machineEvent.setSourceNs(generateString());
-        machineEvent.setSourceId(generateString());
-        machineEvent.setEventId(generateLong());
-        machineEvent.setCreatedAt(generateDate());
-        machineEvent.setData(Value.bin(paymentEventPayloadSerializer.serialize(eventPayload)));
-
-        String refundId = invoicePaymentRefundChange.getId();
-        String paymentId = invoicePaymentChange.getId();
-        String invoiceId = machineEvent.getSourceId();
-
-        Payment payment = random(Payment.class, "paymentCashFlow");
-        payment.setInvoiceId(invoiceId);
-        payment.setPaymentId(paymentId);
-        payment.setId(null);
-        payment.setCurrent(true);
-        paymentDao.save(payment);
-
-        paymentEventMachineEventHandler.handle(eventPayload, machineEvent);
-
-        assertNotNull(refundDao.get(invoiceId, paymentId, refundId));
     }
 
     private List<FinalCashFlowPosting> getCashFlows() {
