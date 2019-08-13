@@ -36,7 +36,7 @@ public class InvoiceBatchMapperImpl implements InvoiceBatchMapper<Invoice, Void>
     }
 
     @Override
-    public Invoice map(InvoiceChangeMapper mapper, MapperPayload payload, List<Invoice> invoices, Map<InvoiceUniqueBatchKey, Void> consumerCache, InvoiceUniqueBatchKey uniqueKey) {
+    public Invoice map(InvoiceChangeMapper mapper, MapperPayload payload, List<Invoice> invoices, Map<InvoiceUniqueBatchKey, Void> consumerCache) {
         throw new UnsupportedOperationException("Invoice does not need cache");
     }
 }

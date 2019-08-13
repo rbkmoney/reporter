@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.mapper.impl;
 
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
+import com.rbkmoney.reporter.batch.impl.InvoiceUniqueBatchKeyImpl;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
@@ -29,7 +30,7 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
     }
 
     @Override
-    public Payment map(InvoiceChangeMapper mapper, MapperPayload payload, List<Payment> payments, Map<InvoiceUniqueBatchKey, Invoice> consumerCache, InvoiceUniqueBatchKey uniqueKey) {
+    public Payment map(InvoiceChangeMapper mapper, MapperPayload payload, List<Payment> payments, Map<InvoiceUniqueBatchKey, Invoice> consumerCache) {
         Payment payment = mapper.map(payload.getInvoiceChange(), payload.getMachineEvent(), payload.getChangeId()).getPayment();
 
         if (!payments.isEmpty()) {
@@ -41,7 +42,7 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
         }
 
         if (payment.getEventType() == InvoiceEventType.INVOICE_PAYMENT_STARTED) {
-            Invoice invoice = consumerCache.computeIfAbsent(getInvoiceCacheKey(uniqueKey), key -> invoiceService.get(key.getInvoiceId()));
+            Invoice invoice = consumerCache.computeIfAbsent(getInvoiceCacheKey(payment), key -> invoiceService.get(payment.getInvoiceId()));
             payment.setPartyId(invoice.getPartyId());
             payment.setPartyShopId(invoice.getPartyShopId());
         }
@@ -56,7 +57,7 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
         }
     }
 
-    private InvoiceUniqueBatchKey getInvoiceCacheKey(InvoiceUniqueBatchKey uniqueKey) {
-        return new InvoiceUniqueBatchKey(uniqueKey.getInvoiceId(), null, null, null);
+    private InvoiceUniqueBatchKey getInvoiceCacheKey(Payment payment) {
+        return new InvoiceUniqueBatchKeyImpl(payment.getInvoiceId());
     }
 }

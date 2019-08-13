@@ -1,7 +1,7 @@
 package com.rbkmoney.reporter.dao.impl;
 
 import com.google.common.collect.ImmutableMap;
-import com.rbkmoney.reporter.dao.AbstractGenericDao;
+import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.PayoutDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;

@@ -30,10 +30,9 @@ public class RefundInvoiceBatchServiceImpl implements InvoiceBatchService {
 
     @Override
     public InvoiceUniqueBatchKey getInvoiceUniqueBatchKey(InvoiceChange invoiceChange, MachineEvent machineEvent) {
-        return new InvoiceUniqueBatchKey(
+        return new RefundInvoiceUniqueBatchKey(
                 machineEvent.getSourceId(),
                 invoiceChange.getInvoicePaymentChange().getId(),
-                null,
                 invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange().getId()
         );
     }

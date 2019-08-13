@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.mapper.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
+import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
@@ -30,7 +31,7 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
     }
 
     @Override
-    public Refund map(InvoiceChangeMapper mapper, MapperPayload payload, List<Refund> refunds, Map<InvoiceUniqueBatchKey, Payment> consumerCache, InvoiceUniqueBatchKey uniqueKey) {
+    public Refund map(InvoiceChangeMapper mapper, MapperPayload payload, List<Refund> refunds, Map<InvoiceUniqueBatchKey, Payment> consumerCache) {
         Refund refund = mapper.map(payload.getInvoiceChange(), payload.getMachineEvent(), payload.getChangeId()).getRefund();
 
         if (!refunds.isEmpty()) {
@@ -42,7 +43,7 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
         }
 
         if (refund.getEventType() == InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED) {
-            Payment payment = consumerCache.computeIfAbsent(getInvoiceCacheKey(uniqueKey), key -> paymentService.get(key.getInvoiceId(), key.getPaymentId()));
+            Payment payment = consumerCache.computeIfAbsent(getInvoiceCacheKey(refund), key -> paymentService.get(refund.getInvoiceId(), refund.getPaymentId()));
 
             refund.setPartyId(payment.getPartyId());
             refund.setPartyShopId(payment.getPartyShopId());
@@ -62,7 +63,7 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
                 .getPayload().getInvoicePaymentRefundCreated().getRefund();
     }
 
-    private InvoiceUniqueBatchKey getInvoiceCacheKey(InvoiceUniqueBatchKey uniqueKey) {
-        return new InvoiceUniqueBatchKey(uniqueKey.getInvoiceId(), uniqueKey.getPaymentId(), null, null);
+    private InvoiceUniqueBatchKey getInvoiceCacheKey(Refund refund) {
+        return new PaymentInvoiceUniqueBatchKey(refund.getInvoiceId(), refund.getPaymentId());
     }
 }

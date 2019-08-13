@@ -49,7 +49,7 @@ public class InvoiceBatchHandlerImpl<R, C> implements InvoiceBatchHandler<R, C> 
 
                                             R invoicingEntity;
                                             if (consumerCache != null) {
-                                                invoicingEntity = invoiceBatchMapper.map(mapper, payload, invoicingEntities, consumerCache, entry.getKey());
+                                                invoicingEntity = invoiceBatchMapper.map(mapper, payload, invoicingEntities, consumerCache);
                                             } else {
                                                 invoicingEntity = invoiceBatchMapper.map(mapper, payload, invoicingEntities);
                                             }

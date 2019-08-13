@@ -1,12 +1,13 @@
 package com.rbkmoney.reporter.dao.impl;
 
-import com.rbkmoney.reporter.dao.AbstractGenericDao;
+import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Condition;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     private final RowMapper<FileMeta> fileMetaRowMapper;
 
     @Autowired
-    public ReportDaoImpl(DataSource dataSource) {
+    public ReportDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         reportRowMapper = BeanPropertyRowMapper.newInstance(Report.class);
         fileMetaRowMapper = BeanPropertyRowMapper.newInstance(FileMeta.class);

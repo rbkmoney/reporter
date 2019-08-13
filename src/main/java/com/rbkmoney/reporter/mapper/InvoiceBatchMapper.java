@@ -9,6 +9,6 @@ public interface InvoiceBatchMapper<R, C> {
 
     R map(InvoiceChangeMapper mapper, MapperPayload payload, List<R> invoicingEntities);
 
-    R map(InvoiceChangeMapper mapper, MapperPayload payload, List<R> invoicingEntities, Map<InvoiceUniqueBatchKey, C> consumerCache, InvoiceUniqueBatchKey uniqueKey);
+    R map(InvoiceChangeMapper mapper, MapperPayload payload, List<R> invoicingEntities, Map<InvoiceUniqueBatchKey, C> consumerCache);
 
 }

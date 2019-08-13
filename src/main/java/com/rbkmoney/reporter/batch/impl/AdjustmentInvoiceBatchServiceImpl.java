@@ -30,11 +30,10 @@ public class AdjustmentInvoiceBatchServiceImpl implements InvoiceBatchService {
 
     @Override
     public InvoiceUniqueBatchKey getInvoiceUniqueBatchKey(InvoiceChange invoiceChange, MachineEvent machineEvent) {
-        return new InvoiceUniqueBatchKey(
+        return new AdjustmentInvoiceUniqueBatchKey(
                 machineEvent.getSourceId(),
                 invoiceChange.getInvoicePaymentChange().getId(),
-                invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getId(),
-                null
+                invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getId()
         );
     }
 }

@@ -33,11 +33,9 @@ public class PaymentInvoiceBatchServiceImpl implements InvoiceBatchService {
 
     @Override
     public InvoiceUniqueBatchKey getInvoiceUniqueBatchKey(InvoiceChange invoiceChange, MachineEvent machineEvent) {
-        return new InvoiceUniqueBatchKey(
+        return new PaymentInvoiceUniqueBatchKey(
                 machineEvent.getSourceId(),
-                invoiceChange.getInvoicePaymentChange().getId(),
-                null,
-                null
+                invoiceChange.getInvoicePaymentChange().getId()
         );
     }
 }

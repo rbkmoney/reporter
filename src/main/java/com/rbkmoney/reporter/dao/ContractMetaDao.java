@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface ContractMetaDao extends GenericDao {
+public interface ContractMetaDao {
 
     Optional<Long> getLastEventId() throws DaoException;
 

@@ -1,7 +1,7 @@
 package com.rbkmoney.reporter.dao.impl;
 
+import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.batch.InvoiceBatchType;
-import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
