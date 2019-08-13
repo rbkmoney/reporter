@@ -10,5 +10,4 @@ public interface InvoiceService {
 
     Invoice get(String invoiceId) throws StorageException, NotFoundException;
 
-    void updateNotCurrent(String invoiceId) throws StorageException;
 }

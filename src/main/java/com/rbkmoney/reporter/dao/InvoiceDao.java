@@ -9,5 +9,4 @@ public interface InvoiceDao {
 
     Invoice get(String invoiceId) throws DaoException;
 
-    void updateNotCurrent(String invoiceId) throws DaoException;
 }

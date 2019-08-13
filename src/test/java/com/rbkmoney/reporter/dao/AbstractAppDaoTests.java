@@ -55,10 +55,9 @@ public abstract class AbstractAppDaoTests extends AbstractTestUtils {
 
         @Override
         public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    testContainers.getEnvironmentProperties(environmentProperties -> {
-                    })
-            ).applyTo(configurableApplicationContext);
+            TestPropertyValues.of(testContainers.getEnvironmentProperties(environmentProperties -> {
+            }))
+                    .applyTo(configurableApplicationContext);
         }
     }
 

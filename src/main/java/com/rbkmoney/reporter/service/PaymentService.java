@@ -10,5 +10,4 @@ public interface PaymentService {
 
     Payment get(String invoiceId, String paymentId) throws StorageException, NotFoundException;
 
-    void updateNotCurrent(String invoiceId, String paymentId) throws StorageException;
 }

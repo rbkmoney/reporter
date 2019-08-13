@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.Failure;
@@ -15,27 +15,30 @@ import com.rbkmoney.reporter.domain.enums.FailureClass;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.service.PaymentService;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class PaymentStatusChangedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final PaymentService paymentService;
+public class PaymentStatusChangedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
+                "paymentAmount", "paymentCurrencyCode", "paymentStatus", "paymentOperationFailureClass", "paymentExternalFailure",
+                "paymentExternalFailureReason"};
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentStatusChanged();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentStatusChanged invoicePaymentStatusChanged = getInvoicePaymentStatusChanged(invoicePaymentChange);
         com.rbkmoney.damsel.domain.InvoicePaymentStatus invoicePaymentStatusChangedStatus = invoicePaymentStatusChanged.getStatus();
@@ -43,9 +46,7 @@ public class PaymentStatusChangedChangeMachineEventHandler implements InvoiceCha
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        log.info("Start invoice payment status changed handling, paymentId={}, invoiceId={}", paymentId, invoiceId);
-
-        Payment payment = paymentService.get(invoiceId, paymentId);
+        Payment payment = new Payment();
 
         payment.setId(null);
         payment.setWtime(null);
@@ -55,10 +56,9 @@ public class PaymentStatusChangedChangeMachineEventHandler implements InvoiceCha
         payment.setChangeId(changeId);
         fillPaymentStatus(invoicePaymentStatusChangedStatus, payment);
 
-        paymentService.updateNotCurrent(invoiceId, paymentId);
-        paymentService.save(payment);
-        log.info("Invoice payment status has been changed, paymentId={}, invoiceId={}", paymentId, invoiceId);
+        log.info("Payment with eventType=statusChanged and status {} has been mapped, invoiceId={}, paymentId={}", TBaseUtil.unionFieldToEnum(invoicePaymentStatusChangedStatus, InvoicePaymentStatus.class), invoiceId, paymentId);
 
+        return new MapperResult(payment);
     }
 
     private void fillPaymentStatus(com.rbkmoney.damsel.domain.InvoicePaymentStatus invoicePaymentStatusChangedStatus, Payment payment) {

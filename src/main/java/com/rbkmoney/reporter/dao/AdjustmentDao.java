@@ -15,6 +15,4 @@ public interface AdjustmentDao {
 
     Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException;
 
-    void updateNotCurrent(String invoiceId, String paymentId, String adjustmentId) throws DaoException;
-
 }

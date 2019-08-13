@@ -19,5 +19,4 @@ public interface RefundDao {
 
     List<RefundPaymentRegistryReportData> getRefundPaymentRegistryReportData(String partyId, String partyShopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
 
-    void updateNotCurrent(String invoiceId, String paymentId, String refundId) throws DaoException;
 }

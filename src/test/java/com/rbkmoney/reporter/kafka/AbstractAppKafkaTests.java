@@ -1,15 +1,23 @@
 package com.rbkmoney.reporter.kafka;
 
 import com.rbkmoney.easyway.*;
+import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.config.KafkaConsumerConfig;
 import com.rbkmoney.reporter.config.KafkaPaymentMachineEventConfig;
 import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
+import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
+import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
+import com.rbkmoney.reporter.domain.tables.pojos.Payment;
+import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.handle.InvoiceBatchHandler;
 import com.rbkmoney.reporter.listener.machineevent.PaymentEventsMessageListener;
+import com.rbkmoney.reporter.service.BatchService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
@@ -39,6 +47,24 @@ public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addKafkaTestContainer()
             .build();
+
+    @MockBean
+    private InvoiceBatchManager invoiceBatchManager;
+
+    @MockBean
+    private BatchService batchService;
+
+    @MockBean
+    private InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler;
+
+    @MockBean
+    private InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler;
+
+    @MockBean
+    private InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
+
+    @MockBean
+    private InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;
 
     @ClassRule
     public static final FailureDetectingExternalResource resource = new FailureDetectingExternalResource() {

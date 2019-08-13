@@ -1,8 +1,6 @@
 package com.rbkmoney.reporter.dao;
 
-import com.rbkmoney.reporter.domain.enums.PayoutEventCategory;
-import com.rbkmoney.reporter.domain.enums.ReportStatus;
-import com.rbkmoney.reporter.domain.enums.ReportType;
+import com.rbkmoney.reporter.domain.enums.*;
 import com.rbkmoney.reporter.domain.tables.pojos.*;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.junit.Test;
@@ -47,12 +45,18 @@ public class DaoTests extends AbstractAppDaoTests {
     public void adjustmentDaoTest() throws DaoException {
         Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
         adjustment.setId(null);
-        adjustment.setCurrent(true);
+        adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED);
         Long id = adjustmentDao.save(adjustment);
         adjustment.setId(id);
         assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
-        adjustmentDao.updateNotCurrent(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId());
-        assertNull(adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
+
+        adjustment.setId(null);
+        adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_STATUS_CHANGED);
+        adjustment.setAdjustmentStatus(AdjustmentStatus.captured);
+        adjustment.setChangeId(adjustment.getChangeId() + 1);
+        id = adjustmentDao.save(adjustment);
+        adjustment.setId(id);
+        assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
     }
 
     @Test
@@ -60,13 +64,10 @@ public class DaoTests extends AbstractAppDaoTests {
     public void duplicationTest() throws DaoException {
         Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
         adjustment.setId(null);
-        adjustment.setCurrent(true);
         adjustmentDao.save(adjustment);
         Long id = adjustmentDao.save(adjustment);
         adjustment.setId(id);
         assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
-        adjustmentDao.updateNotCurrent(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId());
-        assertNull(adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
     }
 
     @Test
@@ -74,12 +75,18 @@ public class DaoTests extends AbstractAppDaoTests {
     public void invoiceDaoTest() throws DaoException {
         Invoice invoice = random(Invoice.class);
         invoice.setId(null);
-        invoice.setCurrent(true);
+        invoice.setEventType(InvoiceEventType.INVOICE_CREATED);
         Long id = invoiceDao.save(invoice);
         invoice.setId(id);
         assertEquals(invoice, invoiceDao.get(invoice.getInvoiceId()));
-        invoiceDao.updateNotCurrent(invoice.getInvoiceId());
-        assertNull(invoiceDao.get(invoice.getInvoiceId()));
+
+        invoice.setId(null);
+        invoice.setEventType(InvoiceEventType.INVOICE_STATUS_CHANGED);
+        invoice.setInvoiceStatus(InvoiceStatus.paid);
+        invoice.setChangeId(invoice.getChangeId() + 1);
+        id = invoiceDao.save(invoice);
+        invoice.setId(id);
+        assertEquals(invoice, invoiceDao.get(invoice.getInvoiceId()));
     }
 
     @Test
@@ -87,18 +94,16 @@ public class DaoTests extends AbstractAppDaoTests {
     public void paymentDaoTest() throws DaoException {
         Payment payment = random(Payment.class, "paymentCashFlow");
         payment.setId(null);
-        payment.setCurrent(true);
         payment.setPaymentFingerprint("b334ba917e0e863283832f5d74a8cd1c'\"\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n" +
                 "\u000B\f\n" +
                 "\u000E\u000F\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001A\u001B\u001C\u001D\u001E\u001F !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKL" +
                 "MNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u007F\u0080\u0081\u0082\u0083\u0084\u0085\u0086\u0087\u0088\u0089\u008A\u008B\u008C\u008D\u008E\u008F\u0090\u0091\u0092\u0093" +
                 "\u0094\u0095\u0096\u0097\u0098\u0099\u009A\u009B\u009C\u009D\u009E\u009F ¡¢£¤¥¦§¨©ª«¬\u00AD®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ\"'");
         Long id = paymentDao.save(payment);
+
         payment.setId(id);
         payment.setPaymentFingerprint(payment.getPaymentFingerprint().replace("\u0000", "\\u0000"));
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
-        paymentDao.updateNotCurrent(payment.getInvoiceId(), payment.getPaymentId());
-        assertNull(paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }
 
     @Test
@@ -106,12 +111,18 @@ public class DaoTests extends AbstractAppDaoTests {
     public void refundDaoTest() throws DaoException {
         Refund refund = random(Refund.class, "refundCashFlow");
         refund.setId(null);
-        refund.setCurrent(true);
+        refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED);
         Long id = refundDao.save(refund);
         refund.setId(id);
         assertEquals(refund, refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
-        refundDao.updateNotCurrent(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId());
-        assertNull(refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
+
+        refund.setId(null);
+        refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_STATUS_CHANGED);
+        refund.setRefundStatus(RefundStatus.succeeded);
+        refund.setChangeId(refund.getChangeId() + 1);
+        id = refundDao.save(refund);
+        refund.setId(id);
+        assertEquals(refund, refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
     }
 
     @Test
@@ -119,13 +130,10 @@ public class DaoTests extends AbstractAppDaoTests {
     public void payoutDaoTest() throws DaoException {
         Payout payout = random(Payout.class, "payoutCashFlow", "payoutSummary");
         payout.setId(null);
-        payout.setCurrent(true);
         payout.setEventCategory(PayoutEventCategory.PAYOUT);
         Long id = payoutDao.save(payout);
         payout.setId(id);
         assertEquals(payout, payoutDao.get(payout.getPayoutId()));
-        payoutDao.updateNotCurrent(payout.getPayoutId());
-        assertNull(payoutDao.get(payout.getPayoutId()));
     }
 
     @Test

@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.base.Content;
 import com.rbkmoney.damsel.domain.InvoiceDetails;
@@ -9,10 +9,9 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoiceStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
-import com.rbkmoney.reporter.service.InvoiceService;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import com.rbkmoney.reporter.util.DamselUtil;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -20,27 +19,28 @@ import java.util.UUID;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class InvoiceCreatedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final InvoiceService invoiceService;
+public class InvoiceCreatedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[0];
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoiceCreated();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         com.rbkmoney.damsel.domain.Invoice damselInvoice = payload.getInvoiceCreated().getInvoice();
         InvoiceDetails details = damselInvoice.getDetails();
         com.rbkmoney.damsel.domain.InvoiceStatus invoiceStatus = damselInvoice.getStatus();
 
         String invoiceId = baseEvent.getSourceId();
 
-        log.info("Start invoice created handling, invoiceId={}", invoiceId);
-
         Invoice invoice = new Invoice();
+
         invoice.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         invoice.setEventType(InvoiceEventType.INVOICE_CREATED);
         invoice.setInvoiceId(invoiceId);
@@ -61,8 +61,9 @@ public class InvoiceCreatedChangeMachineEventHandler implements InvoiceChangeEve
             invoice.setInvoiceTemplateId(damselInvoice.getTemplateId());
         }
 
-        invoiceService.save(invoice);
-        log.info("Invoice has been created, invoiceId={}", invoiceId);
+        log.info("Invoice with eventType=created has been mapped, invoiceId={}", invoiceId);
+
+        return new MapperResult(invoice);
     }
 
     private void fillInvoiceStatus(com.rbkmoney.damsel.domain.InvoiceStatus invoiceStatus, Invoice invoice) {

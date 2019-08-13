@@ -1,8 +1,10 @@
 package com.rbkmoney.reporter.dao.impl;
 
 import com.google.common.collect.ImmutableMap;
-import com.rbkmoney.reporter.dao.AbstractGenericDao;
+import com.rbkmoney.dao.impl.AbstractGenericDao;
+import com.rbkmoney.reporter.batch.InvoiceBatchType;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
+import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
@@ -11,6 +13,8 @@ import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.rbkmoney.reporter.mapper.MapperResult;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +22,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -28,12 +31,12 @@ import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 
 @Component
-public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentDao {
+public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentDao, BatchDao {
 
     private final RowMapper<Adjustment> adjustmentRowMapper;
 
     @Autowired
-    public AdjustmentDaoImpl(DataSource dataSource) {
+    public AdjustmentDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         adjustmentRowMapper = new RecordRowMapper<>(ADJUSTMENT, Adjustment.class);
     }
@@ -59,8 +62,10 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
                         ADJUSTMENT.INVOICE_ID.eq(invoiceId)
                                 .and(ADJUSTMENT.PAYMENT_ID.eq(paymentId))
                                 .and(ADJUSTMENT.ADJUSTMENT_ID.eq(adjustmentId))
-                                .and(ADJUSTMENT.CURRENT)
-                );
+                )
+                .orderBy(ADJUSTMENT.ID.desc())
+                .limit(1);
+
         return fetchOne(query, adjustmentRowMapper);
     }
 
@@ -103,14 +108,17 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public void updateNotCurrent(String invoiceId, String paymentId, String adjustmentId) throws DaoException {
-        Query query = getDslContext().update(ADJUSTMENT).set(ADJUSTMENT.CURRENT, false)
-                .where(
-                        ADJUSTMENT.INVOICE_ID.eq(invoiceId)
-                                .and(ADJUSTMENT.PAYMENT_ID.eq(paymentId))
-                                .and(ADJUSTMENT.ADJUSTMENT_ID.eq(adjustmentId))
-                                .and(ADJUSTMENT.CURRENT)
-                );
-        executeOne(query);
+    public boolean isInvoiceChangeType(InvoiceBatchType invoiceChangeTypeEnum) {
+        return invoiceChangeTypeEnum.equals(InvoiceBatchType.ADJUSTMENT);
+    }
+
+    @Override
+    public Query getSaveEventQuery(MapperResult entity) {
+        AdjustmentRecord record = getDslContext().newRecord(ADJUSTMENT, entity.getAdjustment());
+        return getDslContext().insertInto(ADJUSTMENT)
+                .set(record)
+                .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.SEQUENCE_ID, ADJUSTMENT.CHANGE_ID)
+                .doUpdate()
+                .set(record);
     }
 }

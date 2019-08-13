@@ -1,7 +1,9 @@
 package com.rbkmoney.reporter.dao.impl;
 
 import com.google.common.collect.ImmutableMap;
-import com.rbkmoney.reporter.dao.AbstractGenericDao;
+import com.rbkmoney.dao.impl.AbstractGenericDao;
+import com.rbkmoney.reporter.batch.InvoiceBatchType;
+import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RefundPaymentRegistryReportDataRowMapper;
@@ -11,6 +13,8 @@ import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.rbkmoney.reporter.mapper.MapperResult;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +22,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +33,13 @@ import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.Refund.REFUND;
 
 @Component
-public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
+public class RefundDaoImpl extends AbstractGenericDao implements RefundDao, BatchDao {
 
     private final RowMapper<Refund> refundRowMapper;
     private final RefundPaymentRegistryReportDataRowMapper reportDataRowMapper;
 
     @Autowired
-    public RefundDaoImpl(DataSource dataSource) {
+    public RefundDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         refundRowMapper = new RecordRowMapper<>(REFUND, Refund.class);
         reportDataRowMapper = new RefundPaymentRegistryReportDataRowMapper();
@@ -63,8 +66,10 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
                         REFUND.INVOICE_ID.eq(invoiceId)
                                 .and(REFUND.PAYMENT_ID.eq(paymentId))
                                 .and(REFUND.REFUND_ID.eq(refundId))
-                                .and(REFUND.CURRENT)
-                );
+                )
+                .orderBy(REFUND.ID.desc())
+                .limit(1);
+
         return fetchOne(query, refundRowMapper);
     }
 
@@ -144,14 +149,18 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     }
 
     @Override
-    public void updateNotCurrent(String invoiceId, String paymentId, String refundId) throws DaoException {
-        Query query = getDslContext().update(REFUND).set(REFUND.CURRENT, false)
-                .where(
-                        REFUND.INVOICE_ID.eq(invoiceId)
-                                .and(REFUND.PAYMENT_ID.eq(paymentId))
-                                .and(REFUND.REFUND_ID.eq(refundId))
-                                .and(REFUND.CURRENT)
-                );
-        executeOne(query);
+    public boolean isInvoiceChangeType(InvoiceBatchType invoiceChangeTypeEnum) {
+        return invoiceChangeTypeEnum.equals(InvoiceBatchType.REFUND);
+    }
+
+    @Override
+    public Query getSaveEventQuery(MapperResult entity) {
+        RefundRecord record = getDslContext().newRecord(REFUND, entity.getRefund());
+        return getDslContext().insertInto(REFUND)
+                .set(record)
+                .onConflict(REFUND.INVOICE_ID, REFUND.SEQUENCE_ID, REFUND.CHANGE_ID)
+                .doUpdate()
+                .set(record)
+                .returning(REFUND.ID);
     }
 }

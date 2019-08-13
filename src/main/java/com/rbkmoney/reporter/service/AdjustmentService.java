@@ -10,5 +10,4 @@ public interface AdjustmentService {
 
     Adjustment get(String invoiceId, String paymentId, String adjustmentId) throws StorageException, NotFoundException;
 
-    void updateNotCurrent(String invoiceId, String paymentId, String adjustmentId) throws StorageException;
 }

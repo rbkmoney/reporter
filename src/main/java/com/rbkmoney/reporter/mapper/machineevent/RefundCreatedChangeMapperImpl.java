@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
@@ -11,13 +11,10 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
-import com.rbkmoney.reporter.service.PaymentService;
-import com.rbkmoney.reporter.service.RefundService;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -25,21 +22,22 @@ import java.time.LocalDateTime;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class RefundCreatedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final RefundService refundService;
-    private final PaymentService paymentService;
+public class RefundCreatedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[0];
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRefundChange()
                 && payload.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange().getPayload().isSetInvoicePaymentRefundCreated();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentRefundChange invoicePaymentRefundChange = getInvoicePaymentRefundChange(invoicePaymentChange);
         InvoicePaymentRefundCreated invoicePaymentRefundCreated = getInvoicePaymentRefundCreated(invoicePaymentRefundChange);
@@ -49,19 +47,14 @@ public class RefundCreatedChangeMachineEventHandler implements InvoiceChangeEven
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        Payment payment = paymentService.get(invoiceId, paymentId);
-
-        log.info("Start invoice payment refund created handling, refundId={}, invoiceId={}, paymentId={}", refundId, invoiceId, paymentId);
-
         Refund refund = new Refund();
+
         refund.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED);
         refund.setInvoiceId(invoiceId);
         refund.setSequenceId(baseEvent.getEventId());
         refund.setChangeId(changeId);
         refund.setPaymentId(paymentId);
-        refund.setPartyId(payment.getPartyId());
-        refund.setPartyShopId(payment.getPartyShopId());
         refund.setRefundId(refundId);
         refund.setRefundStatus(getRefundStatus(invoicePaymentRefund));
         refund.setRefundCreatedAt(getRefundCreatedAt(invoicePaymentRefund));
@@ -74,15 +67,13 @@ public class RefundCreatedChangeMachineEventHandler implements InvoiceChangeEven
 
             refund.setRefundAmount(cash.getAmount());
             refund.setRefundCurrencyCode(cash.getCurrency().getSymbolicCode());
-        } else {
-            refund.setRefundAmount(payment.getPaymentAmount());
-            refund.setRefundCurrencyCode(payment.getPaymentCurrencyCode());
         }
         refund.setRefundReason(invoicePaymentRefund.getReason());
         refund.setRefundCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(invoicePaymentRefundCreated.getCashFlow()));
 
-        refundService.save(refund);
-        log.info("Invoice payment refund has been created, refundId={}, invoiceId={}, paymentId={}", refundId, invoiceId, paymentId);
+        log.info("Refund with eventType=created has been mapped, invoiceId={}, paymentId={}, refundId={}", invoiceId, paymentId, refundId);
+
+        return new MapperResult(refund);
     }
 
     private LocalDateTime getRefundCreatedAt(InvoicePaymentRefund invoicePaymentRefund) {

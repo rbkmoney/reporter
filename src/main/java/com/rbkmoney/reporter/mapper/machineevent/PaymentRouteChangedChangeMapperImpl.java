@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.domain.PaymentRoute;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
@@ -8,27 +8,29 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.service.PaymentService;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class PaymentRouteChangedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final PaymentService paymentService;
+public class PaymentRouteChangedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
+                "paymentProviderId", "paymentTerminalId"};
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRouteChanged();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentRouteChanged invoicePaymentRouteChanged = invoicePaymentChange.getPayload().getInvoicePaymentRouteChanged();
         PaymentRoute paymentRoute = invoicePaymentRouteChanged.getRoute();
@@ -36,22 +38,19 @@ public class PaymentRouteChangedChangeMachineEventHandler implements InvoiceChan
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        log.info("Start invoice payment route changed handling, paymentId={}, invoiceId={}", paymentId, invoiceId);
-
-        Payment payment = paymentService.get(invoiceId, paymentId);
+        Payment payment = new Payment();
 
         payment.setId(null);
         payment.setWtime(null);
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ROUTE_CHANGED);
-        payment.setInvoiceId(invoiceId);
         payment.setSequenceId(baseEvent.getEventId());
         payment.setChangeId(changeId);
         payment.setPaymentProviderId(paymentRoute.getProvider().getId());
         payment.setPaymentTerminalId(paymentRoute.getTerminal().getId());
 
-        paymentService.updateNotCurrent(invoiceId, paymentId);
-        paymentService.save(payment);
-        log.info("Invoice payment route has been changed, paymentId={}, invoiceId={}", paymentId, invoiceId);
+        log.info("Payment with eventType=routeChanged has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
+
+        return new MapperResult(payment);
     }
 }

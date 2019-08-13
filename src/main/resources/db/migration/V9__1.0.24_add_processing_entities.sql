@@ -31,7 +31,6 @@ CREATE TABLE rpt.invoice
     invoice_context        BYTEA,
     invoice_template_id    CHARACTER VARYING,
     wtime                  TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    current                BOOLEAN                     NOT NULL DEFAULT TRUE,
     CONSTRAINT invoice_pkey PRIMARY KEY (id),
     CONSTRAINT invoice_ukey
         UNIQUE (invoice_id, sequence_id, change_id)
@@ -125,7 +124,6 @@ CREATE TABLE rpt.payment
     payment_cash_flow                         JSONB,
     payment_short_id                          CHARACTER VARYING,
     wtime                                     TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    current                                   BOOLEAN                     NOT NULL DEFAULT TRUE,
     CONSTRAINT payment_pkey PRIMARY KEY (id),
     CONSTRAINT payment_ukey
         UNIQUE (invoice_id, sequence_id, change_id)
@@ -159,7 +157,6 @@ CREATE TABLE rpt.adjustment
     adjustment_cash_flow_inverse_old JSONB,
     adjustment_party_revision        BIGINT,
     wtime                            TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    current                          BOOLEAN                     NOT NULL DEFAULT TRUE,
     CONSTRAINT adjustment_pkey PRIMARY KEY (id),
     CONSTRAINT adjustment_ukey
         UNIQUE (invoice_id, sequence_id, change_id)
@@ -196,7 +193,6 @@ CREATE TABLE rpt.refund
     refund_reason                  CHARACTER VARYING,
     refund_cash_flow               JSONB,
     wtime                          TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    current                        BOOLEAN                     NOT NULL DEFAULT TRUE,
     CONSTRAINT refund_pkey PRIMARY KEY (id),
     CONSTRAINT refund_ukey
         UNIQUE (invoice_id, sequence_id, change_id)
@@ -263,7 +259,6 @@ CREATE TABLE rpt.payout
     payout_international_correspondent_account_bank_country_code CHARACTER VARYING,
     payout_summary                                               JSONB,
     wtime                                                        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    current                                                      BOOLEAN                     NOT NULL DEFAULT TRUE,
     CONSTRAINT payout_pkey PRIMARY KEY (id),
     CONSTRAINT payout_ukey
         UNIQUE (event_id, event_type, payout_status)

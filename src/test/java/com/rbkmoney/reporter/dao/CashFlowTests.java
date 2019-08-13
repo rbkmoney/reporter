@@ -56,7 +56,6 @@ public class CashFlowTests extends AbstractAppDaoTests {
 
         Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
         adjustment.setId(null);
-        adjustment.setCurrent(true);
         adjustment.setAdjustmentCashFlow(finalCashFlow);
         Long id = adjustmentDao.save(adjustment);
         adjustment.setId(id);
@@ -65,7 +64,6 @@ public class CashFlowTests extends AbstractAppDaoTests {
         PayoutSummary payoutSummary = getPayoutSummary();
         Payout payout = random(Payout.class, "payoutCashFlow", "payoutSummary");
         payout.setId(null);
-        payout.setCurrent(true);
         payout.setPayoutSummary(payoutSummary);
         payout.setEventCategory(PayoutEventCategory.PAYOUT);
         id = payoutDao.save(payout);

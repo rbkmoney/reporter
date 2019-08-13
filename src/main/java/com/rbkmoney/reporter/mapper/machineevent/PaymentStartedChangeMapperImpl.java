@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.handle.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent;
 
 import com.rbkmoney.damsel.base.Content;
 import com.rbkmoney.damsel.domain.InvoicePaymentStatus;
@@ -13,32 +13,30 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.BankCardTokenProvider;
 import com.rbkmoney.reporter.domain.enums.OnHoldExpiration;
 import com.rbkmoney.reporter.domain.enums.*;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.service.InvoiceService;
-import com.rbkmoney.reporter.service.PaymentService;
+import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
+import com.rbkmoney.reporter.mapper.MapperResult;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
-import com.rbkmoney.sink.common.handle.machineevent.eventpayload.change.InvoiceChangeEventHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class PaymentStartedChangeMachineEventHandler implements InvoiceChangeEventHandler {
-
-    private final PaymentService paymentService;
-    private final InvoiceService invoiceService;
+public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
 
     @Override
-    public boolean accept(InvoiceChange payload) {
+    public String[] getIgnoreProperties() {
+        return new String[0];
+    }
+
+    @Override
+    public boolean canMap(InvoiceChange payload) {
         return payload.isSetInvoicePaymentChange()
                 && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentStarted();
     }
 
     @Override
-    public void handle(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
         InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
         InvoicePaymentStarted invoicePaymentStarted = getInvoicePaymentStarted(invoicePaymentChange);
         InvoicePayment invoicePayment = invoicePaymentStarted.getPayment();
@@ -50,18 +48,13 @@ public class PaymentStartedChangeMachineEventHandler implements InvoiceChangeEve
         InvoicePaymentFlow paymentFlow = invoicePayment.getFlow();
         InvoicePaymentStatus status = invoicePayment.getStatus();
 
-        Invoice invoice = invoiceService.get(invoiceId);
-
-        log.info("Start invoice payment created handling, paymentId={}, invoiceId={}", paymentId, invoiceId);
-
         Payment payment = new Payment();
+
         payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
         payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_STARTED);
         payment.setInvoiceId(invoiceId);
         payment.setSequenceId(baseEvent.getEventId());
         payment.setChangeId(changeId);
-        payment.setPartyId(invoice.getPartyId());
-        payment.setPartyShopId(invoice.getPartyShopId());
         payment.setPaymentId(paymentId);
         payment.setPaymentCreatedAt(TypeUtil.stringToLocalDateTime(invoicePayment.getCreatedAt()));
         payment.setPaymentDomainRevision(invoicePayment.getDomainRevision());
@@ -81,8 +74,9 @@ public class PaymentStartedChangeMachineEventHandler implements InvoiceChangeEve
             payment.setPaymentCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(invoicePaymentStarted.getCashFlow()));
         }
 
-        paymentService.save(payment);
-        log.info("Invoice payment has been created, paymentId={}, invoiceId={}", paymentId, invoiceId);
+        log.info("Payment with eventType=created has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
+
+        return new MapperResult(payment);
     }
 
     private InvoicePaymentStarted getInvoicePaymentStarted(InvoicePaymentChange invoicePaymentChange) {
