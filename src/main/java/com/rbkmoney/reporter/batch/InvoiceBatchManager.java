@@ -8,7 +8,7 @@ public interface InvoiceBatchManager {
 
     InvoiceBatchService getInvoiceBatchService(InvoiceChange invoiceChange);
 
-    BatchDao getBatchDao(InvoiceBatchType invoiceChangeTypeEnum);
+    BatchDao getBatchDao(InvoiceBatchType invoiceBatchType);
 
     InvoiceChangeMapper getInvoiceChangeMapper(InvoiceChange invoiceChange);
 

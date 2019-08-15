@@ -100,6 +100,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         messages.add(getConsumerRecord(getSinkEvent(1L, invoiceId, getInvoiceCreated(InvoiceStatus.unpaid(new InvoiceUnpaid())))));
         messages.add(getConsumerRecord(getPaymentMachineEvent(2L, invoiceId, paymentId, getInvoicePaymentStarted(InvoicePaymentStatus.pending(new InvoicePaymentPending())))));
         messages.add(getConsumerRecord(getPaymentMachineEvent(3L, invoiceId, paymentId, getInvoicePaymentStatusChanged(getCaptured()))));
+        messages.add(getConsumerRecord(getPaymentMachineEvent(32L, invoiceId, paymentId, getInvoicePaymentOther())));
         messages.add(getConsumerRecord(getRefundMachineEvent(4L, invoiceId, paymentId, refundId, getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending())))));
         messages.add(getConsumerRecord(getRefundMachineEvent(5L, invoiceId, paymentId, refundId, getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())))));
         messages.add(getConsumerRecord(getAdjustmentMachineEvent(6L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
@@ -195,6 +196,12 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         invoicePaymentStarted.setCashFlow(getCashFlows());
         invoicePaymentStarted.setPayment(payment);
         return InvoicePaymentChangePayload.invoice_payment_started(invoicePaymentStarted);
+    }
+
+    private InvoicePaymentChangePayload getInvoicePaymentOther() {
+        InvoicePaymentRiskScoreChanged riskScoreChanged = new InvoicePaymentRiskScoreChanged();
+        riskScoreChanged.setRiskScore(RiskScore.high);
+        return InvoicePaymentChangePayload.invoice_payment_risk_score_changed(riskScoreChanged);
     }
 
     private InvoiceChange getInvoiceCreated(InvoiceStatus status) {

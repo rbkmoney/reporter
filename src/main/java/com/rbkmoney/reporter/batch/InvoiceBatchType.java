@@ -5,6 +5,7 @@ public enum InvoiceBatchType {
     INVOICE,
     PAYMENT,
     REFUND,
-    ADJUSTMENT
+    ADJUSTMENT,
+    OTHER
 
 }

@@ -21,12 +21,6 @@ public class PaymentInvoiceBatchServiceImpl implements InvoiceBatchService {
     }
 
     @Override
-    public boolean isCreatedChange(InvoiceChange invoiceChange) {
-        return invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentStarted();
-    }
-
-    @Override
     public InvoiceBatchType getInvoiceBatchType() {
         return InvoiceBatchType.PAYMENT;
     }

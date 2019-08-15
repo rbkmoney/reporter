@@ -17,13 +17,6 @@ public class RefundInvoiceBatchServiceImpl implements InvoiceBatchService {
     }
 
     @Override
-    public boolean isCreatedChange(InvoiceChange invoiceChange) {
-        return invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRefundChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange().getPayload().isSetInvoicePaymentRefundCreated();
-    }
-
-    @Override
     public InvoiceBatchType getInvoiceBatchType() {
         return InvoiceBatchType.REFUND;
     }

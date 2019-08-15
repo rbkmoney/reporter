@@ -17,11 +17,6 @@ public class InvoiceBatchServiceImpl implements InvoiceBatchService {
     }
 
     @Override
-    public boolean isCreatedChange(InvoiceChange invoiceChange) {
-        return invoiceChange.isSetInvoiceCreated();
-    }
-
-    @Override
     public InvoiceBatchType getInvoiceBatchType() {
         return InvoiceBatchType.INVOICE;
     }

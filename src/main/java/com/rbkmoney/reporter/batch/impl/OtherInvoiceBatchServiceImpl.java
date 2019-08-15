@@ -8,25 +8,20 @@ import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AdjustmentInvoiceBatchServiceImpl implements InvoiceBatchService {
+public class OtherInvoiceBatchServiceImpl implements InvoiceBatchService {
 
     @Override
     public boolean isChangeType(InvoiceChange invoiceChange) {
-        return invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange();
+        return false;
     }
 
     @Override
     public InvoiceBatchType getInvoiceBatchType() {
-        return InvoiceBatchType.ADJUSTMENT;
+        return InvoiceBatchType.OTHER;
     }
 
     @Override
     public InvoiceUniqueBatchKey getInvoiceUniqueBatchKey(InvoiceChange invoiceChange, MachineEvent machineEvent) {
-        return new AdjustmentInvoiceUniqueBatchKey(
-                machineEvent.getSourceId(),
-                invoiceChange.getInvoicePaymentChange().getId(),
-                invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getId()
-        );
+        return null;
     }
 }
