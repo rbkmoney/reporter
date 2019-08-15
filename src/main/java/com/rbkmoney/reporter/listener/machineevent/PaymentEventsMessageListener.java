@@ -5,6 +5,7 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.batch.InvoiceBatchService;
+import com.rbkmoney.reporter.batch.InvoiceBatchType;
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.rbkmoney.kafka.common.util.LogUtil.toSummaryStringWithSinkEventValues;
+import static java.util.function.Predicate.not;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -84,6 +86,7 @@ public class PaymentEventsMessageListener {
                 )
                 .flatMap(List::stream)
                 .collect(Collectors.groupingBy(mapperPayload -> invoiceBatchManager.getInvoiceBatchService(mapperPayload.getInvoiceChange()))).entrySet().stream()
+                .filter(not(typeEntry -> typeEntry.getKey().getInvoiceBatchType().equals(InvoiceBatchType.OTHER)))
                 .map(
                         typeEntry -> {
                             Map<InvoiceUniqueBatchKey, List<MapperPayload>> mapperPayloadsByUniqueKey = typeEntry.getValue().stream()

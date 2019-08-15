@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Component
 @RequiredArgsConstructor
@@ -19,20 +20,22 @@ public class InvoicingBatchManagerImpl implements InvoiceBatchManager {
     private final List<BatchDao> batchDaos;
     private final List<InvoiceChangeMapper> invoiceChangeMappers;
 
+    private final InvoiceBatchService otherInvoiceBatchServiceImpl;
+
     @Override
     public InvoiceBatchService getInvoiceBatchService(InvoiceChange invoiceChange) {
         return invoiceBatchServices.stream()
                 .filter(invoiceChangeType -> invoiceChangeType.isChangeType(invoiceChange))
                 .findFirst()
-                .orElseThrow();
+                .orElse(otherInvoiceBatchServiceImpl);
     }
 
     @Override
-    public BatchDao getBatchDao(InvoiceBatchType invoiceChangeTypeEnum) {
+    public BatchDao getBatchDao(InvoiceBatchType invoiceBatchType) {
         return batchDaos.stream()
-                .filter(dao -> dao.isInvoiceChangeType(invoiceChangeTypeEnum))
+                .filter(dao -> dao.isInvoiceChangeType(invoiceBatchType))
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new NoSuchElementException(String.format("No value present, invoiceBatchType='%s'", invoiceBatchType)));
     }
 
     @Override
@@ -40,6 +43,6 @@ public class InvoicingBatchManagerImpl implements InvoiceBatchManager {
         return invoiceChangeMappers.stream()
                 .filter(invoiceInvoiceChangeMapper -> invoiceInvoiceChangeMapper.canMap(invoiceChange))
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new NoSuchElementException(String.format("No value present, invoiceChange='%s'", invoiceChange)));
     }
 }

@@ -7,8 +7,6 @@ public interface InvoiceBatchService {
 
     boolean isChangeType(InvoiceChange invoiceChange);
 
-    boolean isCreatedChange(InvoiceChange invoiceChange);
-
     InvoiceBatchType getInvoiceBatchType();
 
     InvoiceUniqueBatchKey getInvoiceUniqueBatchKey(InvoiceChange invoiceChange, MachineEvent machineEvent);
