@@ -31,18 +31,25 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
 
     @Override
     public Payment map(InvoiceChangeMapper mapper, MapperPayload payload, List<Payment> payments, Map<InvoiceUniqueBatchKey, Invoice> consumerCache) {
+        String invoiceId = payload.getMachineEvent().getSourceId();
+        String paymentId = payload.getInvoiceChange().getInvoicePaymentChange().getId();
+
         Payment payment = mapper.map(payload.getInvoiceChange(), payload.getMachineEvent(), payload.getChangeId()).getPayment();
 
         if (!payments.isEmpty()) {
             Payment lastPayment = payments.get(payments.size() - 1);
             copyProperties(mapper, payment, lastPayment);
         } else if (payment.getEventType() != InvoiceEventType.INVOICE_PAYMENT_STARTED) {
-            Payment lastPayment = paymentService.get(payment.getInvoiceId(), payment.getPaymentId());
+            Payment lastPayment = paymentService.get(invoiceId, paymentId);
             copyProperties(mapper, payment, lastPayment);
         }
 
         if (payment.getEventType() == InvoiceEventType.INVOICE_PAYMENT_STARTED) {
-            Invoice invoice = consumerCache.computeIfAbsent(getInvoiceCacheKey(payment), key -> invoiceService.get(payment.getInvoiceId()));
+            Invoice invoice = consumerCache.computeIfAbsent(
+                    new InvoiceUniqueBatchKeyImpl(invoiceId),
+                    key -> invoiceService.get(invoiceId)
+            );
+
             payment.setPartyId(invoice.getPartyId());
             payment.setPartyShopId(invoice.getPartyShopId());
         }
@@ -55,9 +62,5 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
         if (payment.getPaymentAmount() == null) {
             payment.setPaymentAmount(lastPayment.getPaymentAmount());
         }
-    }
-
-    private InvoiceUniqueBatchKey getInvoiceCacheKey(Payment payment) {
-        return new InvoiceUniqueBatchKeyImpl(payment.getInvoiceId());
     }
 }

@@ -22,13 +22,15 @@ public class InvoiceBatchMapperImpl implements InvoiceBatchMapper<Invoice, Void>
 
     @Override
     public Invoice map(InvoiceChangeMapper mapper, MapperPayload payload, List<Invoice> invoices) {
+        String invoiceId = payload.getMachineEvent().getSourceId();
+
         Invoice invoice = mapper.map(payload.getInvoiceChange(), payload.getMachineEvent(), payload.getChangeId()).getInvoice();
 
         if (!invoices.isEmpty()) {
             Invoice lastInvoice = invoices.get(invoices.size() - 1);
             BeanUtils.copyProperties(lastInvoice, invoice, mapper.getIgnoreProperties());
         } else if (invoice.getEventType() != InvoiceEventType.INVOICE_CREATED) {
-            Invoice lastInvoice = invoiceService.get(invoice.getInvoiceId());
+            Invoice lastInvoice = invoiceService.get(invoiceId);
             BeanUtils.copyProperties(lastInvoice, invoice, mapper.getIgnoreProperties());
         }
 
