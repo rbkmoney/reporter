@@ -65,7 +65,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         int rownum = 0;
         Row rowFirstPayments = sh.createRow(rownum++);
 
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 10; ++i) {
             rowFirstPayments.createCell(i);
         }
         sh.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, 0, 7));
@@ -80,7 +80,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         CellStyle greyStyle = wb.createCellStyle();
         greyStyle.setFillBackgroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         greyStyle.setFillPattern(FillPatternType.LESS_DOTS);
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 10; ++i) {
             Cell cell = rowSecondPayments.createCell(i);
             CellUtil.setAlignment(cell, HorizontalAlignment.CENTER);
             cell.setCellStyle(greyStyle);
@@ -138,7 +138,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         sh.createRow(rownum++);
 
         Row rowFirstRefunds = sh.createRow(rownum++);
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 11; ++i) {
             rowFirstRefunds.createCell(i);
         }
         sh.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, 0, 7));
@@ -147,7 +147,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         CellUtil.setAlignment(cellFirstRefunds, HorizontalAlignment.CENTER);
         CellUtil.setFont(cellFirstRefunds, font);
         Row rowSecondRefunds = sh.createRow(rownum++);
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 11; ++i) {
             Cell cell = rowSecondRefunds.createCell(i);
             CellUtil.setAlignment(cell, HorizontalAlignment.CENTER);
             cell.setCellStyle(greyStyle);
@@ -182,7 +182,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             row.createCell(4).setCellValue(Optional.ofNullable(r.getPaymentTool()).map(paymentTool -> paymentTool.getLiteral()).orElse(null));
             row.createCell(5).setCellValue(r.getPaymentEmail());
             row.createCell(6).setCellValue(shopUrl);
-            row.createCell(7).setCellValue(r.getId());
+            row.createCell(7).setCellValue(r.getInvoiceProduct());
             row.createCell(8).setCellValue(r.getRefundId());
             row.createCell(9).setCellValue(r.getRefundReason());
             row.createCell(10).setCellValue(r.getRefundCurrencyCode());
