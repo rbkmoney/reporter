@@ -504,18 +504,17 @@ public class CashFlowTests extends AbstractAppDaoTests {
                 toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))
         );
 
-        RefundPaymentRegistryReportData reportData = refundData.get(0);
-        assertEquals(LocalDateTime.parse("2017-08-24T16:13:23"), reportData.getRefundEventCreatedAt());
-        assertEquals(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED, reportData.getEventType());
-        assertEquals("uWIbtnV7h2", reportData.getInvoiceId());
-        assertEquals("1", reportData.getPaymentId());
-        assertEquals("bank_card", reportData.getPaymentTool().getLiteral());
-        assertEquals((long) 2000, (long) reportData.getRefundAmount());
-        assertEquals("kektus", reportData.getInvoiceProduct());
+        assertEquals(LocalDateTime.parse("2017-08-24T16:13:23"), refundData.get(0).getRefundEventCreatedAt());
+        assertEquals(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED, refundData.get(0).getEventType());
+        assertEquals("uWIbtnV7h2", refundData.get(0).getInvoiceId());
+        assertEquals("1", refundData.get(0).getPaymentId());
+        assertEquals("bank_card", refundData.get(0).getPaymentTool().getLiteral());
+        assertEquals((long) 2000, (long) refundData.get(0).getRefundAmount());
+        assertEquals("kektus", refundData.get(0).getInvoiceProduct());
         assertNull(refundData.get(1).getInvoiceProduct());
-        assertEquals("1", reportData.getRefundId());
-        assertEquals("You are the reason of my life", reportData.getRefundReason());
-        assertEquals("RUB", reportData.getRefundCurrencyCode());
+        assertEquals("1", refundData.get(0).getRefundId());
+        assertEquals("You are the reason of my life", refundData.get(0).getRefundReason());
+        assertEquals("RUB", refundData.get(0).getRefundCurrencyCode());
     }
 
     private FinalCashFlow getFinalCashFlow() {
