@@ -23,6 +23,7 @@ public class PaymentRegistryReportData {
     private Long paymentFee;
     private Long paymentExternalFee;
     private Long paymentProviderFee;
+    private String paymentCurrencyCode;
     private String invoiceProduct;
 
 }

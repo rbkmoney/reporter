@@ -94,6 +94,8 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         rowSecondPayments.getCell(5).setCellValue("Email плательщика");
         rowSecondPayments.getCell(6).setCellValue("URL магазина");
         rowSecondPayments.getCell(7).setCellValue("Назначение платежа");
+        rowSecondPayments.getCell(8).setCellValue("Комиссия");
+        rowSecondPayments.getCell(9).setCellValue("Валюта");
 
         for (PaymentRegistryReportData p : payments) {
             Row row = sh.createRow(rownum++);
@@ -105,6 +107,8 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             row.createCell(5).setCellValue(p.getPaymentEmail());
             row.createCell(6).setCellValue(shopUrl);
             row.createCell(7).setCellValue(p.getInvoiceProduct());
+            row.createCell(8).setCellValue(FormatUtil.formatCurrency(p.getPaymentFee()));
+            row.createCell(9).setCellValue(p.getPaymentCurrencyCode());
             totalAmnt.addAndGet(p.getPaymentAmount());
             totalPayoutAmnt.addAndGet(p.getPaymentAmount() - p.getPaymentFee());
         }
@@ -157,6 +161,9 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         rowSecondRefunds.getCell(5).setCellValue("Email плательщика");
         rowSecondRefunds.getCell(6).setCellValue("URL магазина");
         rowSecondRefunds.getCell(7).setCellValue("Назначение платежа");
+        rowSecondRefunds.getCell(8).setCellValue("Id возврата");
+        rowSecondRefunds.getCell(9).setCellValue("Причина возврата");
+        rowSecondRefunds.getCell(10).setCellValue("Валюта");
 
         AtomicLong totalRefundAmnt = new AtomicLong();
         List<RefundPaymentRegistryReportData> refunds = reportingService.getRefundPaymentRegistryReportData(
@@ -175,7 +182,10 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             row.createCell(4).setCellValue(Optional.ofNullable(r.getPaymentTool()).map(paymentTool -> paymentTool.getLiteral()).orElse(null));
             row.createCell(5).setCellValue(r.getPaymentEmail());
             row.createCell(6).setCellValue(shopUrl);
-            row.createCell(7).setCellValue(r.getInvoiceProduct());
+            row.createCell(7).setCellValue(r.getId());
+            row.createCell(8).setCellValue(r.getRefundId());
+            row.createCell(9).setCellValue(r.getRefundReason());
+            row.createCell(10).setCellValue(r.getRefundCurrencyCode());
             totalRefundAmnt.addAndGet(r.getRefundAmount());
         }
 

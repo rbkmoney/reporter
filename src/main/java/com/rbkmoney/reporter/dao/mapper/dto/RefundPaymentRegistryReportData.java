@@ -18,6 +18,9 @@ public class RefundPaymentRegistryReportData {
     private String partyShopId;
     private String invoiceId;
     private String paymentId;
+    private String refundId;
+    private String refundCurrencyCode;
+    private String refundReason;
     private PaymentTool paymentTool;
     private String paymentEmail;
     private Long refundAmount;

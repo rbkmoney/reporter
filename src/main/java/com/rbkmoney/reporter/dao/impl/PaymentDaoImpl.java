@@ -123,6 +123,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
                         RoutinesWrapper.getPaymentCashFlowFee(),
                         RoutinesWrapper.getPaymentCashFlowProviderFee(),
                         RoutinesWrapper.getPaymentCashFlowExternalFee(),
+                        PAYMENT.PAYMENT_CURRENCY_CODE,
                         INVOICE.INVOICE_PRODUCT
                 )
                 .from(PAYMENT)

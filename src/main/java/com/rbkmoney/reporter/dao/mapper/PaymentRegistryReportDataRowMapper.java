@@ -40,6 +40,7 @@ public class PaymentRegistryReportDataRowMapper implements RowMapper<PaymentRegi
         data.setPaymentFee(rs.getLong(paymentFee.getName()));
         data.setPaymentExternalFee(rs.getLong(paymentExternalFee.getName()));
         data.setPaymentProviderFee(rs.getLong(paymentProviderFee.getName()));
+        data.setPaymentCurrencyCode(rs.getString(PAYMENT.PAYMENT_CURRENCY_CODE.getName()));
         data.setInvoiceProduct(rs.getString(INVOICE.INVOICE_PRODUCT.getName()));
         return data;
     }
