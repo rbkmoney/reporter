@@ -13,7 +13,9 @@ public class AdjustmentInvoiceBatchServiceImpl implements InvoiceBatchService {
     @Override
     public boolean isChangeType(InvoiceChange invoiceChange) {
         return invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange();
+                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
+                && (invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getPayload().isSetInvoicePaymentAdjustmentCreated()
+                || invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getPayload().isSetInvoicePaymentAdjustmentStatusChanged());
     }
 
     @Override

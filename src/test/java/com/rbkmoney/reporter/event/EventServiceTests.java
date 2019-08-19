@@ -101,6 +101,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         messages.add(getConsumerRecord(getPaymentMachineEvent(2L, invoiceId, paymentId, getInvoicePaymentStarted(InvoicePaymentStatus.pending(new InvoicePaymentPending())))));
         messages.add(getConsumerRecord(getPaymentMachineEvent(3L, invoiceId, paymentId, getInvoicePaymentStatusChanged(getCaptured()))));
         messages.add(getConsumerRecord(getPaymentMachineEvent(32L, invoiceId, paymentId, getInvoicePaymentOther())));
+        messages.add(getConsumerRecord(getPaymentMachineEvent(33L, invoiceId, paymentId, getInvoicePaymentSessionStarted())));
         messages.add(getConsumerRecord(getRefundMachineEvent(4L, invoiceId, paymentId, refundId, getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending())))));
         messages.add(getConsumerRecord(getRefundMachineEvent(5L, invoiceId, paymentId, refundId, getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())))));
         messages.add(getConsumerRecord(getAdjustmentMachineEvent(6L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
@@ -202,6 +203,18 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         InvoicePaymentRiskScoreChanged riskScoreChanged = new InvoicePaymentRiskScoreChanged();
         riskScoreChanged.setRiskScore(RiskScore.high);
         return InvoicePaymentChangePayload.invoice_payment_risk_score_changed(riskScoreChanged);
+    }
+
+    private InvoicePaymentChangePayload getInvoicePaymentSessionStarted() {
+        SessionStarted sessionStarted = new SessionStarted();
+
+        SessionChangePayload sessionChangePayload = new SessionChangePayload();
+        sessionChangePayload.setSessionStarted(sessionStarted);
+
+        InvoicePaymentSessionChange invoicePaymentSessionChange = new InvoicePaymentSessionChange();
+        invoicePaymentSessionChange.setPayload(sessionChangePayload);
+        invoicePaymentSessionChange.setTarget(TargetInvoicePaymentStatus.processed(new InvoicePaymentProcessed()));
+        return InvoicePaymentChangePayload.invoice_payment_session_change(invoicePaymentSessionChange);
     }
 
     private InvoiceChange getInvoiceCreated(InvoiceStatus status) {
