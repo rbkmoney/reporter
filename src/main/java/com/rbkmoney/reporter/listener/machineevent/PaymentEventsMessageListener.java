@@ -45,7 +45,10 @@ public class PaymentEventsMessageListener {
 
     @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "kafkaListenerContainerFactory")
     public void listen(List<ConsumerRecord<String, SinkEvent>> messages, Acknowledgment ack) {
-        log.info("Got machineEvent batch with size: {}", messages.size());
+        String recordInfo = toSummaryStringWithSinkEventValues(messages);
+        int size = messages.size();
+
+        log.info("Start handling batch with size:, size={}, {}", size, recordInfo);
 
         Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> mapperPayloadsByUniqueKeyByType = getMapperPayloadsByUniqueKeyByType(messages);
 
@@ -66,9 +69,9 @@ public class PaymentEventsMessageListener {
 
         if (!saveEventQueries.isEmpty()) {
             batchService.save(saveEventQueries);
-            log.info("Batch has been committed, size={}, {}", messages.size(), toSummaryStringWithSinkEventValues(messages));
+            log.info("Batch has been committed, size={}, {}", size, recordInfo);
         } else {
-            log.info("Batch is empty, size={}, {}", messages.size(), toSummaryStringWithSinkEventValues(messages));
+            log.info("Batch is empty, size={}, {}", size, recordInfo);
         }
 
         ack.acknowledge();
