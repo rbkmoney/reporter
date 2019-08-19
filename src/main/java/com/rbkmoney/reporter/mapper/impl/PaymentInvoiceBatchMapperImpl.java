@@ -62,5 +62,8 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
         if (payment.getPaymentAmount() == null) {
             payment.setPaymentAmount(lastPayment.getPaymentAmount());
         }
+        if (payment.getPaymentCurrencyCode() == null) {
+            payment.setPaymentCurrencyCode(lastPayment.getPaymentCurrencyCode());
+        }
     }
 }
