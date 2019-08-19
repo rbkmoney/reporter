@@ -252,7 +252,7 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
             long expectedRefundSum = refunds.stream().mapToLong(RefundPaymentRegistryReportData::getRefundAmount).sum();
             assertEquals(FormatUtil.formatCurrency(expectedRefundSum), refundsTotalSum.getStringCellValue());
         } finally {
-         //   Files.deleteIfExists(tempFile);
+            Files.deleteIfExists(tempFile);
         }
     }
 
