@@ -31,26 +31,30 @@ public class AdjustmentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Adju
 
     @Override
     public Adjustment map(InvoiceChangeMapper mapper, MapperPayload payload, List<Adjustment> adjustments, Map<InvoiceUniqueBatchKey, Payment> consumerCache) {
+        String invoiceId = payload.getMachineEvent().getSourceId();
+        String paymentId = payload.getInvoiceChange().getInvoicePaymentChange().getId();
+        String adjustmentId = payload.getInvoiceChange().getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getId();
+
         Adjustment adjustment = mapper.map(payload.getInvoiceChange(), payload.getMachineEvent(), payload.getChangeId()).getAdjustment();
 
         if (!adjustments.isEmpty()) {
             Adjustment lastAdjustment = adjustments.get(adjustments.size() - 1);
             BeanUtils.copyProperties(lastAdjustment, adjustment, mapper.getIgnoreProperties());
         } else if (adjustment.getEventType() != InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED) {
-            Adjustment lastAdjustment = adjustmentService.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId());
+            Adjustment lastAdjustment = adjustmentService.get(invoiceId, paymentId, adjustmentId);
             BeanUtils.copyProperties(lastAdjustment, adjustment, mapper.getIgnoreProperties());
         }
 
         if (adjustment.getEventType() == InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED) {
-            Payment payment = consumerCache.computeIfAbsent(getInvoiceCacheKey(adjustment), key -> paymentService.get(adjustment.getInvoiceId(), adjustment.getPaymentId()));
+            Payment payment = consumerCache.computeIfAbsent(
+                    new PaymentInvoiceUniqueBatchKey(invoiceId, paymentId),
+                    key -> paymentService.get(invoiceId, paymentId)
+            );
+
             adjustment.setPartyId(payment.getPartyId());
             adjustment.setPartyShopId(payment.getPartyShopId());
         }
 
         return adjustment;
-    }
-
-    private InvoiceUniqueBatchKey getInvoiceCacheKey(Adjustment adjustment) {
-        return new PaymentInvoiceUniqueBatchKey(adjustment.getInvoiceId(), adjustment.getPaymentId());
     }
 }

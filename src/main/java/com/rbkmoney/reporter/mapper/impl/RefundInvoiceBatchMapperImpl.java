@@ -32,18 +32,25 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
 
     @Override
     public Refund map(InvoiceChangeMapper mapper, MapperPayload payload, List<Refund> refunds, Map<InvoiceUniqueBatchKey, Payment> consumerCache) {
+        String invoiceId = payload.getMachineEvent().getSourceId();
+        String paymentId = payload.getInvoiceChange().getInvoicePaymentChange().getId();
+        String refundId = payload.getInvoiceChange().getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange().getId();
+
         Refund refund = mapper.map(payload.getInvoiceChange(), payload.getMachineEvent(), payload.getChangeId()).getRefund();
 
         if (!refunds.isEmpty()) {
             Refund lastRefund = refunds.get(refunds.size() - 1);
             BeanUtils.copyProperties(lastRefund, refund, mapper.getIgnoreProperties());
         } else if (refund.getEventType() != InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED) {
-            Refund lastRefund = refundService.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId());
+            Refund lastRefund = refundService.get(invoiceId, paymentId, refundId);
             BeanUtils.copyProperties(lastRefund, refund, mapper.getIgnoreProperties());
         }
 
         if (refund.getEventType() == InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED) {
-            Payment payment = consumerCache.computeIfAbsent(getInvoiceCacheKey(refund), key -> paymentService.get(refund.getInvoiceId(), refund.getPaymentId()));
+            Payment payment = consumerCache.computeIfAbsent(
+                    new PaymentInvoiceUniqueBatchKey(invoiceId, paymentId),
+                    key -> paymentService.get(invoiceId, paymentId)
+            );
 
             refund.setPartyId(payment.getPartyId());
             refund.setPartyShopId(payment.getPartyShopId());
@@ -61,9 +68,5 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
         return payload.getInvoiceChange().getInvoicePaymentChange()
                 .getPayload().getInvoicePaymentRefundChange()
                 .getPayload().getInvoicePaymentRefundCreated().getRefund();
-    }
-
-    private InvoiceUniqueBatchKey getInvoiceCacheKey(Refund refund) {
-        return new PaymentInvoiceUniqueBatchKey(refund.getInvoiceId(), refund.getPaymentId());
     }
 }
