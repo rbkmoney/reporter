@@ -1,8 +1,8 @@
 package com.rbkmoney.reporter.mapper.impl;
 
-import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
@@ -49,24 +49,27 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
         if (refund.getEventType() == InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED) {
             Payment payment = consumerCache.computeIfAbsent(
                     new PaymentInvoiceUniqueBatchKey(invoiceId, paymentId),
-                    key -> paymentService.get(invoiceId, paymentId)
+                    key -> {
+                        PaymentPartyData paymentPartyData = paymentService.getPaymentPartyData(invoiceId, paymentId);
+
+                        Payment pmnt = new Payment();
+                        pmnt.setPartyId(paymentPartyData.getPartyId());
+                        pmnt.setPartyShopId(paymentPartyData.getPartyShopId());
+                        pmnt.setPaymentAmount(paymentPartyData.getPaymentAmount());
+                        pmnt.setPaymentCurrencyCode(paymentPartyData.getPaymentCurrencyCode());
+                        return pmnt;
+                    }
             );
 
             refund.setPartyId(payment.getPartyId());
             refund.setPartyShopId(payment.getPartyShopId());
-
-            InvoicePaymentRefund invoicePaymentRefund = getInvoicePaymentRefund(payload);
-            if (!invoicePaymentRefund.isSetCash()) {
+            if (refund.getRefundAmount() == null) {
                 refund.setRefundAmount(payment.getPaymentAmount());
+            }
+            if (refund.getRefundCurrencyCode() == null) {
                 refund.setRefundCurrencyCode(payment.getPaymentCurrencyCode());
             }
         }
         return refund;
-    }
-
-    private InvoicePaymentRefund getInvoicePaymentRefund(MapperPayload payload) {
-        return payload.getInvoiceChange().getInvoicePaymentChange()
-                .getPayload().getInvoicePaymentRefundChange()
-                .getPayload().getInvoicePaymentRefundCreated().getRefund();
     }
 }

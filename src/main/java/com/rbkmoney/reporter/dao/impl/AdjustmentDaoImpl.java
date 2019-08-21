@@ -47,12 +47,11 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         Query query = getDslContext().insertInto(ADJUSTMENT)
                 .set(record)
                 .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.SEQUENCE_ID, ADJUSTMENT.CHANGE_ID)
-                .doUpdate()
-                .set(record)
+                .doNothing()
                 .returning(ADJUSTMENT.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
-        return keyHolder.getKey().longValue();
+        return Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElse(null);
     }
 
     @Override
@@ -118,7 +117,6 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         return getDslContext().insertInto(ADJUSTMENT)
                 .set(record)
                 .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.SEQUENCE_ID, ADJUSTMENT.CHANGE_ID)
-                .doUpdate()
-                .set(record);
+                .doNothing();
     }
 }

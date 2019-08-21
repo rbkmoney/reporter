@@ -40,7 +40,7 @@ public class PaymentEventsMessageListener {
 
     private final InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler;
     private final InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler;
-    private final InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
+    private final InvoiceBatchHandler<Adjustment, Invoice> adjustmentInvoiceBatchHandler;
     private final InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;
 
     @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "kafkaListenerContainerFactory")
@@ -59,7 +59,7 @@ public class PaymentEventsMessageListener {
 
         List<Query> invoiceSaveEventQueries = invoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, invoiceCache, null);
         List<Query> paymentEventQueries = paymentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, paymentCache, invoiceCache);
-        List<Query> adjustmentEventQueries = adjustmentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, null, paymentCache);
+        List<Query> adjustmentEventQueries = adjustmentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, null, invoiceCache);
         List<Query> refundEventQueries = refundInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, null, paymentCache);
 
         saveEventQueries.addAll(invoiceSaveEventQueries);

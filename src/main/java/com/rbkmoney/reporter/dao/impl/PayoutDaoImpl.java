@@ -51,12 +51,11 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Query query = getDslContext().insertInto(PAYOUT)
                 .set(payoutRecord)
                 .onConflict(PAYOUT.EVENT_ID, PAYOUT.EVENT_TYPE, PAYOUT.PAYOUT_STATUS)
-                .doUpdate()
-                .set(payoutRecord)
+                .doNothing()
                 .returning(PAYOUT.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
-        return keyHolder.getKey().longValue();
+        return Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElse(null);
     }
 
     @Override

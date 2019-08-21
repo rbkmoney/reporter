@@ -31,7 +31,7 @@ public class InvoiceBatchHandlerConfig {
     }
 
     @Bean
-    public InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
+    public InvoiceBatchHandler<Adjustment, Invoice> adjustmentInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
                                                                                   AdjustmentInvoiceBatchMapperImpl invoiceBatchMapper) {
         return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.ADJUSTMENT, invoiceBatchManager, invoiceBatchMapper);
     }

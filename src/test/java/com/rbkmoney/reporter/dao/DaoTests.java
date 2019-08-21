@@ -65,9 +65,7 @@ public class DaoTests extends AbstractAppDaoTests {
         Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
         adjustment.setId(null);
         adjustmentDao.save(adjustment);
-        Long id = adjustmentDao.save(adjustment);
-        adjustment.setId(id);
-        assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
+        assertNull(adjustmentDao.save(adjustment));
     }
 
     @Test
@@ -87,6 +85,7 @@ public class DaoTests extends AbstractAppDaoTests {
         id = invoiceDao.save(invoice);
         invoice.setId(id);
         assertEquals(invoice, invoiceDao.get(invoice.getInvoiceId()));
+        assertEquals(invoice.getPartyId(), invoiceDao.getPartyData(invoice.getInvoiceId()).getPartyId());
     }
 
     @Test
@@ -104,6 +103,8 @@ public class DaoTests extends AbstractAppDaoTests {
         payment.setId(id);
         payment.setPaymentFingerprint(payment.getPaymentFingerprint().replace("\u0000", "\\u0000"));
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
+        assertEquals(payment.getPartyId(), paymentDao.getPaymentPartyData(payment.getInvoiceId(), payment.getPaymentId()).getPartyId());
+        assertEquals(payment.getPaymentAmount(), paymentDao.getPaymentPartyData(payment.getInvoiceId(), payment.getPaymentId()).getPaymentAmount());
     }
 
     @Test

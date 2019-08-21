@@ -5,8 +5,10 @@ import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.batch.InvoiceBatchType;
 import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
+import com.rbkmoney.reporter.dao.mapper.PaymentPartyDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.PaymentRegistryReportDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentRegistryReportData;
 import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
@@ -37,12 +39,14 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
 
     private final RowMapper<Payment> paymentRowMapper;
     private final PaymentRegistryReportDataRowMapper reportDataRowMapper;
+    private final PaymentPartyDataRowMapper paymentPartyDataRowMapper;
 
     @Autowired
     public PaymentDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         paymentRowMapper = new RecordRowMapper<>(PAYMENT, Payment.class);
         reportDataRowMapper = new PaymentRegistryReportDataRowMapper();
+        paymentPartyDataRowMapper = new PaymentPartyDataRowMapper();
     }
 
     @Override
@@ -51,8 +55,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
         Query query = getDslContext().insertInto(PAYMENT)
                 .set(paymentRecord)
                 .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
-                .doUpdate()
-                .set(paymentRecord)
+                .doNothing()
                 .returning(PAYMENT.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
@@ -70,6 +73,25 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
                 .limit(1);
 
         return fetchOne(query, paymentRowMapper);
+    }
+
+    @Override
+    public PaymentPartyData getPaymentPartyData(String invoiceId, String paymentId) throws DaoException {
+        Query query = getDslContext()
+                .select(
+                        PAYMENT.PARTY_ID,
+                        PAYMENT.PARTY_SHOP_ID,
+                        PAYMENT.PAYMENT_AMOUNT,
+                        PAYMENT.PAYMENT_CURRENCY_CODE
+                )
+                .from(PAYMENT)
+                .where(
+                        PAYMENT.INVOICE_ID.eq(invoiceId)
+                                .and(PAYMENT.PAYMENT_ID.eq(paymentId))
+                )
+                .orderBy(PAYMENT.ID.desc())
+                .limit(1);
+        return fetchOne(query, paymentPartyDataRowMapper);
     }
 
     @Override
@@ -156,8 +178,6 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
         return getDslContext().insertInto(PAYMENT)
                 .set(paymentRecord)
                 .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
-                .doUpdate()
-                .set(paymentRecord)
-                .returning(PAYMENT.ID);
+                .doNothing();
     }
 }

@@ -1,3 +1,4 @@
+
 info:
   version: @project.version@
   stage: dev
@@ -23,6 +24,8 @@ spring:
     username: @db.user@
     password: @db.password@
     hikari:
+      data-source-properties:
+        reWriteBatchedInserts: true
       idle-timeout: 30000
       maximum-pool-size: 3
   flyway:
