@@ -18,8 +18,6 @@ import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.machinegun.msgpack.Value;
 import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.dao.*;
-import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
-import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
@@ -30,7 +28,6 @@ import com.rbkmoney.sink.common.handle.stockevent.StockEventHandler;
 import com.rbkmoney.sink.common.parser.Parser;
 import com.rbkmoney.sink.common.serialization.impl.PaymentEventPayloadSerializer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.Acknowledgment;
@@ -69,7 +66,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
     private InvoiceBatchHandler<Payment, com.rbkmoney.reporter.domain.tables.pojos.Invoice> paymentInvoiceBatchHandler;
 
     @Autowired
-    private InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
+    private InvoiceBatchHandler<Adjustment, com.rbkmoney.reporter.domain.tables.pojos.Invoice> adjustmentInvoiceBatchHandler;
 
     @Autowired
     private InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;
@@ -92,6 +89,8 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
     @Test
     @Sql("classpath:data/sql/truncate.sql")
     public void batchHandlingTest() {
+        PaymentEventsMessageListener paymentEventsMessageListener = new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, invoiceBatchManager, batchService, invoiceBatchHandler, paymentInvoiceBatchHandler, adjustmentInvoiceBatchHandler, refundInvoiceBatchHandler);
+
         String invoiceId = generateString();
         String paymentId = generateString();
         String adjustmentId = generateString();
@@ -109,8 +108,6 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         messages.add(getConsumerRecord(getAdjustmentMachineEvent(6L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
         messages.add(getConsumerRecord(getAdjustmentMachineEvent(7L, invoiceId, paymentId, adjustmentId, getAdjustmentStatusChanged(InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured(TypeUtil.temporalToString(LocalDateTime.now().plusDays(1))))))));
         messages.add(getConsumerRecord(getSinkEvent(8L, invoiceId, getInvoiceStatusChanged(InvoiceStatus.paid(new InvoicePaid())))));
-
-        PaymentEventsMessageListener paymentEventsMessageListener = new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, invoiceBatchManager, batchService, invoiceBatchHandler, paymentInvoiceBatchHandler, adjustmentInvoiceBatchHandler, refundInvoiceBatchHandler);
         paymentEventsMessageListener.listen(messages, getAcknowledgment());
 
         Adjustment adjustment = adjustmentDao.get(invoiceId, paymentId, adjustmentId);
@@ -118,21 +115,43 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
         Payment payment = paymentDao.get(invoiceId, paymentId);
         com.rbkmoney.reporter.domain.tables.pojos.Invoice invoice = invoiceDao.get(invoiceId);
 
-        assertEquals(AdjustmentStatus.captured, adjustment.getAdjustmentStatus());
-        assertEquals(RefundStatus.succeeded, refund.getRefundStatus());
-        assertEquals(com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus.captured, payment.getPaymentStatus());
-        assertEquals(com.rbkmoney.reporter.domain.enums.InvoiceStatus.paid, invoice.getInvoiceStatus());
+        assertEquals((long) 7, (long) adjustment.getSequenceId());
+        assertEquals((long) 5, (long) refund.getSequenceId());
+        assertEquals((long) 3, (long) payment.getSequenceId());
+        assertEquals((long) 8, (long) invoice.getSequenceId());
 
         messages.clear();
         messages.add(getConsumerRecord(getPaymentMachineEvent(11L, invoiceId, paymentId, getInvoicePaymentStatusChanged(getCaptured()))));
         messages.add(getConsumerRecord(getRefundMachineEvent(13L, invoiceId, paymentId, refundId, getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())))));
         messages.add(getConsumerRecord(getAdjustmentMachineEvent(15L, invoiceId, paymentId, adjustmentId, getAdjustmentStatusChanged(InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured(TypeUtil.temporalToString(LocalDateTime.now().plusDays(1))))))));
         messages.add(getConsumerRecord(getSinkEvent(16L, invoiceId, getInvoiceStatusChanged(InvoiceStatus.paid(new InvoicePaid())))));
-        paymentEventsMessageListener = new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, invoiceBatchManager, batchService, invoiceBatchHandler, paymentInvoiceBatchHandler, adjustmentInvoiceBatchHandler, refundInvoiceBatchHandler);
         paymentEventsMessageListener.listen(messages, getAcknowledgment());
+
+        adjustment = adjustmentDao.get(invoiceId, paymentId, adjustmentId);
+        refund = refundDao.get(invoiceId, paymentId, refundId);
+        payment = paymentDao.get(invoiceId, paymentId);
+        invoice = invoiceDao.get(invoiceId);
+
+        assertEquals((long) 15, (long) adjustment.getSequenceId());
+        assertEquals((long) 13, (long) refund.getSequenceId());
+        assertEquals((long) 11, (long) payment.getSequenceId());
+        assertEquals((long) 16, (long) invoice.getSequenceId());
+
+        adjustmentId = generateString();
+        refundId = generateString();
+
+        messages.clear();
+        messages.add(getConsumerRecord(getRefundMachineEvent(20L, invoiceId, paymentId, refundId, getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending())))));
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(21L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
+        paymentEventsMessageListener.listen(messages, getAcknowledgment());
+
+        adjustment = adjustmentDao.get(invoiceId, paymentId, adjustmentId);
+        refund = refundDao.get(invoiceId, paymentId, refundId);
+
+        assertEquals((long) 21, (long) adjustment.getSequenceId());
+        assertEquals((long) 20, (long) refund.getSequenceId());
     }
 
-    @NotNull
     private Acknowledgment getAcknowledgment() {
         return () -> {
         };

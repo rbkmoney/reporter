@@ -51,12 +51,11 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao, Batc
         Query query = getDslContext().insertInto(REFUND)
                 .set(record)
                 .onConflict(REFUND.INVOICE_ID, REFUND.SEQUENCE_ID, REFUND.CHANGE_ID)
-                .doUpdate()
-                .set(record)
+                .doNothing()
                 .returning(REFUND.ID);
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         execute(query, keyHolder);
-        return keyHolder.getKey().longValue();
+        return Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElse(null);
     }
 
     @Override
@@ -159,8 +158,6 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao, Batc
         return getDslContext().insertInto(REFUND)
                 .set(record)
                 .onConflict(REFUND.INVOICE_ID, REFUND.SEQUENCE_ID, REFUND.CHANGE_ID)
-                .doUpdate()
-                .set(record)
-                .returning(REFUND.ID);
+                .doNothing();
     }
 }

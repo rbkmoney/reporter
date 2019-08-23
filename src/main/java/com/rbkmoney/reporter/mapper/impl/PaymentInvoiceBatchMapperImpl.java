@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.mapper.impl;
 
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.batch.impl.InvoiceUniqueBatchKeyImpl;
+import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
@@ -47,7 +48,14 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
         if (payment.getEventType() == InvoiceEventType.INVOICE_PAYMENT_STARTED) {
             Invoice invoice = consumerCache.computeIfAbsent(
                     new InvoiceUniqueBatchKeyImpl(invoiceId),
-                    key -> invoiceService.get(invoiceId)
+                    key -> {
+                        PartyData partyData = invoiceService.getPartyData(invoiceId);
+
+                        Invoice inv = new Invoice();
+                        inv.setPartyId(partyData.getPartyId());
+                        inv.setPartyShopId(partyData.getPartyShopId());
+                        return inv;
+                    }
             );
 
             payment.setPartyId(invoice.getPartyId());
