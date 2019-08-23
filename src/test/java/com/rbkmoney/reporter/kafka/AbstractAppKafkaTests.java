@@ -61,7 +61,7 @@ public abstract class AbstractAppKafkaTests extends AbstractTestUtils {
     private InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler;
 
     @MockBean
-    private InvoiceBatchHandler<Adjustment, Invoice> adjustmentInvoiceBatchHandler;
+    private InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
 
     @MockBean
     private InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;

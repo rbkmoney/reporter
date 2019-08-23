@@ -47,19 +47,21 @@ public class RefundInvoiceBatchMapperImpl implements InvoiceBatchMapper<Refund, 
         }
 
         if (refund.getEventType() == InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED) {
-            Payment payment = consumerCache.computeIfAbsent(
-                    new PaymentInvoiceUniqueBatchKey(invoiceId, paymentId),
-                    key -> {
-                        PaymentPartyData paymentPartyData = paymentService.getPaymentPartyData(invoiceId, paymentId);
+            Payment payment;
+            InvoiceUniqueBatchKey uniqueBatchKey = new PaymentInvoiceUniqueBatchKey(invoiceId, paymentId);
+            if (consumerCache.containsKey(uniqueBatchKey)) {
+                payment = consumerCache.get(uniqueBatchKey);
+            } else {
+                PaymentPartyData paymentPartyData = paymentService.getPaymentPartyData(invoiceId, paymentId);
 
-                        Payment pmnt = new Payment();
-                        pmnt.setPartyId(paymentPartyData.getPartyId());
-                        pmnt.setPartyShopId(paymentPartyData.getPartyShopId());
-                        pmnt.setPaymentAmount(paymentPartyData.getPaymentAmount());
-                        pmnt.setPaymentCurrencyCode(paymentPartyData.getPaymentCurrencyCode());
-                        return pmnt;
-                    }
-            );
+                payment = new Payment();
+                payment.setPartyId(paymentPartyData.getPartyId());
+                payment.setPartyShopId(paymentPartyData.getPartyShopId());
+                payment.setPaymentAmount(paymentPartyData.getPaymentAmount());
+                payment.setPaymentCurrencyCode(paymentPartyData.getPaymentCurrencyCode());
+
+                consumerCache.put(uniqueBatchKey, payment);
+            }
 
             refund.setPartyId(payment.getPartyId());
             refund.setPartyShopId(payment.getPartyShopId());

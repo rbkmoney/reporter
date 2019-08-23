@@ -46,17 +46,19 @@ public class PaymentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Payment
         }
 
         if (payment.getEventType() == InvoiceEventType.INVOICE_PAYMENT_STARTED) {
-            Invoice invoice = consumerCache.computeIfAbsent(
-                    new InvoiceUniqueBatchKeyImpl(invoiceId),
-                    key -> {
-                        PartyData partyData = invoiceService.getPartyData(invoiceId);
+            Invoice invoice;
+            InvoiceUniqueBatchKey uniqueBatchKey = new InvoiceUniqueBatchKeyImpl(invoiceId);
+            if (consumerCache.containsKey(uniqueBatchKey)) {
+                invoice = consumerCache.get(uniqueBatchKey);
+            } else {
+                PartyData partyData = invoiceService.getPartyData(invoiceId);
 
-                        Invoice inv = new Invoice();
-                        inv.setPartyId(partyData.getPartyId());
-                        inv.setPartyShopId(partyData.getPartyShopId());
-                        return inv;
-                    }
-            );
+                invoice = new Invoice();
+                invoice.setPartyId(partyData.getPartyId());
+                invoice.setPartyShopId(partyData.getPartyShopId());
+
+                consumerCache.put(uniqueBatchKey, invoice);
+            }
 
             payment.setPartyId(invoice.getPartyId());
             payment.setPartyShopId(invoice.getPartyShopId());
