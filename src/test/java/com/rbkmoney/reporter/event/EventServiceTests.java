@@ -66,7 +66,7 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
     private InvoiceBatchHandler<Payment, com.rbkmoney.reporter.domain.tables.pojos.Invoice> paymentInvoiceBatchHandler;
 
     @Autowired
-    private InvoiceBatchHandler<Adjustment, com.rbkmoney.reporter.domain.tables.pojos.Invoice> adjustmentInvoiceBatchHandler;
+    private InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
 
     @Autowired
     private InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;
@@ -150,6 +150,40 @@ public class EventServiceTests extends AbstractAppEventServiceTests {
 
         assertEquals((long) 21, (long) adjustment.getSequenceId());
         assertEquals((long) 20, (long) refund.getSequenceId());
+
+        messages.clear();
+        paymentId = generateString();
+        messages.add(getConsumerRecord(getPaymentMachineEvent(22L, invoiceId, paymentId, getInvoicePaymentStarted(InvoicePaymentStatus.pending(new InvoicePaymentPending())))));
+        messages.add(getConsumerRecord(getPaymentMachineEvent(23L, invoiceId, paymentId, getInvoicePaymentStatusChanged(getCaptured()))));
+        paymentId = generateString();
+        messages.add(getConsumerRecord(getPaymentMachineEvent(24L, invoiceId, paymentId, getInvoicePaymentStarted(InvoicePaymentStatus.pending(new InvoicePaymentPending())))));
+        messages.add(getConsumerRecord(getPaymentMachineEvent(25L, invoiceId, paymentId, getInvoicePaymentStatusChanged(getCaptured()))));
+        paymentEventsMessageListener.listen(messages, getAcknowledgment());
+
+        payment = paymentDao.get(invoiceId, paymentId);
+
+        assertEquals((long) 25, (long) payment.getSequenceId());
+
+        messages.clear();
+        refundId = generateString();
+        messages.add(getConsumerRecord(getRefundMachineEvent(26L, invoiceId, paymentId, refundId, getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending())))));
+        messages.add(getConsumerRecord(getRefundMachineEvent(27L, invoiceId, paymentId, refundId, getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())))));
+        refundId = generateString();
+        messages.add(getConsumerRecord(getRefundMachineEvent(28L, invoiceId, paymentId, refundId, getInvoicePaymentRefundCreated(InvoicePaymentRefundStatus.pending(new InvoicePaymentRefundPending())))));
+        messages.add(getConsumerRecord(getRefundMachineEvent(29L, invoiceId, paymentId, refundId, getInvoicePaymentRefundStatusChanged(InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())))));
+        adjustmentId = generateString();
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(30L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(31L, invoiceId, paymentId, adjustmentId, getAdjustmentStatusChanged(InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured(TypeUtil.temporalToString(LocalDateTime.now().plusDays(1))))))));
+        adjustmentId = generateString();
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(32L, invoiceId, paymentId, adjustmentId, getAdjustmentCreated(InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())))));
+        messages.add(getConsumerRecord(getAdjustmentMachineEvent(33L, invoiceId, paymentId, adjustmentId, getAdjustmentStatusChanged(InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured(TypeUtil.temporalToString(LocalDateTime.now().plusDays(1))))))));
+        paymentEventsMessageListener.listen(messages, getAcknowledgment());
+
+        adjustment = adjustmentDao.get(invoiceId, paymentId, adjustmentId);
+        refund = refundDao.get(invoiceId, paymentId, refundId);
+
+        assertEquals((long) 33, (long) adjustment.getSequenceId());
+        assertEquals((long) 29, (long) refund.getSequenceId());
     }
 
     private Acknowledgment getAcknowledgment() {

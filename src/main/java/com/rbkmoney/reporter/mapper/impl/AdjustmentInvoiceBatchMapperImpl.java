@@ -1,16 +1,16 @@
 package com.rbkmoney.reporter.mapper.impl;
 
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
-import com.rbkmoney.reporter.batch.impl.InvoiceUniqueBatchKeyImpl;
-import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
+import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
+import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.mapper.InvoiceBatchMapper;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperPayload;
 import com.rbkmoney.reporter.service.AdjustmentService;
-import com.rbkmoney.reporter.service.InvoiceService;
+import com.rbkmoney.reporter.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -20,9 +20,9 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class AdjustmentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Adjustment, Invoice> {
+public class AdjustmentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Adjustment, Payment> {
 
-    private final InvoiceService invoiceService;
+    private final PaymentService paymentService;
     private final AdjustmentService adjustmentService;
 
     @Override
@@ -31,7 +31,7 @@ public class AdjustmentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Adju
     }
 
     @Override
-    public Adjustment map(InvoiceChangeMapper mapper, MapperPayload payload, List<Adjustment> adjustments, Map<InvoiceUniqueBatchKey, Invoice> consumerCache) {
+    public Adjustment map(InvoiceChangeMapper mapper, MapperPayload payload, List<Adjustment> adjustments, Map<InvoiceUniqueBatchKey, Payment> consumerCache) {
         String invoiceId = payload.getMachineEvent().getSourceId();
         String paymentId = payload.getInvoiceChange().getInvoicePaymentChange().getId();
         String adjustmentId = payload.getInvoiceChange().getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getId();
@@ -47,20 +47,20 @@ public class AdjustmentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Adju
         }
 
         if (adjustment.getEventType() == InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED) {
-            Invoice invoice = consumerCache.computeIfAbsent(
-                    new InvoiceUniqueBatchKeyImpl(invoiceId),
+            Payment payment = consumerCache.computeIfAbsent(
+                    new PaymentInvoiceUniqueBatchKey(invoiceId, paymentId),
                     key -> {
-                        PartyData partyData = invoiceService.getPartyData(invoiceId);
+                        PaymentPartyData paymentPartyData = paymentService.getPaymentPartyData(invoiceId, paymentId);
 
-                        Invoice inv = new Invoice();
-                        inv.setPartyId(partyData.getPartyId());
-                        inv.setPartyShopId(partyData.getPartyShopId());
-                        return inv;
+                        Payment pmnt = new Payment();
+                        pmnt.setPartyId(paymentPartyData.getPartyId());
+                        pmnt.setPartyShopId(paymentPartyData.getPartyShopId());
+                        return pmnt;
                     }
             );
 
-            adjustment.setPartyId(invoice.getPartyId());
-            adjustment.setPartyShopId(invoice.getPartyShopId());
+            adjustment.setPartyId(payment.getPartyId());
+            adjustment.setPartyShopId(payment.getPartyShopId());
         }
 
         return adjustment;

@@ -41,7 +41,7 @@ public class KafkaPaymentMachineEventConfig {
                                                                    BatchService batchService,
                                                                    InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler,
                                                                    InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler,
-                                                                   InvoiceBatchHandler<Adjustment, Invoice> adjustmentInvoiceBatchHandler,
+                                                                   InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler,
                                                                    InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler) {
         return new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, invoiceBatchManager, batchService, invoiceBatchHandler, paymentInvoiceBatchHandler, adjustmentInvoiceBatchHandler, refundInvoiceBatchHandler);
     }
