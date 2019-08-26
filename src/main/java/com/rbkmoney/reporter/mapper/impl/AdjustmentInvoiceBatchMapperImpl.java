@@ -55,6 +55,8 @@ public class AdjustmentInvoiceBatchMapperImpl implements InvoiceBatchMapper<Adju
                         Payment pmnt = new Payment();
                         pmnt.setPartyId(paymentPartyData.getPartyId());
                         pmnt.setPartyShopId(paymentPartyData.getPartyShopId());
+                        pmnt.setPaymentAmount(paymentPartyData.getPaymentAmount());
+                        pmnt.setPaymentCurrencyCode(paymentPartyData.getPaymentCurrencyCode());
                         return pmnt;
                     }
             );
