@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>reporter</artifactId>
-    <version>1.10.24-SNAPSHOT</version>
+    <version>1.10.25-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>reporter</name>
@@ -50,6 +50,7 @@
         <db.embedded.password>${db.password}</db.embedded.password>
         <db.embedded.port>15432</db.embedded.port>
         <db.embedded.url>jdbc:postgresql://localhost:${db.embedded.port}/${db.embedded.name}</db.embedded.url>
+        <claim.management.version>1.6-4a3331c</claim.management.version>
     </properties>
 
     <dependencies>
@@ -98,6 +99,11 @@
             <groupId>com.rbkmoney</groupId>
             <artifactId>db-common-lib</artifactId>
             <version>0.0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>claim-management-proto</artifactId>
+            <version>${claim.management.version}</version>
         </dependency>
 
         <!--spring-->

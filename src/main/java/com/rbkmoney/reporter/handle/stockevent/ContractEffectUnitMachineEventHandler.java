@@ -58,4 +58,5 @@ public class ContractEffectUnitMachineEventHandler implements ClaimEffectEventHa
     private void handlePreferences(String partyId, String contractId, long eventId, ServiceAcceptanceActPreferences preferences) {
         taskService.registerProvisionOfServiceJob(partyId, contractId, eventId, preferences.getSchedule(), preferences.getSigner());
     }
+
 }
