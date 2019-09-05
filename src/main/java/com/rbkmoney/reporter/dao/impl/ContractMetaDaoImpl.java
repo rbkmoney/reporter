@@ -110,9 +110,9 @@ public class ContractMetaDaoImpl extends AbstractGenericDao implements ContractM
     }
 
     @Override
-    public void enableContract(String partyId, String contractId, Integer scheduleId) throws DaoException {
+    public void enableContract(String partyId, String contractId, Integer scheduleId, Integer calendarId) throws DaoException {
         Query query = getDslContext().update(CONTRACT_META)
-                //.set(CONTRACT_META.CALENDAR_ID, (Integer) null)
+                .set(CONTRACT_META.CALENDAR_ID, calendarId)
                 .set(CONTRACT_META.SCHEDULE_ID, scheduleId)
                 .where(CONTRACT_META.PARTY_ID.eq(partyId)
                         .and(CONTRACT_META.CONTRACT_ID.eq(contractId)));

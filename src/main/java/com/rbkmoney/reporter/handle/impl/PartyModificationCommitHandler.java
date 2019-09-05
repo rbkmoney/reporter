@@ -1,11 +1,13 @@
 package com.rbkmoney.reporter.handle.impl;
 
 import com.rbkmoney.damsel.claim_management.*;
-import com.rbkmoney.damsel.domain.ReportPreferences;
-import com.rbkmoney.damsel.domain.ServiceAcceptanceActPreferences;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
 import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
+import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.handle.CommitHandler;
+import com.rbkmoney.reporter.service.DomainConfigService;
+import com.rbkmoney.reporter.service.PartyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
@@ -19,6 +21,10 @@ import static com.rbkmoney.reporter.util.ClaimCompareUtil.comparePreferences;
 public class PartyModificationCommitHandler implements CommitHandler<PartyModification> {
 
     private final ContractMetaDao contractMetaDao;
+
+    private final PartyService partyService;
+
+    private final DomainConfigService domainConfigService;
 
     @Override
     public void accept(String partyId, PartyModification partyModification) throws PartyNotFound, InvalidChangeset, TException {
@@ -86,7 +92,16 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
                 if (contractMeta == null) {
                     throw new PartyNotFound();
                 }
-                contractMetaDao.enableContract(partyId, contractId, serviceAcceptanceActPreferences.getSchedule().getId());
+                PaymentInstitutionRef paymentInstitutionRef = partyService.getPaymentInstitutionRef(partyId, contractId);
+                PaymentInstitution paymentInstitution = domainConfigService.getPaymentInstitution(paymentInstitutionRef);
+                if (!paymentInstitution.isSetCalendar()) {
+                    throw new NotFoundException(
+                            String.format("Calendar not found, partyId='%s', contractId='%s'", partyId, contractId)
+                    );
+                }
+                BusinessScheduleRef schedule = serviceAcceptanceActPreferences.getSchedule();
+                CalendarRef calendarRef = paymentInstitution.getCalendar();
+                contractMetaDao.enableContract(partyId, contractId, schedule.getId(), calendarRef.getId());
             }
         }
     }
