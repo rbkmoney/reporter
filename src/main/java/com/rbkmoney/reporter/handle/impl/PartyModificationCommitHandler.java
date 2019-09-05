@@ -32,12 +32,8 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
         if (partyModification.isSetContractModification()) {
             ContractModificationUnit contractModificationUnit = partyModification.getContractModification();
             contractModificationAccept(partyId, contractModificationUnit);
-        } else if (partyModification.isSetContractorModification()) {
-            log.info("Accepting for contractor modification not implemented yet!");
-        } else if (partyModification.isSetShopModification()) {
-            log.info("Accepting for shop modification not implemented yet!");
         } else {
-            log.info("Unknown party modification!");
+            log.info("Received unknown party modification '{}' at the accept stage", partyModification.getSetField().getFieldName());
         }
     }
 
@@ -46,12 +42,8 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
         if (partyModification.isSetContractModification()) {
             ContractModificationUnit contractModificationUnit = partyModification.getContractModification();
             contractModificationCommit(partyId, contractModificationUnit);
-        } else if (partyModification.isSetContractorModification()) {
-            log.info("Commit for contractor modification not implemented yet!");
-        } else if (partyModification.isSetShopModification()) {
-            log.info("Commit for shop modification not implemented yet!");
         } else {
-            log.info("Unknown party modification!");
+            log.info("Received unknown party modification '{}' at the accept stage", partyModification.getSetField().getFieldName());
         }
     }
 
@@ -73,6 +65,8 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
                 }
                 comparePreferences(serviceAcceptanceActPreferences, contractMeta);
             }
+        } else {
+            log.info("Received unknown contract modification '{}' at the accept stage", contractModification.getSetField().getFieldName());
         }
     }
 
@@ -103,6 +97,8 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
                 CalendarRef calendarRef = paymentInstitution.getCalendar();
                 contractMetaDao.enableContract(partyId, contractId, schedule.getId(), calendarRef.getId());
             }
+        } else {
+            log.info("Received unknown contract modification '{}' at the commit stage", contractModification.getSetField().getFieldName());
         }
     }
 
