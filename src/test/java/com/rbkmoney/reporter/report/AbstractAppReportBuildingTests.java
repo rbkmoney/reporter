@@ -38,7 +38,8 @@ import java.util.function.Supplier;
 @ComponentScan(
         basePackages = {
                 "com.rbkmoney.reporter.dao",
-                "com.rbkmoney.reporter.service"
+                "com.rbkmoney.reporter.service",
+                "com.rbkmoney.reporter.handle.impl"
         },
         excludeFilters = {
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = S3StorageServiceImpl.class)

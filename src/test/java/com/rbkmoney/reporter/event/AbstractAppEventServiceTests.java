@@ -43,7 +43,8 @@ import java.util.function.Supplier;
                 "com.rbkmoney.reporter.dao",
                 "com.rbkmoney.reporter.service",
                 "com.rbkmoney.reporter.mapper",
-                "com.rbkmoney.reporter.batch"
+                "com.rbkmoney.reporter.batch",
+                "com.rbkmoney.reporter.handle.impl"
         },
         excludeFilters = {
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = S3StorageServiceImpl.class),

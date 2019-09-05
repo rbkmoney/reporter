@@ -5,10 +5,10 @@ import com.rbkmoney.reporter.handle.CommitHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
 
