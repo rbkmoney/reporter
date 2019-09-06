@@ -63,10 +63,22 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
                 if (contractMeta == null) {
                     throw new PartyNotFound();
                 }
+                checkSchedulerExistence(serviceAcceptanceActPreferences.getSchedule());
                 comparePreferences(serviceAcceptanceActPreferences, contractMeta);
             }
         } else {
             log.info("Received unknown contract modification '{}' at the accept stage", contractModification.getSetField().getFieldName());
+        }
+    }
+
+    private void checkSchedulerExistence(BusinessScheduleRef schedule) throws InvalidChangeset {
+        if (schedule == null) {
+            throw new InvalidChangeset();
+        }
+        try {
+            domainConfigService.getBusinessSchedule(schedule);
+        } catch (NotFoundException ex) {
+            throw new InvalidChangeset();
         }
     }
 
