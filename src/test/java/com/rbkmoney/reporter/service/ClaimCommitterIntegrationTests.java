@@ -1,6 +1,8 @@
 package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.damsel.claim_management.*;
+import com.rbkmoney.damsel.domain.BusinessSchedule;
+import com.rbkmoney.damsel.domain.BusinessScheduleRef;
 import com.rbkmoney.damsel.domain.ReportPreferences;
 import com.rbkmoney.damsel.domain.ServiceAcceptanceActPreferences;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
@@ -26,9 +28,13 @@ public final class ClaimCommitterIntegrationTests extends AbstractAppServiceTest
     @MockBean
     private ContractMetaDao contractMetaDao;
 
+    @MockBean
+    private DomainConfigService domainConfigService;
+
     @Test
     public void claimCommitterTest() throws TException {
         when(contractMetaDao.get(any(String.class), any(String.class))).thenReturn(getTestContractMeta());
+        when(domainConfigService.getBusinessSchedule(any(BusinessScheduleRef.class))).thenReturn(new BusinessSchedule());
 
         boolean isError = false;
         try {
