@@ -79,7 +79,7 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public ExecutorService reportsThreadPool(@Value("${reports.threadPoolSize}") int threadPoolSize) {
+    public ExecutorService reportsThreadPool(@Value("${report.batchSize}") int threadPoolSize) {
         return Executors.newFixedThreadPool(threadPoolSize);
     }
 
