@@ -243,24 +243,32 @@ public class TaskServiceImpl implements TaskService {
         List<Report> reports = reportService.getPendingReports();
         log.debug("Trying to process {} pending reports", reports.size());
         List<Future<?>> futures = new ArrayList<>();
+
         for (Report report : reports) {
-            futures.add(reportsThreadPool.submit(() -> reportService.generateReport(report)));
+            futures.add(reportsThreadPool.submit(() -> processReport(report)));
         }
-        for (Future<?> future : futures) {
-            try {
-                processFutureTask(future);
-            } catch (Exception ex) {
-                log.error("Received exception while a report is generating", ex);
-            }
+        futures.forEach(this::processFutureTask);
+    }
+
+    private void processReport(Report report) {
+        final Thread currentThread = Thread.currentThread();
+        final String oldName = currentThread.getName();
+        currentThread.setName("report-" + report.getId());
+        try {
+            reportService.generateReport(report);
+        } finally {
+            currentThread.setName(oldName);
         }
     }
 
-    private void processFutureTask(Future<?> future) throws Exception {
+    private void processFutureTask(Future<?> future) {
         try {
             future.get();
-        } catch (InterruptedException | ExecutionException ex) {
-            log.error("Received error while thread executed report", ex);
-            throw new Exception(ex);
+        } catch (InterruptedException ex) {
+            log.error("Received InterruptedException while thread executed report", ex);
+            future.cancel(true);
+        } catch (ExecutionException ex) {
+            log.error("Received ExecutionException while thread executed report", ex);
         }
     }
 
