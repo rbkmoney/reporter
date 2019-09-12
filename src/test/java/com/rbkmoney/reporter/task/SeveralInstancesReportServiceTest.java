@@ -39,7 +39,7 @@ public class SeveralInstancesReportServiceTest extends AbstractIntegrationTest {
 
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
-    private static final int REPORTS_COUNT = 3000;
+    private static final int REPORTS_COUNT = 5000;
 
     @Test
     public void severalInstancesReportServiceTest() throws DaoException, ExecutionException, InterruptedException {
