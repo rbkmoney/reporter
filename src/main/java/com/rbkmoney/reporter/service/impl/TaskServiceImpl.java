@@ -246,16 +246,21 @@ public class TaskServiceImpl implements TaskService {
         for (Report report : reports) {
             futures.add(reportsThreadPool.submit(() -> reportService.generateReport(report)));
         }
-        futures.forEach(this::processFutureTask);
+        for (Future<?> future : futures) {
+            try {
+                processFutureTask(future);
+            } catch (Exception ex) {
+                log.error("Received exception while a report is generating", ex);
+            }
+        }
     }
 
-    private void processFutureTask(Future<?> future) {
+    private void processFutureTask(Future<?> future) throws Exception {
         try {
             future.get();
         } catch (InterruptedException | ExecutionException ex) {
             log.error("Received error while thread executed report", ex);
-        } catch (Throwable ex) {
-            log.error("Received throwable while thread executed report", ex);
+            throw new Exception(ex);
         }
     }
 
