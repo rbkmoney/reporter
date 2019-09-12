@@ -59,4 +59,5 @@ storage:
   accessKey: test
   secretKey: test
   clientProtocol: HTTP
-
+reports:
+  threadPoolSize: 5

@@ -93,7 +93,8 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
         Query query = getDslContext().selectFrom(REPORT)
                 .where(REPORT.STATUS.eq(ReportStatus.pending))
                 .limit(limit)
-                .forUpdate();
+                .forUpdate()
+                .skipLocked();
 
         return fetch(query, reportRowMapper);
     }
@@ -103,7 +104,8 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
         Query query = getDslContext().selectFrom(REPORT)
                 .where(REPORT.STATUS.eq(ReportStatus.pending))
                 .and(REPORT.TYPE.eq(reportType))
-                .forUpdate();
+                .forUpdate()
+                .skipLocked();
 
         return fetch(query, reportRowMapper);
     }

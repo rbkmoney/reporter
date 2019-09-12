@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Configuration
 public class ApplicationConfig {
@@ -74,6 +76,11 @@ public class ApplicationConfig {
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new Jdk8Module())
                 .registerModule(new JavaTimeModule());
+    }
+
+    @Bean
+    public ExecutorService reportsThreadPool(@Value("${reports.threadPoolSize}") int threadPoolSize) {
+        return Executors.newFixedThreadPool(threadPoolSize);
     }
 
 }

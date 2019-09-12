@@ -19,26 +19,24 @@ import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.service.TaskService;
 import com.rbkmoney.reporter.trigger.FreezeTimeCronScheduleBuilder;
 import com.rbkmoney.reporter.util.SchedulerUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.calendar.HolidayCalendar;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final Scheduler scheduler;
 
@@ -50,20 +48,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final DomainConfigService domainConfigService;
 
-    @Autowired
-    public TaskServiceImpl(
-            Scheduler scheduler,
-            ContractMetaDao contractMetaDao,
-            ReportService reportService,
-            PartyService partyService,
-            DomainConfigService domainConfigService
-    ) {
-        this.scheduler = scheduler;
-        this.contractMetaDao = contractMetaDao;
-        this.reportService = reportService;
-        this.partyService = partyService;
-        this.domainConfigService = domainConfigService;
-    }
+    private final ExecutorService reportsThreadPool;
 
     @Scheduled(fixedDelay = 60 * 1000)
     public void syncJobs() {
@@ -152,8 +137,10 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private void createJob(String partyId, String contractId, CalendarRef calendarRef, BusinessScheduleRef scheduleRef) throws ScheduleProcessingException {
-        log.info("Trying to create job, partyId='{}', contractId='{}', calendarRef='{}', scheduleRef='{}'", partyId, contractId, calendarRef, scheduleRef);
+    private void createJob(String partyId, String contractId, CalendarRef calendarRef, BusinessScheduleRef scheduleRef)
+            throws ScheduleProcessingException {
+        log.info("Trying to create job, partyId='{}', contractId='{}', calendarRef='{}', scheduleRef='{}'",
+                partyId, contractId, calendarRef, scheduleRef);
         try {
             BusinessSchedule schedule = domainConfigService.getBusinessSchedule(scheduleRef);
             Calendar calendar = domainConfigService.getCalendar(calendarRef);
@@ -252,12 +239,23 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Scheduled(fixedDelay = 5000)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processPendingReports() {
         List<Report> reports = reportService.getPendingReports();
         log.debug("Trying to process {} pending reports", reports.size());
+        List<Future<?>> futures = new ArrayList<>();
         for (Report report : reports) {
-            reportService.generateReport(report);
+            futures.add(reportsThreadPool.submit(() -> reportService.generateReport(report)));
+        }
+        futures.forEach(this::processFutureTask);
+    }
+
+    private void processFutureTask(Future<?> future) {
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException ex) {
+            log.error("Received error while thread executed report", ex);
+        } catch (Throwable ex) {
+            log.error("Received throwable while thread executed report", ex);
         }
     }
 

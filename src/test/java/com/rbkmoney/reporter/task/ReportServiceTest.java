@@ -18,12 +18,11 @@ import com.rbkmoney.reporter.model.ShopAccountingModel;
 import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.service.SignService;
 import com.rbkmoney.reporter.service.StatisticService;
-import com.rbkmoney.reporter.service.TaskService;
+import com.rbkmoney.reporter.service.impl.TaskServiceImpl;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.thrift.TException;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.junit.Test;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -31,12 +30,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -51,10 +47,10 @@ import static org.mockito.Matchers.*;
 public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Autowired
-    ReportService reportService;
+    private ReportService reportService;
 
     @Autowired
-    TaskService taskService;
+    private TaskServiceImpl taskService;
 
     @MockBean
     private StatisticService statisticService;
@@ -104,25 +100,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         Instant fromTime = random(Instant.class);
         Instant toTime = random(Instant.class);
 
-        Party party = new Party();
-        party.setId(partyId);
-        Shop shop = new Shop();
-        shop.setId(shopId);
-        shop.setContractId(contractId);
-        shop.setLocation(ShopLocation.url("http://2ch.hk/"));
-        Contract contract = new Contract();
-        contract.setId(contractId);
-        contract.setPaymentInstitution(new PaymentInstitutionRef(1));
-        RussianLegalEntity russianLegalEntity = new RussianLegalEntity();
-        russianLegalEntity.setRegisteredName(random(String.class));
-        russianLegalEntity.setRepresentativePosition(random(String.class));
-        russianLegalEntity.setRepresentativeFullName(random(String.class));
-        contract.setContractor(Contractor.legal_entity(LegalEntity.russian_legal_entity(russianLegalEntity)));
-        contract.setLegalAgreement(new LegalAgreement(TypeUtil.temporalToString(Instant.now()), random(String.class)));
-        party.setShops(Collections.singletonMap(shopId, shop));
-        party.setContracts(Collections.singletonMap(contractId, contract));
         given(partyManagementClient.checkout(any(), any(), any()))
-                .willReturn(party);
+                .willReturn(getTestParty(partyId, shopId, contractId));
         given(partyManagementClient.getMetaData(any(), any(), any()))
                 .willReturn(Value.b(true));
         ShopAccountingModel shopAccountingModel = random(ShopAccountingModel.class);
@@ -152,7 +131,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         Report report;
         int retryCount = 0;
         do {
-            TimeUnit.SECONDS.sleep(1L);
+            TimeUnit.SECONDS.sleep(2L);
             report = reportService.getReport(partyId, shopId, reportId);
             retryCount++;
         } while (report.getStatus() != ReportStatus.created && retryCount <= 10);
@@ -223,6 +202,32 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                         payoutSchedule
                 ))
         );
+    }
+
+    private static Party getTestParty(String partyId, String shopId, String contractId) {
+        Party party = new Party();
+        party.setId(partyId);
+
+        Contract contract = new Contract();
+        contract.setId(contractId);
+        contract.setPaymentInstitution(new PaymentInstitutionRef(1));
+        RussianLegalEntity russianLegalEntity = new RussianLegalEntity();
+        russianLegalEntity.setRegisteredName(random(String.class));
+        russianLegalEntity.setRepresentativePosition(random(String.class));
+        russianLegalEntity.setRepresentativeFullName(random(String.class));
+        contract.setContractor(Contractor.legal_entity(LegalEntity.russian_legal_entity(russianLegalEntity)));
+        contract.setLegalAgreement(new LegalAgreement(TypeUtil.temporalToString(Instant.now()), random(String.class)));
+        party.setShops(Collections.singletonMap(shopId, getTestShop(shopId, contractId)));
+        party.setContracts(Collections.singletonMap(contractId, contract));
+        return party;
+    }
+
+    private static Shop getTestShop(String shopId, String contractId) {
+        Shop shop = new Shop();
+        shop.setId(shopId);
+        shop.setContractId(contractId);
+        shop.setLocation(ShopLocation.url("http://2ch.hk/"));
+        return shop;
     }
 
 }
