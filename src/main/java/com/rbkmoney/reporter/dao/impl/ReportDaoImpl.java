@@ -47,6 +47,17 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
+    public Report getReportWIthLock(String partyId, String shopId, long reportId) throws DaoException {
+        Query query = getDslContext().selectFrom(REPORT).where(
+                REPORT.ID.eq(reportId)
+                        .and(REPORT.PARTY_ID.eq(partyId))
+                        .and(REPORT.PARTY_SHOP_ID.eq(shopId)))
+                .forUpdate()
+                .skipLocked();
+        return fetchOne(query, reportRowMapper);
+    }
+
+    @Override
     public List<FileMeta> getReportFiles(long reportId) throws DaoException {
         Query query = getDslContext().selectFrom(FILE_META)
                 .where(

@@ -12,11 +12,9 @@ import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.ScheduleProcessingException;
 import com.rbkmoney.reporter.exception.StorageException;
+import com.rbkmoney.reporter.handler.ReportGeneratorHandler;
 import com.rbkmoney.reporter.job.GenerateReportJob;
-import com.rbkmoney.reporter.service.DomainConfigService;
-import com.rbkmoney.reporter.service.PartyService;
-import com.rbkmoney.reporter.service.ReportService;
-import com.rbkmoney.reporter.service.TaskService;
+import com.rbkmoney.reporter.service.*;
 import com.rbkmoney.reporter.trigger.FreezeTimeCronScheduleBuilder;
 import com.rbkmoney.reporter.util.SchedulerUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,18 +23,19 @@ import org.quartz.*;
 import org.quartz.impl.calendar.HolidayCalendar;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TaskServiceImpl implements TaskService {
+public class TaskServiceImpl implements TaskService, ScheduleReports {
 
     private final Scheduler scheduler;
 
@@ -50,7 +49,9 @@ public class TaskServiceImpl implements TaskService {
 
     private final ExecutorService reportsThreadPool;
 
+    @Override
     @Scheduled(fixedDelay = 60 * 1000)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.REPEATABLE_READ)
     public void syncJobs() {
         try {
             log.info("Starting synchronization of jobs...");
@@ -61,7 +62,12 @@ public class TaskServiceImpl implements TaskService {
             }
 
             for (ContractMeta contractMeta : activeContracts) {
-                JobKey jobKey = buildJobKey(contractMeta.getPartyId(), contractMeta.getContractId(), contractMeta.getCalendarId(), contractMeta.getScheduleId());
+                JobKey jobKey = buildJobKey(
+                        contractMeta.getPartyId(),
+                        contractMeta.getContractId(),
+                        contractMeta.getCalendarId(),
+                        contractMeta.getScheduleId()
+                );
                 List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
                 if (triggers.isEmpty() || !triggers.stream().allMatch(this::isTriggerOnNormalState)) {
                     if (scheduler.checkExists(jobKey)) {
@@ -238,38 +244,31 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+    @Override
     @Scheduled(fixedDelay = 5000)
     public void processPendingReports() {
-        List<Report> reports = reportService.getPendingReports();
-        log.debug("Trying to process {} pending reports", reports.size());
-        List<Future<?>> futures = new ArrayList<>();
+        log.info("Processing pending reports get started");
 
-        for (Report report : reports) {
-            futures.add(reportsThreadPool.submit(() -> processReport(report)));
-        }
-        futures.forEach(this::processFutureTask);
-    }
-
-    private void processReport(Report report) {
-        final Thread currentThread = Thread.currentThread();
-        final String oldName = currentThread.getName();
-        currentThread.setName("report-" + report.getId());
         try {
-            reportService.generateReport(report);
-        } finally {
-            currentThread.setName(oldName);
-        }
-    }
+            List<Report> reports = reportService.getPendingReports();
+            log.debug("Trying to process {} pending reports", reports.size());
 
-    private void processFutureTask(Future<?> future) {
-        try {
-            future.get();
+            List<Callable<Long>> callables = reports.stream()
+                    .map(this::transformReportToCallable)
+                    .collect(Collectors.toList());
+            reportsThreadPool.invokeAll(callables);
         } catch (InterruptedException ex) {
             log.error("Received InterruptedException while thread executed report", ex);
-            future.cancel(true);
-        } catch (ExecutionException ex) {
-            log.error("Received ExecutionException while thread executed report", ex);
+            Thread.currentThread().interrupt();
+        } catch (Exception ex) {
+            log.error("Received exception while scheduler processed pending reports", ex);
         }
+
+        log.info("Pending reports were processed");
+    }
+
+    private Callable<Long> transformReportToCallable(Report report) {
+        return () -> new ReportGeneratorHandler(reportService).handle(report);
     }
 
     private JobKey buildJobKey(String partyId, String contractId, int calendarId, int scheduleId) {

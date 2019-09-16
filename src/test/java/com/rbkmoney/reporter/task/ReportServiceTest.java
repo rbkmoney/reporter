@@ -8,17 +8,21 @@ import com.rbkmoney.damsel.merch_stat.StatPayment;
 import com.rbkmoney.damsel.merch_stat.StatRefund;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
+import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.AbstractIntegrationTest;
+import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.model.ShopAccountingModel;
 import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.service.SignService;
 import com.rbkmoney.reporter.service.StatisticService;
 import com.rbkmoney.reporter.service.impl.TaskServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.thrift.TException;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
@@ -44,6 +48,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.*;
 
+@Slf4j
 public class ReportServiceTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -52,11 +57,17 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     @Autowired
     private TaskServiceImpl taskService;
 
+    @Autowired
+    private ReportDao reportDao;
+
     @MockBean
     private StatisticService statisticService;
 
     @MockBean
     private SignService signService;
+
+    @MockBean
+    private EventPublisher eventPublisher;
 
     @MockBean
     private RepositoryClientSrv.Iface dominantClient;
@@ -65,7 +76,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     private PartyManagementSrv.Iface partyManagementClient;
 
     @Test
-    public void generateProvisionOfServiceReportTest() throws IOException, TException, InterruptedException {
+    public void generateProvisionOfServiceReportTest() throws IOException, TException, InterruptedException, DaoException {
         given(statisticService.getCapturedPaymentsIterator(anyString(), anyString(), any(), any())).willReturn(
                 new Iterator<StatPayment>() {
                     @Override
@@ -131,12 +142,12 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         Report report;
         int retryCount = 0;
         do {
-            TimeUnit.SECONDS.sleep(2L);
-            report = reportService.getReport(partyId, shopId, reportId);
+            TimeUnit.SECONDS.sleep(5L);
+            report = reportDao.getReport(partyId, shopId, reportId);
             retryCount++;
-        } while (report.getStatus() != ReportStatus.created && retryCount <= 10);
+        } while (report != null && report.getStatus() != ReportStatus.created && retryCount <= 10);
 
-        assertEquals(ReportStatus.created, report.getStatus());
+        assertEquals(ReportStatus.created, report == null ? null : report.getStatus());
         List<FileMeta> reportFiles = reportService.getReportFiles(report.getId());
         assertEquals(2, reportFiles.size());
         for (FileMeta fileMeta : reportFiles) {
