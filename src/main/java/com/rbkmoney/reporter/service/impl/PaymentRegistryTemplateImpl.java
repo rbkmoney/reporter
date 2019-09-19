@@ -59,9 +59,7 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         AtomicLong totalAmnt = new AtomicLong();
         AtomicLong totalPayoutAmnt = new AtomicLong();
 
-        SXSSFWorkbook wb = null;
-        try {
-            wb = new SXSSFWorkbook(100);// keep 100 rows in memory, exceeding rows will be flushed to disk
+        try (SXSSFWorkbook wb = new SXSSFWorkbook(100)) { // keep 100 rows in memory, exceeding rows will be flushed to disk
             Sheet sh = wb.createSheet();
             sh.setDefaultColumnWidth(20);
             int rownum = 0;
@@ -195,13 +193,10 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
             rowTotalRefundAmount.getCell(3).setCellValue(FormatUtil.formatCurrency(totalRefundAmnt.longValue()));
 
             wb.write(outputStream);
+            outputStream.close();
+            wb.dispose();
         } catch (Throwable e) {
             log.error("Problem with fill of report", e);
-        } finally {
-            outputStream.close();
-            if (wb != null) {
-                wb.dispose();
-            }
         }
     }
 }
