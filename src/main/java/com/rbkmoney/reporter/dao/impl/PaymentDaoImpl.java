@@ -161,6 +161,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
                                 .and(PAYMENT.PARTY_SHOP_ID.eq(partyShopId))
                                 .and(PAYMENT.EVENT_CREATED_AT.ge(fromTime))
                                 .and(PAYMENT.EVENT_CREATED_AT.lt(toTime))
+                                .and(PAYMENT.EVENT_TYPE.eq(InvoiceEventType.INVOICE_PAYMENT_STATUS_CHANGED))
+                                .and(PAYMENT.PAYMENT_STATUS.eq(InvoicePaymentStatus.captured))
 
                 )
                 .orderBy(PAYMENT.ID);
