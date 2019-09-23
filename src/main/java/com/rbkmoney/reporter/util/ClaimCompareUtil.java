@@ -22,24 +22,15 @@ public final class ClaimCompareUtil {
     }
 
     private static boolean compareShedulersInfo(BusinessScheduleRef schedule, ContractMeta contractMeta) {
-        if (contractMeta.getScheduleId() != null
-                && !contractMeta.getScheduleId().equals(schedule.getId())) {
-            return true;
-        }
-        return false;
+        return contractMeta.getScheduleId() != null && !contractMeta.getScheduleId().equals(schedule.getId()) ?
+                true : false;
     }
 
     private static boolean compareSignerInfo(Representative signer, ContractMeta contractMeta) {
-        if (!signer.getFullName().equals(contractMeta.getRepresentativeFullName())) {
-            return true;
-        }
-        if (!signer.getPosition().equals(contractMeta.getRepresentativePosition())) {
-            return true;
-        }
-        if (hasRepresentativeDocumentDiff(signer.getDocument(), contractMeta)) {
-            return true;
-        }
-        return false;
+        return !signer.getFullName().equals(contractMeta.getRepresentativeFullName())
+                || !signer.getPosition().equals(contractMeta.getRepresentativePosition())
+                || hasRepresentativeDocumentDiff(signer.getDocument(), contractMeta) ?
+                true : false;
     }
 
     private static boolean hasRepresentativeDocumentDiff(RepresentativeDocument document, ContractMeta contractMeta) {

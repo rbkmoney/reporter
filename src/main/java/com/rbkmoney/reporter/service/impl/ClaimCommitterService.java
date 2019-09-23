@@ -21,8 +21,6 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
             if (modification.isSetPartyModification()) {
                 PartyModification partyModification = modification.getPartyModification();
                 partyModificationCommitHandler.accept(partyId, partyModification);
-            } else {
-                log.info("Received unknown modification '{}' at the accept stage", modification.getSetField().getFieldName());
             }
         }
     }
@@ -34,8 +32,6 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
             if (modification.isSetPartyModification()) {
                 PartyModification partyModification = modification.getPartyModification();
                 partyModificationCommitHandler.commit(partyId, partyModification);
-            } else {
-                log.info("Received unknown modification '{}' at the commit stage", modification.getSetField().getFieldName());
             }
         }
     }

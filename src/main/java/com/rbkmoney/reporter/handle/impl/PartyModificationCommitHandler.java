@@ -27,13 +27,13 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
     private final DomainConfigService domainConfigService;
 
     @Override
-    public void accept(String partyId, PartyModification partyModification) throws PartyNotFound, InvalidChangeset, TException {
-
+    public void accept(String partyId,
+                       PartyModification partyModification) throws PartyNotFound, InvalidChangeset, TException {
         if (partyModification.isSetContractModification()) {
             ContractModificationUnit contractModificationUnit = partyModification.getContractModification();
+            log.info("Received contract modification with partyId = '{}', contractId = '{}' for accepting",
+                    partyId, contractModificationUnit.getId());
             contractModificationAccept(partyId, contractModificationUnit);
-        } else {
-            log.info("Received unknown party modification '{}' at the accept stage", partyModification.getSetField().getFieldName());
         }
     }
 
@@ -41,9 +41,9 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
     public void commit(String partyId, PartyModification partyModification) throws TException {
         if (partyModification.isSetContractModification()) {
             ContractModificationUnit contractModificationUnit = partyModification.getContractModification();
+            log.info("Received contract modification with partyId = '{}', contractId = '{}' for commiting",
+                    partyId, contractModificationUnit.getId());
             contractModificationCommit(partyId, contractModificationUnit);
-        } else {
-            log.info("Received unknown party modification '{}' at the accept stage", partyModification.getSetField().getFieldName());
         }
     }
 
@@ -66,8 +66,6 @@ public class PartyModificationCommitHandler implements CommitHandler<PartyModifi
                 checkSchedulerExistence(serviceAcceptanceActPreferences.getSchedule());
                 comparePreferences(serviceAcceptanceActPreferences, contractMeta);
             }
-        } else {
-            log.info("Received unknown contract modification '{}' at the accept stage", contractModification.getSetField().getFieldName());
         }
     }
 

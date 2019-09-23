@@ -36,13 +36,7 @@ import java.util.function.Supplier;
         },
         initializers = AbstractAppServiceTests.Initializer.class
 )
-@ComponentScan(
-        basePackages = {
-                "com.rbkmoney.reporter.dao",
-                "com.rbkmoney.reporter.service",
-                "com.rbkmoney.reporter.handle.impl"
-        }
-)
+@ComponentScan(basePackages = {"com.rbkmoney.reporter"})
 @AutoConfigureJdbc
 @TestPropertySource("classpath:application.yml")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
