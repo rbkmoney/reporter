@@ -38,7 +38,7 @@ public class PartyServiceImpl implements PartyService {
 
     @Override
     public Party getParty(String partyId) throws PartyNotFoundException {
-        return getParty(partyId, Instant.now());
+        return getParty(partyId, getPartyRevision(partyId));
     }
 
     @Override
@@ -110,6 +110,20 @@ public class PartyServiceImpl implements PartyService {
         }
         log.info("Shop has been found, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
         return shop;
+    }
+
+    @Override
+    public long getPartyRevision(String partyId) {
+        try {
+            log.info("Trying to get shop, partyId='{}', shopId='{}'", partyId);
+            long revision = partyManagementClient.getRevision(userInfo, partyId);
+            log.info("Revision has been found, partyId='{}', revision='{}'", revision);
+            return revision;
+        } catch (PartyNotFound ex) {
+            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to get party revision, partyId='%s'", partyId), ex);
+        }
     }
 
     @Override

@@ -36,6 +36,8 @@ public interface PartyService {
 
     Shop getShop(String partyId, String shopId, PartyRevisionParam partyRevisionParam) throws ShopNotFoundException, PartyNotFoundException;
 
+    long getPartyRevision(String partyId);
+
     Contract getContract(String partyId, String contractId) throws ContractNotFoundException, PartyNotFoundException;
 
     Contract getContract(String partyId, String contractId, long partyRevision) throws ContractNotFoundException, PartyNotFoundException;
