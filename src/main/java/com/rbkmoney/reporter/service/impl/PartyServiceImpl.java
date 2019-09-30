@@ -101,7 +101,7 @@ public class PartyServiceImpl implements PartyService {
         try {
             log.info("Trying to get revision, partyId='{}'", partyId);
             long revision = partyManagementClient.getRevision(userInfo, partyId);
-            log.info("Revision has been found, partyId='{}', revision='{}'", revision);
+            log.info("Revision has been found, partyId='{}', revision='{}'", partyId, revision);
             return revision;
         } catch (PartyNotFound ex) {
             throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
