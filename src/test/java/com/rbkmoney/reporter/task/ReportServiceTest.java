@@ -105,8 +105,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                 }
         );
 
-        String partyId = random(String.class);
-        String shopId = random(String.class);
+        String partyId = "TestPartyID";
+        String shopId = "TestShopID";
         String contractId = random(String.class);
         Instant fromTime = random(Instant.class);
         Instant toTime = random(Instant.class);
