@@ -30,6 +30,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+import static com.rbkmoney.reporter.util.QuartzJobUtil.buildJobKey;
+import static com.rbkmoney.reporter.util.QuartzJobUtil.buildTriggerKey;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -268,21 +271,4 @@ public class TaskServiceImpl implements TaskService, ScheduleReports {
         return () -> new ReportGeneratorHandler(reportService).handle(report);
     }
 
-    private JobKey buildJobKey(String partyId, String contractId, int calendarId, int scheduleId) {
-        return JobKey.jobKey(
-                String.format("job-%s-%s", partyId, contractId),
-                buildGroupKey(calendarId, scheduleId)
-        );
-    }
-
-    private TriggerKey buildTriggerKey(String partyId, String contractId, int calendarId, int scheduleId, int triggerId) {
-        return TriggerKey.triggerKey(
-                String.format("trigger-%s-%s-%d", partyId, contractId, triggerId),
-                buildGroupKey(calendarId, scheduleId)
-        );
-    }
-
-    private String buildGroupKey(int calendarId, int scheduleId) {
-        return String.format("group-%d-%d", calendarId, scheduleId);
-    }
 }
