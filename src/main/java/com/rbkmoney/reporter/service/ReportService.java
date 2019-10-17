@@ -94,7 +94,8 @@ public class ReportService {
                 report = reportDao.getReport(reportId);
             }
             if (report == null) {
-                throw new ReportNotFoundException(String.format("Report with id {} not found", reportId));
+                log.info("Report with id {} not found", reportId);
+                throw new ReportNotFoundException();
             }
             return report;
         } catch (DaoException ex) {
