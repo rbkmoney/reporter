@@ -43,7 +43,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
         Query query = getDslContext().selectFrom(REPORT).where(
                 REPORT.ID.eq(reportId)
                         .and(REPORT.PARTY_ID.eq(partyId))
-                        .and(REPORT.PARTY_SHOP_ID.eq(shopId))
+                        .and(ofNullable(shopId).map(REPORT.PARTY_SHOP_ID::eq).orElse(trueCondition()))
         );
         return fetchOne(query, reportRowMapper);
     }
@@ -53,7 +53,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
         Query query = getDslContext().selectFrom(REPORT).where(
                 REPORT.ID.eq(reportId)
                         .and(REPORT.PARTY_ID.eq(partyId))
-                        .and(REPORT.PARTY_SHOP_ID.eq(shopId)))
+                        .and(ofNullable(shopId).map(REPORT.PARTY_SHOP_ID::eq).orElse(trueCondition())))
                 .forUpdate();
         return fetchOne(query, reportRowMapper);
     }
@@ -76,7 +76,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
         Query query = getDslContext().selectFrom(REPORT).where(
                 REPORT.ID.eq(reportId)
                         .and(REPORT.PARTY_ID.eq(partyId))
-                        .and(REPORT.PARTY_SHOP_ID.eq(shopId)))
+                        .and(ofNullable(shopId).map(REPORT.PARTY_SHOP_ID::eq).orElse(trueCondition())))
                 .forUpdate()
                 .skipLocked();
         return fetchOne(query, reportRowMapper);
