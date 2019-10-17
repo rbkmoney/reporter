@@ -100,8 +100,7 @@ public class ReportsHandler implements ReportingSrv.Iface {
     public Report getReport(String partyId, String shopId, long reportId) throws ReportNotFound, TException {
         try {
             com.rbkmoney.reporter.domain.tables.pojos.Report report = reportService.getReport(reportId, false);
-            if (partyId == null
-                    || (partyId != null && !partyId.equals(report.getPartyId()))) {
+            if (partyId == null || !partyId.equals(report.getPartyId())) {
                 log.warn("Not enough rights to execute the report {} for party id {}", reportId, partyId);
                 throw new ReportNotFoundException();
             }
