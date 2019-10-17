@@ -5,6 +5,7 @@ import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.batch.InvoiceBatchType;
 import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
+import com.rbkmoney.reporter.dao.mapper.PaymentCostRowMapper;
 import com.rbkmoney.reporter.dao.mapper.PaymentPartyDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.PaymentRegistryReportDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
@@ -14,6 +15,7 @@ import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
+import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.mapper.MapperResult;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.rbkmoney.reporter.domain.Tables.PAYMENT_COST;
 import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 
@@ -40,6 +43,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
     private final RowMapper<Payment> paymentRowMapper;
     private final PaymentRegistryReportDataRowMapper reportDataRowMapper;
     private final PaymentPartyDataRowMapper paymentPartyDataRowMapper;
+    private final PaymentCostRowMapper paymentCostRowMapper;
 
     @Autowired
     public PaymentDaoImpl(HikariDataSource dataSource) {
@@ -47,6 +51,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
         paymentRowMapper = new RecordRowMapper<>(PAYMENT, Payment.class);
         reportDataRowMapper = new PaymentRegistryReportDataRowMapper();
         paymentPartyDataRowMapper = new PaymentPartyDataRowMapper();
+        paymentCostRowMapper = new PaymentCostRowMapper();
     }
 
     @Override
@@ -81,8 +86,6 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
                 .select(
                         PAYMENT.PARTY_ID,
                         PAYMENT.PARTY_SHOP_ID,
-                        PAYMENT.PAYMENT_AMOUNT,
-                        PAYMENT.PAYMENT_CURRENCY_CODE
                 )
                 .from(PAYMENT)
                 .where(
@@ -92,6 +95,19 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, Ba
                 .orderBy(PAYMENT.ID.desc())
                 .limit(1);
         return fetchOne(query, paymentPartyDataRowMapper);
+    }
+
+    @Override
+    public PaymentCost getPaymentCost(String invoiceId, String paymentId) throws DaoException {
+        Query query = getDslContext()
+                .selectFrom(PAYMENT_COST)
+                .where(
+                        PAYMENT_COST.INVOICE_ID.eq(invoiceId)
+                                .and(PAYMENT_COST.PAYMENT_ID.eq(paymentId))
+                )
+                .orderBy(PAYMENT_COST.CREATED_AT.desc())
+                .limit(1);
+        return fetchOne(query, paymentCostRowMapper);
     }
 
     @Override

@@ -1,6 +1,7 @@
-package com.rbkmoney.reporter.mapper.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent.refund;
 
 import com.rbkmoney.damsel.domain.Cash;
+import com.rbkmoney.damsel.domain.FinalCashFlowPosting;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -10,15 +11,20 @@ import com.rbkmoney.geck.common.util.TBaseUtil;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
+import com.rbkmoney.reporter.domain.enums.PaymentChangeType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
+import com.rbkmoney.reporter.domain.tables.pojos.CashFlow;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.domain.tables.pojos.RefundState;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperResult;
+import com.rbkmoney.reporter.util.CashFlowUtil;
 import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -56,7 +62,6 @@ public class RefundCreatedChangeMapperImpl implements InvoiceChangeMapper {
         refund.setChangeId(changeId);
         refund.setPaymentId(paymentId);
         refund.setRefundId(refundId);
-        refund.setRefundStatus(getRefundStatus(invoicePaymentRefund));
         refund.setRefundCreatedAt(getRefundCreatedAt(invoicePaymentRefund));
         refund.setRefundDomainRevision(invoicePaymentRefund.getDomainRevision());
         if (invoicePaymentRefund.isSetPartyRevision()) {
@@ -69,11 +74,38 @@ public class RefundCreatedChangeMapperImpl implements InvoiceChangeMapper {
             refund.setRefundCurrencyCode(cash.getCurrency().getSymbolicCode());
         }
         refund.setRefundReason(invoicePaymentRefund.getReason());
-        refund.setRefundCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(invoicePaymentRefundCreated.getCashFlow()));
+
+        RefundState refundState = new RefundState();
+        refundState.setInvoiceId(invoiceId);
+        refundState.setSequenceId(baseEvent.getEventId());
+        refundState.setChangeId(changeId);
+        refundState.setPaymentId(paymentId);
+        refundState.setRefundId(refundId);
+        refundState.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
+        refundState.setRefundStatus(getRefundStatus(invoicePaymentRefund));
+
+        List<CashFlow> cashFlowList = getCashFlowList(baseEvent, changeId, paymentId, refundId, invoicePaymentRefundCreated.getCashFlow());
 
         log.info("Refund with eventType=created has been mapped, invoiceId={}, paymentId={}, refundId={}", invoiceId, paymentId, refundId);
 
-        return new MapperResult(refund);
+        return new MapperResult(refund, refundState, cashFlowList);
+    }
+
+    private List<CashFlow> getCashFlowList(MachineEvent baseEvent,
+                                           Integer changeId,
+                                           String paymentId,
+                                           String refundId,
+                                           List<FinalCashFlowPosting> cashFlow) {
+        return CashFlowUtil.convertRefundCashFlows(
+                cashFlow,
+                baseEvent.getSourceId(),
+                baseEvent.getEventId(),
+                changeId,
+                paymentId,
+                refundId,
+                TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()),
+                PaymentChangeType.refund
+        );
     }
 
     private LocalDateTime getRefundCreatedAt(InvoicePaymentRefund invoicePaymentRefund) {

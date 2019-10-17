@@ -50,7 +50,8 @@ public class PaymentEventsMessageListener {
 
         log.info("Start handling batch with size:, size={}, {}", size, recordInfo);
 
-        Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> mapperPayloadsByUniqueKeyByType = getMapperPayloadsByUniqueKeyByType(messages);
+        Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> mapperPayloadsByUniqueKeyByType =
+                getMapperPayloadsByUniqueKeyByType(messages);
 
         List<Query> saveEventQueries = new ArrayList<>();
 
@@ -77,7 +78,9 @@ public class PaymentEventsMessageListener {
         ack.acknowledge();
     }
 
-    private Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> getMapperPayloadsByUniqueKeyByType(List<ConsumerRecord<String, SinkEvent>> messages) {
+    private Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> getMapperPayloadsByUniqueKeyByType(
+            List<ConsumerRecord<String, SinkEvent>> messages
+    ) {
         return messages.stream()
                 .map(ConsumerRecord::value)
                 .map(sinkEvent -> Map.entry(sinkEvent.getEvent(), paymentEventPayloadMachineEventParser.parse(sinkEvent.getEvent())))
@@ -88,7 +91,9 @@ public class PaymentEventsMessageListener {
                                 .collect(Collectors.toList())
                 )
                 .flatMap(List::stream)
-                .collect(Collectors.groupingBy(mapperPayload -> invoiceBatchManager.getInvoiceBatchService(mapperPayload.getInvoiceChange()))).entrySet().stream()
+                .collect(Collectors.groupingBy(mapperPayload ->
+                        invoiceBatchManager.getInvoiceBatchService(mapperPayload.getInvoiceChange())))
+                .entrySet().stream()
                 .filter(not(typeEntry -> typeEntry.getKey().getInvoiceBatchType().equals(InvoiceBatchType.OTHER)))
                 .map(
                         typeEntry -> {

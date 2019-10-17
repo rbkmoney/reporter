@@ -3,6 +3,7 @@ package com.rbkmoney.reporter.service.impl;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
+import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.StorageException;
@@ -20,7 +21,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentDao paymentDao;
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     @Override
     public Long save(Payment payment) throws StorageException {
         String invoiceId = payment.getInvoiceId();
@@ -40,7 +41,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     @Override
     public Payment get(String invoiceId, String paymentId) throws StorageException, NotFoundException {
         log.info("Trying to get payment, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
@@ -56,7 +57,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     @Override
     public PaymentPartyData getPaymentPartyData(String invoiceId, String paymentId) throws StorageException, NotFoundException {
         log.info("Trying to get PaymentPartyData, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
@@ -69,6 +70,22 @@ public class PaymentServiceImpl implements PaymentService {
             return paymentPartyData;
         } catch (DaoException e) {
             throw new StorageException(String.format("Failed to get PaymentPartyData, invoiceId='%s', paymentId='%s'", invoiceId, paymentId), e);
+        }
+    }
+
+    @Transactional
+    @Override
+    public PaymentCost getPaymentCost(String invoiceId, String paymentId) throws StorageException, NotFoundException {
+        log.info("Trying to get PaymentCost, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
+        try {
+            PaymentCost paymentCost = null;
+            if (paymentCost == null) {
+                throw new NotFoundException(String.format("PaymentCost not found, invoiceId='%s', paymentId='%s'", invoiceId, paymentId));
+            }
+            log.info("PaymentCost has been got, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
+            return paymentCost;
+        } catch (DaoException e) {
+            throw new StorageException(String.format("Failed to get PaymentCost, invoiceId='%s', paymentId='%s'", invoiceId, paymentId), e);
         }
     }
 }

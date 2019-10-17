@@ -16,8 +16,6 @@ public class PaymentPartyDataRowMapper implements RowMapper<PaymentPartyData> {
         PaymentPartyData paymentPartyData = new PaymentPartyData();
         paymentPartyData.setPartyId(UUID.fromString(rs.getString(PAYMENT.PARTY_ID.getName())));
         paymentPartyData.setPartyShopId(rs.getString(PAYMENT.PARTY_SHOP_ID.getName()));
-        paymentPartyData.setPaymentAmount(rs.getLong(PAYMENT.PAYMENT_AMOUNT.getName()));
-        paymentPartyData.setPaymentCurrencyCode(rs.getString(PAYMENT.PAYMENT_CURRENCY_CODE.getName()));
         return paymentPartyData;
     }
 }

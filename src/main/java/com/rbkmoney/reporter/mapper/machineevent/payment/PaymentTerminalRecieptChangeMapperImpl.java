@@ -1,12 +1,11 @@
-package com.rbkmoney.reporter.mapper.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent.payment;
 
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.damsel.user_interaction.PaymentTerminalReceipt;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
+import com.rbkmoney.reporter.domain.tables.pojos.PaymentShortId;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
@@ -38,19 +37,17 @@ public class PaymentTerminalRecieptChangeMapperImpl implements InvoiceChangeMapp
         String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
 
-        Payment payment = new Payment();
-
-        payment.setId(null);
-        payment.setWtime(null);
-        payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        payment.setEventType(InvoiceEventType.PAYMENT_TERMINAL_RECIEPT);
-        payment.setSequenceId(baseEvent.getEventId());
-        payment.setChangeId(changeId);
-        payment.setPaymentShortId(paymentTerminalReceipt.getShortPaymentId());
+        PaymentShortId paymentShortId = new PaymentShortId();
+        paymentShortId.setInvoiceId(invoiceId);
+        paymentShortId.setSequenceId(baseEvent.getEventId());
+        paymentShortId.setChangeId(changeId);
+        paymentShortId.setPaymentId(paymentId);
+        paymentShortId.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
+        paymentShortId.setPaymentShortId(paymentTerminalReceipt.getShortPaymentId());
 
         log.info("Payment with eventType=terminalReciept has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
 
-        return new MapperResult(payment);
+        return new MapperResult(paymentShortId);
     }
 
     private PaymentTerminalReceipt getPaymentTerminalReciept(InvoicePaymentChange invoicePaymentChange) {

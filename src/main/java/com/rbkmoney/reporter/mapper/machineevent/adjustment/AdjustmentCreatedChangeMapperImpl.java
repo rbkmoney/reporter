@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.mapper.machineevent;
+package com.rbkmoney.reporter.mapper.machineevent.adjustment;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustment;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
@@ -10,6 +10,7 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
+import com.rbkmoney.reporter.domain.tables.pojos.AdjustmentState;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperResult;
 import com.rbkmoney.reporter.util.DamselUtil;
@@ -22,18 +23,6 @@ import java.time.LocalDateTime;
 @Component
 @Slf4j
 public class AdjustmentCreatedChangeMapperImpl implements InvoiceChangeMapper {
-
-    @Override
-    public String[] getIgnoreProperties() {
-        return new String[0];
-    }
-
-    @Override
-    public boolean canMap(InvoiceChange payload) {
-        return payload.isSetInvoicePaymentChange()
-                && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
-                && payload.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getPayload().isSetInvoicePaymentAdjustmentCreated();
-    }
 
     @Override
     public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
@@ -54,7 +43,6 @@ public class AdjustmentCreatedChangeMapperImpl implements InvoiceChangeMapper {
         adjustment.setChangeId(changeId);
         adjustment.setPaymentId(paymentId);
         adjustment.setAdjustmentId(adjustmentId);
-        fillAdjustmentStatus(invoicePaymentAdjustment, adjustment);
         adjustment.setAdjustmentCreatedAt(getAdjustmentCreatedAt(invoicePaymentAdjustment));
         adjustment.setAdjustmentDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setAdjustmentReason(invoicePaymentAdjustment.getReason());
@@ -64,18 +52,28 @@ public class AdjustmentCreatedChangeMapperImpl implements InvoiceChangeMapper {
             adjustment.setAdjustmentPartyRevision(invoicePaymentAdjustment.getPartyRevision());
         }
 
+        AdjustmentState adjustmentState = new AdjustmentState();
+        adjustmentState.setInvoiceId(invoiceId);
+        adjustmentState.setSequenceId(baseEvent.getEventId());
+        adjustmentState.setChangeId(changeId);
+        adjustmentState.setCreatedAt(DamselUtil.getAdjustmentStatusCreatedAt(invoicePaymentAdjustment.getStatus()));
+        adjustmentState.setStatus(TBaseUtil.unionFieldToEnum(invoicePaymentAdjustment.getStatus(), AdjustmentStatus.class));
+
         log.info("Adjustment with eventType=created has been mapped, invoiceId={}, paymentId={}, adjustmentId={}", invoiceId, paymentId, adjustmentId);
 
-        return new MapperResult(adjustment);
+        return new MapperResult(adjustment, adjustmentState);
     }
 
-    private void fillAdjustmentStatus(InvoicePaymentAdjustment invoicePaymentAdjustment, Adjustment adjustment) {
-        adjustment.setAdjustmentStatus(TBaseUtil.unionFieldToEnum(invoicePaymentAdjustment.getStatus(), AdjustmentStatus.class));
-        adjustment.setAdjustmentStatusCreatedAt(getAdjustmentStatusCreatedAt(invoicePaymentAdjustment));
+    @Override
+    public boolean canMap(InvoiceChange payload) {
+        return payload.isSetInvoicePaymentChange()
+                && payload.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
+                && payload.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange().getPayload().isSetInvoicePaymentAdjustmentCreated();
     }
 
-    private LocalDateTime getAdjustmentStatusCreatedAt(InvoicePaymentAdjustment invoicePaymentAdjustment) {
-        return DamselUtil.getAdjustmentStatusCreatedAt(invoicePaymentAdjustment.getStatus());
+    @Override
+    public String[] getIgnoreProperties() {
+        return new String[0];
     }
 
     private LocalDateTime getAdjustmentCreatedAt(InvoicePaymentAdjustment invoicePaymentAdjustment) {

@@ -21,7 +21,7 @@ public class InvoiceBatchHandlerConfig {
     @Bean
     public InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
                                                                   InvoiceBatchMapperImpl invoiceBatchMapper) {
-        return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.INVOICE, invoiceBatchManager, invoiceBatchMapper);
+            return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.INVOICE, invoiceBatchManager, invoiceBatchMapper);
     }
 
     @Bean

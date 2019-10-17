@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
+import static com.rbkmoney.reporter.domain.tables.AdjustmentState.ADJUSTMENT_STATE;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 
 @Component
@@ -69,12 +70,18 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException {
+    public Map<String, Long> getShopAccountingReportData(String partyId,
+                                                         String partyShopId,
+                                                         String currencyCode,
+                                                         Optional<LocalDateTime> fromTime,
+                                                         LocalDateTime toTime) throws DaoException {
         String key = "funds_adjusted";
         Query query = getDslContext().select(
                 RoutinesWrapper.getPaymentFee().minus(RoutinesWrapper.getAdjustmentFee()).as(key)
         )
                 .from(ADJUSTMENT)
+                //.join(ADJUSTMENT_STATE)
+                //.on()
                 .join(PAYMENT)
                 .on(
                         ADJUSTMENT.PARTY_ID.eq(UUID.fromString(partyId))
