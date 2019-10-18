@@ -1,8 +1,8 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.base.TimeSpan;
-import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.dao.ContractMetaDao;
 import com.rbkmoney.reporter.domain.enums.ReportType;
@@ -15,7 +15,8 @@ import com.rbkmoney.reporter.exception.StorageException;
 import com.rbkmoney.reporter.handler.ReportGeneratorHandler;
 import com.rbkmoney.reporter.job.GenerateReportJob;
 import com.rbkmoney.reporter.service.*;
-import com.rbkmoney.reporter.trigger.*;
+import com.rbkmoney.reporter.trigger.FreezeTimeCronScheduleBuilder;
+import com.rbkmoney.reporter.trigger.FreezeTimeCronTrigger;
 import com.rbkmoney.reporter.util.SchedulerUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
