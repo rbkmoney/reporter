@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.dao.impl;
 
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
@@ -7,6 +8,8 @@ import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.rbkmoney.reporter.util.TimeUtil;
+import com.rbkmoney.reporter.util.TokenUtil;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Condition;
 import org.jooq.Query;
@@ -125,19 +128,32 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
         return fetch(query, reportRowMapper);
     }
 
-    @Override
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
+    private Condition buildCondition(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) {
         Condition condition = REPORT.PARTY_ID.eq(partyId)
                 .and(ofNullable(shopId).map(REPORT.PARTY_SHOP_ID::eq).orElse(trueCondition()))
                 .and(REPORT.FROM_TIME.ge(fromTime))
                 .and(REPORT.TO_TIME.le(toTime));
 
-        if (!reportTypes.isEmpty()) {
+        if (reportTypes != null && !reportTypes.isEmpty()) {
             condition = condition.and(REPORT.TYPE.in(reportTypes));
         }
+        return condition;
+    }
 
+    @Override
+    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
+        Condition condition = buildCondition(partyId, shopId, reportTypes, fromTime, toTime);
         Query query = getDslContext().selectFrom(REPORT).where(condition);
+        return fetch(query, reportRowMapper);
+    }
 
+    @Override
+    public List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime, LocalDateTime whereTime, int limit) throws DaoException {
+        Condition condition = buildCondition(partyId, shopId, reportTypes, fromTime, toTime);
+        if (whereTime != null) {
+           condition = condition.and(REPORT.CREATED_AT.greaterThan(whereTime));
+        }
+        Query query = getDslContext().selectFrom(REPORT).where(condition).orderBy(REPORT.CREATED_AT.asc()).limit(limit);
         return fetch(query, reportRowMapper);
     }
 

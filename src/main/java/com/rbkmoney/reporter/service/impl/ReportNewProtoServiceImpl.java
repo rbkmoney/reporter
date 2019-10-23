@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -51,8 +53,21 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
     }
 
     @Override
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) throws StorageException {
-        return reportService.getReportsByRange(partyId, shopId, reportTypes, fromTime, toTime);
+    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime, Instant whereTime, int limit) throws StorageException {
+        try {
+            return reportDao.getReportsWithToken(
+                    partyId,
+                    shopId,
+                    reportTypes,
+                    LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
+                    LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
+                    whereTime != null ? LocalDateTime.ofInstant(whereTime, ZoneOffset.UTC) : null,
+                    limit
+            );
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s', whereTime='%s'",
+                    partyId, shopId, reportTypes, fromTime, toTime, whereTime), ex);
+        }
     }
 
     @Override

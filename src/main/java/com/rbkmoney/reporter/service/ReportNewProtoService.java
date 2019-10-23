@@ -7,6 +7,7 @@ import com.rbkmoney.reporter.exception.*;
 
 import java.net.URL;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReportNewProtoService {
@@ -15,7 +16,7 @@ public interface ReportNewProtoService {
 
     Report getReport(long reportId, boolean withLock);
 
-    List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime) throws StorageException;
+    List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime, Instant whereTime, int limit) throws StorageException;
 
     void cancelReport(long reportId) throws ReportNotFoundException, StorageException;
 
