@@ -7,7 +7,6 @@ import com.rbkmoney.reporter.exception.*;
 
 import java.net.URL;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReportNewProtoService {

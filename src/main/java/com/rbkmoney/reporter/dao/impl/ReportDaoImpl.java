@@ -1,6 +1,5 @@
 package com.rbkmoney.reporter.dao.impl;
 
-import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.dao.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.ReportDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
@@ -8,8 +7,6 @@ import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.util.TimeUtil;
-import com.rbkmoney.reporter.util.TokenUtil;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Condition;
 import org.jooq.Query;
