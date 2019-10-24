@@ -82,7 +82,7 @@ public class ReportsNewProtoHandler implements ReportingSrv.Iface {
                 throw new BadToken();
             }
 
-            List<com.rbkmoney.reporter.domain.tables.pojos.Report> reports = reportService.getReportsByRange(
+            List<com.rbkmoney.reporter.domain.tables.pojos.Report> reports = reportService.getReportsWithToken(
                     reportRequest.getPartyId(),
                     reportRequest.getShopId(),
                     reportTypes(reportTypes),
@@ -98,8 +98,8 @@ public class ReportsNewProtoHandler implements ReportingSrv.Iface {
 
             StatReportResponse statReportResponse = new StatReportResponse(reportsFiltered);
             if (reports.size() >= REPORTS_LIMIT) {
-                String nextWhereTime = TypeUtil.temporalToString(reports.get(reports.size() - 1).getCreatedAt());
-                statReportResponse.setContinuationToken(TokenUtil.buildToken(reportRequest, reportTypes, nextWhereTime));
+                String nextCreatedAfter = TypeUtil.temporalToString(reports.get(reports.size() - 1).getCreatedAt());
+                statReportResponse.setContinuationToken(TokenUtil.buildToken(reportRequest, reportTypes, nextCreatedAfter));
             }
             return statReportResponse;
         } catch (IllegalArgumentException ex) {

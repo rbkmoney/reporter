@@ -18,8 +18,8 @@ public class TokenUtil {
     private static ObjectMapper objectMapper = new ObjectMapper();
 
     @SneakyThrows
-    public static String buildToken(ReportRequest request, List<String> reportTypes, String whereTime) {
-        return Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(new TokenData(request, reportTypes, whereTime)));
+    public static String buildToken(ReportRequest request, List<String> reportTypes, String createdAfter) {
+        return Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(new TokenData(request, reportTypes, createdAfter)));
     }
 
     public static boolean isValid(StatReportRequest statReportRequest) {
@@ -35,7 +35,7 @@ public class TokenUtil {
 
     @SneakyThrows
     public static String extractTime(String token) {
-        return objectMapper.readValue(Base64.getDecoder().decode(token), TokenData.class).getWhereTime();
+        return objectMapper.readValue(Base64.getDecoder().decode(token), TokenData.class).getCreatedAfter();
     }
 
     @Data
@@ -47,10 +47,10 @@ public class TokenUtil {
         private String fromTime;
         private String toTime;
         private List<String> reportTypes;
-        private String whereTime;
+        private String createdAfter;
 
-        public TokenData(ReportRequest request, List<String> reportTypes, String whereTime) {
-            this(request.getPartyId(), request.getShopId(), request.getTimeRange().getFromTime(), request.getTimeRange().getToTime(), reportTypes, whereTime);
+        public TokenData(ReportRequest request, List<String> reportTypes, String createdAfter) {
+            this(request.getPartyId(), request.getShopId(), request.getTimeRange().getFromTime(), request.getTimeRange().getToTime(), reportTypes, createdAfter);
         }
     }
 }

@@ -53,7 +53,7 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
     }
 
     @Override
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime, Instant whereTime, int limit) throws StorageException {
+    public List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime, Instant createdAfter, int limit) throws StorageException {
         try {
             return reportDao.getReportsWithToken(
                     partyId,
@@ -61,12 +61,12 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
                     reportTypes,
                     LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
                     LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
-                    whereTime != null ? LocalDateTime.ofInstant(whereTime, ZoneOffset.UTC) : null,
+                    createdAfter != null ? LocalDateTime.ofInstant(createdAfter, ZoneOffset.UTC) : null,
                     limit
             );
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get reports by range, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s', whereTime='%s'",
-                    partyId, shopId, reportTypes, fromTime, toTime, whereTime), ex);
+            throw new StorageException(String.format("Failed to get reports with token, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s', createdAfter='%s'",
+                    partyId, shopId, reportTypes, fromTime, toTime, createdAfter), ex);
         }
     }
 
