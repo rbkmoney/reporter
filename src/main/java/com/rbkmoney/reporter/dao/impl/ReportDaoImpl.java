@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -131,7 +132,7 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
                 .and(REPORT.FROM_TIME.ge(fromTime))
                 .and(REPORT.TO_TIME.le(toTime));
 
-        if (reportTypes != null && !reportTypes.isEmpty()) {
+        if (!CollectionUtils.isEmpty(reportTypes)) {
             condition = condition.and(REPORT.TYPE.in(reportTypes));
         }
         return condition;
