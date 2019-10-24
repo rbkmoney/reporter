@@ -59,15 +59,18 @@ public class ReportDaoTest extends AbstractIntegrationTest {
         LocalDateTime currMoment = LocalDateTime.now();
         IntStream.rangeClosed(1, 15).forEach(i -> {
             try {
-                reportDao.createReport("partyId", "shopId", currMoment.minusSeconds(i), currMoment.plusSeconds(i) , random(ReportType.class), random(TimeZone.class).getID(), currMoment.plusSeconds(i));
+                reportDao.createReport("partyId", "shopId", currMoment.minusSeconds(i), currMoment.plusSeconds(i),
+                        random(ReportType.class), random(TimeZone.class).getID(), currMoment.plusSeconds(i));
             } catch (DaoException e) {
                 throw new RuntimeException();
             }
         });
 
-        List<Report> reports = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(), currMoment.minusMinutes(1), currMoment.plusMinutes(1), null, 10);
+        List<Report> reports = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(),
+                currMoment.minusMinutes(1), currMoment.plusMinutes(1), null, 10);
         assertEquals(10, reports.size());
-        List<Report> reportsWithTime = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(), currMoment.minusMinutes(1), currMoment.plusMinutes(1), currMoment.plusSeconds(10), 10);
+        List<Report> reportsWithTime = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(),
+                currMoment.minusMinutes(1), currMoment.plusMinutes(1), currMoment.plusSeconds(10), 10);
         assertEquals(5, reportsWithTime.size());
 
     }

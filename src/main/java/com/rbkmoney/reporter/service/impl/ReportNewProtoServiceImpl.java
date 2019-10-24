@@ -53,7 +53,8 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
     }
 
     @Override
-    public List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes, Instant fromTime, Instant toTime, Instant createdAfter, int limit) throws StorageException {
+    public List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes,
+                                            Instant fromTime, Instant toTime, Instant createdAfter, int limit) throws StorageException {
         try {
             return reportDao.getReportsWithToken(
                     partyId,
@@ -65,7 +66,8 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
                     limit
             );
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get reports with token, partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s', createdAfter='%s'",
+            throw new StorageException(String.format("Failed to get reports with token, " +
+                            "partyId='%s', shopId='%s', reportTypes='%s', fromTime='%s', toTime='%s', createdAfter='%s'",
                     partyId, shopId, reportTypes, fromTime, toTime, createdAfter), ex);
         }
     }

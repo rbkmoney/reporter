@@ -139,14 +139,16 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
-    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
+    public List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes,
+                                          LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
         Condition condition = buildCondition(partyId, shopId, reportTypes, fromTime, toTime);
         Query query = getDslContext().selectFrom(REPORT).where(condition);
         return fetch(query, reportRowMapper);
     }
 
     @Override
-    public List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime, LocalDateTime createdAfter, int limit) throws DaoException {
+    public List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime,
+                                            LocalDateTime toTime, LocalDateTime createdAfter, int limit) throws DaoException {
         Condition condition = buildCondition(partyId, shopId, reportTypes, fromTime, toTime);
         if (createdAfter != null) {
            condition = condition.and(REPORT.CREATED_AT.greaterThan(createdAfter));
@@ -159,7 +161,8 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
-    public long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, String timezone, LocalDateTime createdAt) throws DaoException {
+    public long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime,
+                             ReportType reportType, String timezone, LocalDateTime createdAt) throws DaoException {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         Query query = getDslContext().insertInto(REPORT)
