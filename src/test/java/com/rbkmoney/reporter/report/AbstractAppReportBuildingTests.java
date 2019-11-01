@@ -1,10 +1,8 @@
 package com.rbkmoney.reporter.report;
 
-import com.rbkmoney.easyway.AbstractTestUtils;
-import com.rbkmoney.easyway.TestContainers;
-import com.rbkmoney.easyway.TestContainersBuilder;
-import com.rbkmoney.easyway.TestContainersParameters;
+import com.rbkmoney.easyway.*;
 import com.rbkmoney.reporter.config.ApplicationConfig;
+import com.rbkmoney.reporter.config.CacheConfig;
 import com.rbkmoney.reporter.config.SchedulerConfig;
 import com.rbkmoney.reporter.service.StorageService;
 import com.rbkmoney.reporter.service.impl.S3StorageServiceImpl;
@@ -25,13 +23,15 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.FailureDetectingExternalResource;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(
         classes = {
                 ApplicationConfig.class,
-                SchedulerConfig.class
+                SchedulerConfig.class,
+                CacheConfig.class
         },
         initializers = AbstractAppReportBuildingTests.Initializer.class
 )
@@ -83,12 +83,15 @@ public abstract class AbstractAppReportBuildingTests extends AbstractTestUtils {
             super.initialize(configurableApplicationContext);
             TestPropertyValues.of(
                     testContainers.getEnvironmentProperties(
-                            environmentProperties -> {
-                            }
+                            getEnvironmentPropertiesConsumer()
                     )
             )
                     .applyTo(configurableApplicationContext);
         }
+    }
+
+    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
+        return environmentProperties -> environmentProperties.put("info.single-instance-mode", "true");
     }
 
     private static Supplier<TestContainersParameters> getTestContainersParametersSupplier() {

@@ -2,24 +2,21 @@ package com.rbkmoney.reporter.mapper.machineevent.payment;
 
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
-import com.rbkmoney.damsel.user_interaction.PaymentTerminalReceipt;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentShortId;
+import com.rbkmoney.reporter.domain.tables.pojos.PaymentTerminalReceipt;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
+import static com.rbkmoney.reporter.util.MapperUtil.getPaymentTerminalReceipt;
+
 @Component
 @Slf4j
 public class PaymentTerminalRecieptChangeMapperImpl implements InvoiceChangeMapper {
-
-    @Override
-    public String[] getIgnoreProperties() {
-        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
-                "paymentShortId"};
-    }
 
     @Override
     public boolean canMap(InvoiceChange payload) {
@@ -31,26 +28,22 @@ public class PaymentTerminalRecieptChangeMapperImpl implements InvoiceChangeMapp
 
     @Override
     public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
-        InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
-        PaymentTerminalReceipt paymentTerminalReceipt = getPaymentTerminalReciept(invoicePaymentChange);
+        InvoicePaymentChange damselPaymentChange = payload.getInvoicePaymentChange();
+        var damselPaymentTerminalReceipt = getPaymentTerminalReciept(damselPaymentChange);
 
-        String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
+        long sequenceId = baseEvent.getEventId();
+        LocalDateTime eventCreatedAt = TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt());
+        String paymentId = damselPaymentChange.getId();
 
-        PaymentShortId paymentShortId = new PaymentShortId();
-        paymentShortId.setInvoiceId(invoiceId);
-        paymentShortId.setSequenceId(baseEvent.getEventId());
-        paymentShortId.setChangeId(changeId);
-        paymentShortId.setPaymentId(paymentId);
-        paymentShortId.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        paymentShortId.setPaymentShortId(paymentTerminalReceipt.getShortPaymentId());
+        PaymentTerminalReceipt paymentTerminalReceipt = getPaymentTerminalReceipt(invoiceId, changeId, sequenceId, eventCreatedAt, paymentId, damselPaymentTerminalReceipt);
 
-        log.info("Payment with eventType=terminalReciept has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
+        log.info("Payment with eventType=[paymentTerminalReceipt] has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
 
-        return new MapperResult(paymentShortId);
+        return new MapperResult(paymentTerminalReceipt);
     }
 
-    private PaymentTerminalReceipt getPaymentTerminalReciept(InvoicePaymentChange invoicePaymentChange) {
+    private com.rbkmoney.damsel.user_interaction.PaymentTerminalReceipt getPaymentTerminalReciept(InvoicePaymentChange invoicePaymentChange) {
         return invoicePaymentChange
                 .getPayload().getInvoicePaymentSessionChange()
                 .getPayload().getSessionInteractionRequested()

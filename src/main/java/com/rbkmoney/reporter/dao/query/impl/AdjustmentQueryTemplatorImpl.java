@@ -6,19 +6,17 @@ import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.pojos.AdjustmentState;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentStateRecord;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-
 import static com.rbkmoney.reporter.domain.Tables.ADJUSTMENT_STATE;
 import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
-import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 
 @Component
 public class AdjustmentQueryTemplatorImpl extends AbstractGenericDao implements AdjustmentQueryTemplator {
 
-    public AdjustmentQueryTemplatorImpl(DataSource dataSource) {
+    public AdjustmentQueryTemplatorImpl(HikariDataSource dataSource) {
         super(dataSource);
     }
 
@@ -27,7 +25,7 @@ public class AdjustmentQueryTemplatorImpl extends AbstractGenericDao implements 
         AdjustmentRecord adjustmentRecord = getDslContext().newRecord(ADJUSTMENT, adjustment);
         return getDslContext().insertInto(ADJUSTMENT)
                 .set(adjustmentRecord)
-                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID, INVOICE.CHANGE_ID)
+                .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.PAYMENT_ID, ADJUSTMENT.ADJUSTMENT_ID)
                 .doNothing();
     }
 
@@ -36,8 +34,7 @@ public class AdjustmentQueryTemplatorImpl extends AbstractGenericDao implements 
         AdjustmentStateRecord adjustmentStateRecord = getDslContext().newRecord(ADJUSTMENT_STATE, adjustmentState);
         return getDslContext().insertInto(ADJUSTMENT_STATE)
                 .set(adjustmentStateRecord)
-                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID, INVOICE.CHANGE_ID)
+                .onConflict(ADJUSTMENT_STATE.INVOICE_ID, ADJUSTMENT_STATE.SEQUENCE_ID, ADJUSTMENT_STATE.CHANGE_ID)
                 .doNothing();
     }
-
 }

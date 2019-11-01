@@ -3,8 +3,6 @@ package com.rbkmoney.reporter.batch.impl;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.batch.InvoiceBatchService;
-import com.rbkmoney.reporter.batch.InvoiceBatchType;
-import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,7 +15,6 @@ import java.util.NoSuchElementException;
 public class InvoicingBatchManagerImpl implements InvoiceBatchManager {
 
     private final List<InvoiceBatchService> invoiceBatchServices;
-    private final List<BatchDao> batchDaos;
     private final List<InvoiceChangeMapper> invoiceChangeMappers;
 
     private final InvoiceBatchService otherInvoiceBatchServiceImpl;
@@ -28,14 +25,6 @@ public class InvoicingBatchManagerImpl implements InvoiceBatchManager {
                 .filter(invoiceChangeType -> invoiceChangeType.isChangeType(invoiceChange))
                 .findFirst()
                 .orElse(otherInvoiceBatchServiceImpl);
-    }
-
-    @Override
-    public BatchDao getBatchDao(InvoiceBatchType invoiceBatchType) {
-        return batchDaos.stream()
-                .filter(dao -> dao.isInvoiceChangeType(invoiceBatchType))
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException(String.format("No value present, invoiceBatchType='%s'", invoiceBatchType)));
     }
 
     @Override

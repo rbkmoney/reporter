@@ -2,16 +2,14 @@ package com.rbkmoney.reporter.config;
 
 import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.batch.InvoiceBatchType;
-import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.handle.InvoiceBatchHandler;
 import com.rbkmoney.reporter.handle.impl.InvoiceBatchHandlerImpl;
-import com.rbkmoney.reporter.mapper.impl.AdjustmentInvoiceBatchMapperImpl;
-import com.rbkmoney.reporter.mapper.impl.InvoiceBatchMapperImpl;
-import com.rbkmoney.reporter.mapper.impl.PaymentInvoiceBatchMapperImpl;
-import com.rbkmoney.reporter.mapper.impl.RefundInvoiceBatchMapperImpl;
+import com.rbkmoney.reporter.mapper.impl.AdjustmentQueryInvoiceBatchMapperImpl;
+import com.rbkmoney.reporter.mapper.impl.InvoiceQueryInvoiceBatchMapperImpl;
+import com.rbkmoney.reporter.mapper.impl.PaymentQueryInvoiceBatchMapperImpl;
+import com.rbkmoney.reporter.mapper.impl.RefundQueryInvoiceBatchMapperImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,26 +17,26 @@ import org.springframework.context.annotation.Configuration;
 public class InvoiceBatchHandlerConfig {
 
     @Bean
-    public InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
-                                                                  InvoiceBatchMapperImpl invoiceBatchMapper) {
-            return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.INVOICE, invoiceBatchManager, invoiceBatchMapper);
+    public InvoiceBatchHandler<PartyData, Void> invoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
+                                                                    InvoiceQueryInvoiceBatchMapperImpl invoiceBatchMapper) {
+        return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.INVOICE, invoiceBatchManager, invoiceBatchMapper);
     }
 
     @Bean
-    public InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
-                                                                            PaymentInvoiceBatchMapperImpl invoiceBatchMapper) {
+    public InvoiceBatchHandler<PaymentPartyData, PartyData> paymentInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
+                                                                                       PaymentQueryInvoiceBatchMapperImpl invoiceBatchMapper) {
         return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.PAYMENT, invoiceBatchManager, invoiceBatchMapper);
     }
 
     @Bean
-    public InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
-                                                                                  AdjustmentInvoiceBatchMapperImpl invoiceBatchMapper) {
+    public InvoiceBatchHandler<Void, PaymentPartyData> adjustmentInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
+                                                                                     AdjustmentQueryInvoiceBatchMapperImpl invoiceBatchMapper) {
         return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.ADJUSTMENT, invoiceBatchManager, invoiceBatchMapper);
     }
 
     @Bean
-    public InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
-                                                                          RefundInvoiceBatchMapperImpl invoiceBatchMapper) {
+    public InvoiceBatchHandler<Void, PaymentPartyData> refundInvoiceBatchHandler(InvoiceBatchManager invoiceBatchManager,
+                                                                                 RefundQueryInvoiceBatchMapperImpl invoiceBatchMapper) {
         return new InvoiceBatchHandlerImpl<>(InvoiceBatchType.REFUND, invoiceBatchManager, invoiceBatchMapper);
     }
 }

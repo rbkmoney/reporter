@@ -31,12 +31,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.rbkmoney.geck.common.util.TypeUtil.stringToTemporal;
-import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -63,9 +60,6 @@ public class ServiceTests extends AbstractAppServiceTests {
     private PartyManagementSrv.Iface partyManagementClient;
 
     @Autowired
-    private ReportingService reportingService;
-
-    @Autowired
     private StorageService storageService;
 
     @Autowired
@@ -73,22 +67,6 @@ public class ServiceTests extends AbstractAppServiceTests {
 
     @Autowired
     private TaskService taskService;
-
-    @Test
-    @Sql("classpath:data/sql/shop_accounting_full_data.sql")
-    public void reportingServiceTest() {
-        Map<String, Long> data = reportingService.getShopAccountingReportData(
-                "db79ad6c-a507-43ed-9ecf-3bbd88475b32",
-                "test_shop_1",
-                "RUB",
-                toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))
-        );
-        assertEquals((long) 3000, (long) data.get("funds_acquired"));
-        assertEquals((long) 75, (long) data.get("fee_charged"));
-        assertEquals((long) 2, (long) data.get("funds_adjusted"));
-        assertEquals((long) 1000, (long) data.get("funds_refunded"));
-        assertEquals((long) 950, (long) data.get("funds_paid_out"));
-    }
 
     @Test
     public void saveFileTest() throws IOException {

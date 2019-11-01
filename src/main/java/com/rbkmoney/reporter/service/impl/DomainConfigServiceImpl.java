@@ -23,11 +23,6 @@ public class DomainConfigServiceImpl implements DomainConfigService {
     }
 
     @Override
-    public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, long domainRevision) throws NotFoundException {
-        return getBusinessSchedule(scheduleRef, Reference.version(domainRevision));
-    }
-
-    @Override
     public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException {
         log.info("Trying to get schedule, scheduleRef='{}', revisionReference='{}'", scheduleRef, revisionReference);
         try {
@@ -45,38 +40,8 @@ public class DomainConfigServiceImpl implements DomainConfigService {
     }
 
     @Override
-    public CategoryType getCategoryType(CategoryRef categoryRef) {
-        return getCategoryType(categoryRef, Reference.head(new Head()));
-    }
-
-    @Override
-    public CategoryType getCategoryType(CategoryRef categoryRef, long domainRevision) {
-        return getCategoryType(categoryRef, Reference.version(domainRevision));
-    }
-
-    @Override
-    public CategoryType getCategoryType(CategoryRef categoryRef, Reference revisionReference) {
-        log.info("Trying to get category type, categoryRef='{}', revisionReference='{}'", categoryRef, revisionReference);
-        try {
-            com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
-            reference.setCategory(categoryRef);
-            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
-            CategoryType categoryType = versionedObject.getObject().getCategory().getData().getType();
-            log.info("Category type has been found, categoryRef='{}', revisionReference='{}', categoryType='{}'", categoryRef, revisionReference, categoryType);
-            return categoryType;
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to get category type, categoryRef='%s', revisionReference='%s'", categoryRef, revisionReference), ex);
-        }
-    }
-
-    @Override
     public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef) throws NotFoundException {
         return getPaymentInstitution(paymentInstitutionRef, Reference.head(new Head()));
-    }
-
-    @Override
-    public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, long domainRevision) throws NotFoundException {
-        return getPaymentInstitution(paymentInstitutionRef, Reference.version(domainRevision));
     }
 
     @Override
@@ -102,11 +67,6 @@ public class DomainConfigServiceImpl implements DomainConfigService {
     }
 
     @Override
-    public Calendar getCalendar(CalendarRef calendarRef, long domainRevision) throws NotFoundException {
-        return getCalendar(calendarRef, Reference.version(domainRevision));
-    }
-
-    @Override
     public Calendar getCalendar(CalendarRef calendarRef, Reference revisionReference) throws NotFoundException {
         log.info("Trying to get calendar, calendarRef='{}', revisionReference='{}'", calendarRef, revisionReference);
         try {
@@ -122,5 +82,4 @@ public class DomainConfigServiceImpl implements DomainConfigService {
             throw new RuntimeException(String.format("Failed to get calendar, calendarRef='%s', revisionReference='%s'", calendarRef, revisionReference), ex);
         }
     }
-
 }

@@ -1,16 +1,14 @@
 package com.rbkmoney.reporter.service;
 
+import com.rbkmoney.reporter.batch.impl.InvoiceUniqueBatchKeyImpl;
 import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.StorageException;
 
 public interface InvoiceService {
 
-    Long save(Invoice invoice) throws StorageException;
+    void savePartyData(InvoiceUniqueBatchKeyImpl uniqueBatchKey, PartyData partyData);
 
-    Invoice get(String invoiceId) throws StorageException, NotFoundException;
-
-    PartyData getPartyData(String invoiceId) throws StorageException, NotFoundException;
+    PartyData getPartyData(InvoiceUniqueBatchKeyImpl uniqueBatchKey) throws StorageException, NotFoundException;
 
 }

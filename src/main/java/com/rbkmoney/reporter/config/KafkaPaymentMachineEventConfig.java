@@ -3,10 +3,8 @@ package com.rbkmoney.reporter.config;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.batch.InvoiceBatchManager;
-import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.handle.InvoiceBatchHandler;
 import com.rbkmoney.reporter.listener.machineevent.PaymentEventsMessageListener;
 import com.rbkmoney.reporter.service.BatchService;
@@ -39,10 +37,10 @@ public class KafkaPaymentMachineEventConfig {
     public PaymentEventsMessageListener paymentEventsKafkaListener(Parser<MachineEvent, EventPayload> paymentEventPayloadMachineEventParser,
                                                                    InvoiceBatchManager invoiceBatchManager,
                                                                    BatchService batchService,
-                                                                   InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler,
-                                                                   InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler,
-                                                                   InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler,
-                                                                   InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler) {
+                                                                   InvoiceBatchHandler<PartyData, Void> invoiceBatchHandler,
+                                                                   InvoiceBatchHandler<PaymentPartyData, PartyData> paymentInvoiceBatchHandler,
+                                                                   InvoiceBatchHandler<Void, PaymentPartyData> adjustmentInvoiceBatchHandler,
+                                                                   InvoiceBatchHandler<Void, PaymentPartyData> refundInvoiceBatchHandler) {
         return new PaymentEventsMessageListener(paymentEventPayloadMachineEventParser, invoiceBatchManager, batchService, invoiceBatchHandler, paymentInvoiceBatchHandler, adjustmentInvoiceBatchHandler, refundInvoiceBatchHandler);
     }
 }

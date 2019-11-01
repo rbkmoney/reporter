@@ -68,34 +68,12 @@ public class ContractMetaDaoImpl extends AbstractGenericDao implements ContractM
     }
 
     @Override
-    public List<ContractMeta> getByCalendarAndSchedulerId(int calendarId, int schedulerId) throws DaoException {
-        Query query = getDslContext().selectFrom(CONTRACT_META)
-                .where(
-                        CONTRACT_META.CALENDAR_ID.eq(calendarId)
-                                .and(CONTRACT_META.SCHEDULE_ID.eq(schedulerId))
-                );
-
-        return fetch(query, contractMetaRowMapper);
-    }
-
-    @Override
     public List<ContractMeta> getAllActiveContracts() throws DaoException {
         Query query = getDslContext().selectFrom(CONTRACT_META)
                 .where(CONTRACT_META.SCHEDULE_ID.isNotNull()
                         .and(CONTRACT_META.CALENDAR_ID.isNotNull()));
 
         return fetch(query, contractMetaRowMapper);
-    }
-
-    @Override
-    public void saveLastClosingBalance(String partyId, String contractId, long lastClosingBalance) throws DaoException {
-        Query query = getDslContext()
-                .update(CONTRACT_META)
-                .set(CONTRACT_META.LAST_CLOSING_BALANCE, lastClosingBalance)
-                .where(CONTRACT_META.PARTY_ID.eq(partyId)
-                        .and(CONTRACT_META.CONTRACT_ID.eq(contractId)));
-
-        executeOne(query);
     }
 
     @Override

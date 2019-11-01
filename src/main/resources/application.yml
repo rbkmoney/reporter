@@ -1,4 +1,3 @@
-
 info:
   version: @project.version@
   stage: dev
@@ -33,6 +32,12 @@ spring:
   output:
     ansi:
       enabled: always
+---
+cache:
+  invoice:
+    size: 10000
+  payment:
+    size: 10000
 ---
 kafka:
   bootstrap-servers: localhost:9092

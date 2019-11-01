@@ -1,9 +1,9 @@
 package com.rbkmoney.reporter.service.impl;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.StorageException;
@@ -11,7 +11,6 @@ import com.rbkmoney.reporter.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -20,72 +19,37 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentDao paymentDao;
+    private final Cache<PaymentInvoiceUniqueBatchKey, PaymentPartyData> paymentPartyDataCache;
 
-    @Transactional
     @Override
-    public Long save(Payment payment) throws StorageException {
-        String invoiceId = payment.getInvoiceId();
-        String paymentId = payment.getPaymentId();
-
-        log.info("Trying to save payment, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-        try {
-            Long id = paymentDao.save(payment);
-            if (id != null) {
-                log.info("Payment has been saved, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-            } else {
-                log.info("Payment is duplicate, id is null, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-            }
-            return id;
-        } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to save payment, payment='%s'", payment), e);
-        }
+    public void savePaymentPartyData(PaymentInvoiceUniqueBatchKey uniqueBatchKey, PaymentPartyData paymentPartyData) {
+        paymentPartyDataCache.put(uniqueBatchKey, paymentPartyData);
     }
 
     @Transactional
     @Override
-    public Payment get(String invoiceId, String paymentId) throws StorageException, NotFoundException {
-        log.info("Trying to get payment, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-        try {
-            Payment payment = paymentDao.get(invoiceId, paymentId);
-            if (payment == null) {
-                throw new NotFoundException(String.format("Payment not found, invoiceId='%s', paymentId='%s'", invoiceId, paymentId));
-            }
-            log.info("Payment has been got, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-            return payment;
-        } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to get payment, invoiceId='%s', paymentId='%s'", invoiceId, paymentId), e);
-        }
-    }
+    public PaymentPartyData getPaymentPartyData(PaymentInvoiceUniqueBatchKey uniqueBatchKey) throws StorageException, NotFoundException {
+        String invoiceId = uniqueBatchKey.getInvoiceId();
+        String paymentId = uniqueBatchKey.getPaymentId();
 
-    @Transactional
-    @Override
-    public PaymentPartyData getPaymentPartyData(String invoiceId, String paymentId) throws StorageException, NotFoundException {
         log.info("Trying to get PaymentPartyData, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-        try {
-            PaymentPartyData paymentPartyData = paymentDao.getPaymentPartyData(invoiceId, paymentId);
-            if (paymentPartyData == null) {
-                throw new NotFoundException(String.format("PaymentPartyData not found, invoiceId='%s', paymentId='%s'", invoiceId, paymentId));
-            }
-            log.info("PaymentPartyData has been got, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-            return paymentPartyData;
-        } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to get PaymentPartyData, invoiceId='%s', paymentId='%s'", invoiceId, paymentId), e);
-        }
-    }
 
-    @Transactional
-    @Override
-    public PaymentCost getPaymentCost(String invoiceId, String paymentId) throws StorageException, NotFoundException {
-        log.info("Trying to get PaymentCost, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-        try {
-            PaymentCost paymentCost = null;
-            if (paymentCost == null) {
-                throw new NotFoundException(String.format("PaymentCost not found, invoiceId='%s', paymentId='%s'", invoiceId, paymentId));
-            }
-            log.info("PaymentCost has been got, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
-            return paymentCost;
-        } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to get PaymentCost, invoiceId='%s', paymentId='%s'", invoiceId, paymentId), e);
-        }
+        PaymentPartyData paymentPartyData = paymentPartyDataCache.get(
+                uniqueBatchKey,
+                k -> {
+                    try {
+                        PaymentPartyData data = paymentDao.getPaymentPartyData(uniqueBatchKey);
+                        if (data == null) {
+                            throw new NotFoundException(String.format("PaymentPartyData not found, invoiceId='%s', paymentId='%s'", invoiceId, paymentId));
+                        }
+                        return data;
+                    } catch (DaoException e) {
+                        throw new StorageException(String.format("Failed to get PaymentPartyData, invoiceId='%s', paymentId='%s'", invoiceId, paymentId), e);
+                    }
+                }
+        );
+
+        log.info("PaymentPartyData has been got, invoiceId='{}', paymentId='{}'", invoiceId, paymentId);
+        return paymentPartyData;
     }
 }

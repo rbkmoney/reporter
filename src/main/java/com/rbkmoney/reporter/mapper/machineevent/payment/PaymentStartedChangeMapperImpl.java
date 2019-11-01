@@ -1,8 +1,6 @@
 package com.rbkmoney.reporter.mapper.machineevent.payment;
 
 import com.rbkmoney.damsel.base.Content;
-import com.rbkmoney.damsel.domain.InvoicePaymentStatus;
-import com.rbkmoney.damsel.domain.PaymentTool;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -12,62 +10,27 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.BankCardTokenProvider;
 import com.rbkmoney.reporter.domain.enums.OnHoldExpiration;
-import com.rbkmoney.reporter.domain.enums.*;
+import com.rbkmoney.reporter.domain.enums.PaymentFlow;
+import com.rbkmoney.reporter.domain.enums.PaymentPayerType;
 import com.rbkmoney.reporter.domain.tables.pojos.*;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperResult;
-import com.rbkmoney.reporter.util.CashFlowUtil;
+import com.rbkmoney.reporter.util.FeeType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
+import static com.rbkmoney.reporter.util.DamselUtil.getCurrency;
+import static com.rbkmoney.reporter.util.DamselUtil.getFees;
+import static com.rbkmoney.reporter.util.FeeTypeMapUtil.isContainsAnyFee;
+import static com.rbkmoney.reporter.util.MapperUtil.*;
 
 @Component
 @Slf4j
 public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
-
-    @Override
-    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
-        InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
-        InvoicePaymentStarted invoicePaymentStarted = getInvoicePaymentStarted(invoicePaymentChange);
-        InvoicePayment invoicePayment = invoicePaymentStarted.getPayment();
-
-        String paymentId = invoicePaymentChange.getId();
-        String invoiceId = baseEvent.getSourceId();
-        Payer payer = invoicePayment.getPayer();
-        InvoicePaymentFlow paymentFlow = invoicePayment.getFlow();
-        InvoicePaymentStatus status = invoicePayment.getStatus();
-
-        Payment payment = new Payment();
-        payment.setEventCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        payment.setEventType(InvoiceEventType.INVOICE_PAYMENT_STARTED);
-        payment.setInvoiceId(invoiceId);
-        payment.setSequenceId(baseEvent.getEventId());
-        payment.setChangeId(changeId);
-        payment.setPaymentId(paymentId);
-        payment.setPaymentCreatedAt(TypeUtil.stringToLocalDateTime(invoicePayment.getCreatedAt()));
-        payment.setPaymentDomainRevision(invoicePayment.getDomainRevision());
-
-        fillPayer(payer, payment);
-        fillInvoicePaymentFlow(paymentFlow, payment);
-        fillInvoicePaymentContext(invoicePayment, payment);
-
-        if (invoicePayment.isSetMakeRecurrent()) {
-            payment.setPaymentMakeRecurrentFlag(invoicePayment.isMakeRecurrent());
-        }
-        if (invoicePayment.isSetPartyRevision()) {
-            payment.setPaymentPartyRevision(invoicePayment.getPartyRevision());
-        }
-
-        PaymentState paymentState = getPaymentState(baseEvent, changeId, paymentId, status);
-        PaymentCost paymentCost = getPaymentCost(baseEvent, changeId, paymentId, invoicePayment.getCost());
-        PaymentRouting paymentRouting = getPaymentRouting(baseEvent, changeId, paymentId, invoicePaymentStarted);
-        List<CashFlow> cashFlowList = getCashFlowList(baseEvent, changeId, paymentId, invoicePaymentStarted);
-
-        log.info("Payment with eventType=created has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
-
-        return new MapperResult(payment, paymentState, paymentCost, paymentRouting, cashFlowList);
-    }
 
     @Override
     public boolean canMap(InvoiceChange payload) {
@@ -76,69 +39,65 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
     }
 
     @Override
-    public String[] getIgnoreProperties() {
-        return new String[0];
-    }
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+        InvoicePaymentChange damselPaymentChange = payload.getInvoicePaymentChange();
+        InvoicePaymentStarted damselPaymentStarted = getInvoicePaymentStarted(damselPaymentChange);
+        InvoicePayment damselPayment = damselPaymentStarted.getPayment();
 
-    private PaymentCost getPaymentCost(MachineEvent baseEvent, Integer changeId, String paymentId, Cash cost) {
-        PaymentCost paymentCost = new PaymentCost();
-        paymentCost.setInvoiceId(baseEvent.getSourceId());
-        paymentCost.setSequenceId(baseEvent.getEventId());
-        paymentCost.setChangeId(changeId);
-        paymentCost.setPaymentId(paymentId);
-        paymentCost.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        paymentCost.setAmount(cost.getAmount());
-        paymentCost.setOriginAmount(cost.getAmount());
-        paymentCost.setCurrency(cost.getCurrency().getSymbolicCode());
-        return paymentCost;
-    }
+        String invoiceId = baseEvent.getSourceId();
+        long sequenceId = baseEvent.getEventId();
+        LocalDateTime eventCreatedAt = TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt());
+        String paymentId = damselPaymentChange.getId();
+        Payer payer = damselPayment.getPayer();
+        InvoicePaymentFlow paymentFlow = damselPayment.getFlow();
+        InvoicePaymentStatus status = damselPayment.getStatus();
+        Cash cost = damselPayment.getCost();
 
-    private PaymentState getPaymentState(MachineEvent baseEvent, Integer changeId, String paymentId, InvoicePaymentStatus status) {
-        PaymentState state = new PaymentState();
-        state.setInvoiceId(baseEvent.getSourceId());
-        state.setSequenceId(baseEvent.getEventId());
-        state.setChangeId(changeId);
-        state.setPaymentId(paymentId);
-        state.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        state.setPaymentStatus(TBaseUtil.unionFieldToEnum(status, com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus.class));
-        return state;
-    }
+        Payment payment = getPayment(damselPayment, invoiceId, paymentId, payer, paymentFlow);
 
-    private PaymentRouting getPaymentRouting(MachineEvent baseEvent,
-                                             Integer changeId,
-                                             String paymentId,
-                                             InvoicePaymentStarted invoicePaymentStarted) {
-        if (invoicePaymentStarted.isSetRoute()) {
-            PaymentRoute paymentRoute = invoicePaymentStarted.getRoute();
-            PaymentRouting paymentRouting = new PaymentRouting();
-            paymentRouting.setInvoiceId(baseEvent.getSourceId());
-            paymentRouting.setSequenceId(baseEvent.getEventId());
-            paymentRouting.setChangeId(changeId);
-            paymentRouting.setPaymentId(paymentId);
-            paymentRouting.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-            paymentRouting.setProviderId(paymentRoute.getProvider().getId());
-            paymentRouting.setTerminalId(paymentRoute.getTerminal().getId());
-            return paymentRouting;
+        PaymentState paymentState = getPaymentState(invoiceId, changeId, sequenceId, eventCreatedAt, paymentId, status);
+
+        PaymentCost paymentCost = getPaymentCost(invoiceId, sequenceId, changeId, eventCreatedAt, paymentId, cost.getAmount(), cost.getCurrency().getSymbolicCode());
+
+        PaymentRouting paymentRouting = null;
+        if (damselPaymentStarted.isSetRoute()) {
+            PaymentRoute paymentRoute = damselPaymentStarted.getRoute();
+            paymentRouting = getPaymentRouting(invoiceId, changeId, sequenceId, eventCreatedAt, paymentId, paymentRoute);
         }
-        return null;
+
+        PaymentFee paymentFee = null;
+        if (damselPaymentStarted.isSetCashFlow()) {
+            List<FinalCashFlowPosting> cashFlowPostings = damselPaymentStarted.getCashFlow();
+            Map<FeeType, Long> fees = getFees(cashFlowPostings);
+            Map<FeeType, String> currencies = getCurrency(cashFlowPostings);
+
+            if (isContainsAnyFee(fees)) {
+                paymentFee = getPaymentFee(invoiceId, changeId, sequenceId, eventCreatedAt, paymentId, fees, currencies);
+            }
+        }
+
+        log.info("Payment with eventType=[created] has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
+
+        return new MapperResult(payment, paymentState, paymentCost, paymentRouting, paymentFee);
     }
 
-    private List<CashFlow> getCashFlowList(MachineEvent baseEvent,
-                                           Integer changeId,
-                                           String paymentId,
-                                           InvoicePaymentStarted invoicePaymentStarted) {
-        if (invoicePaymentStarted.isSetCashFlow()) {
-            return CashFlowUtil.convertCashFlows(
-                    invoicePaymentStarted.getCashFlow(),
-                    baseEvent.getSourceId(),
-                    baseEvent.getEventId(),
-                    changeId,
-                    paymentId,
-                    TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()),
-                    PaymentChangeType.payment
-            );
+    private Payment getPayment(InvoicePayment damselPayment, String invoiceId, String paymentId, Payer payer, InvoicePaymentFlow paymentFlow) {
+        Payment payment = new Payment();
+        payment.setInvoiceId(invoiceId);
+        payment.setPaymentId(paymentId);
+        payment.setCreatedAt(TypeUtil.stringToLocalDateTime(damselPayment.getCreatedAt()));
+        payment.setDomainRevision(damselPayment.getDomainRevision());
+        if (damselPayment.isSetPartyRevision()) {
+            payment.setPartyRevision(damselPayment.getPartyRevision());
         }
-        return null;
+        fillPayer(payer, payment);
+        fillInvoicePaymentFlow(paymentFlow, payment);
+        if (damselPayment.isSetMakeRecurrent()) {
+            payment.setMakeRecurrentFlag(damselPayment.isMakeRecurrent());
+        }
+        fillInvoicePaymentContext(damselPayment, payment);
+
+        return payment;
     }
 
     private InvoicePaymentStarted getInvoicePaymentStarted(InvoicePaymentChange invoicePaymentChange) {
@@ -147,7 +106,7 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
     }
 
     private void fillPayer(Payer payer, Payment payment) {
-        payment.setPaymentPayerType(TBaseUtil.unionFieldToEnum(payer, PaymentPayerType.class));
+        payment.setPayerType(TBaseUtil.unionFieldToEnum(payer, PaymentPayerType.class));
         if (payer.isSetPaymentResource()) {
             PaymentResourcePayer paymentResource = payer.getPaymentResource();
             DisposablePaymentResource resource = paymentResource.getResource();
@@ -156,12 +115,12 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
 
             fillPaymentToolUnion(payment, paymentTool);
             if (resource.isSetPaymentSessionId()) {
-                payment.setPaymentSessionId(resource.getPaymentSessionId());
+                payment.setSessionId(resource.getPaymentSessionId());
             }
             if (resource.isSetClientInfo()) {
                 ClientInfo clientInfo = resource.getClientInfo();
-                payment.setPaymentFingerprint(clientInfo.getFingerprint());
-                payment.setPaymentIp(clientInfo.getIpAddress());
+                payment.setFingerprint(clientInfo.getFingerprint());
+                payment.setIp(clientInfo.getIpAddress());
             }
             fillContactInfo(payment, contactInfo);
         } else if (payer.isSetCustomer()) {
@@ -169,7 +128,7 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
             PaymentTool paymentTool = customer.getPaymentTool();
             ContactInfo contactInfo = customer.getContactInfo();
 
-            payment.setPaymentCustomerId(customer.getCustomerId());
+            payment.setCustomerId(customer.getCustomerId());
             fillPaymentToolUnion(payment, paymentTool);
             fillContactInfo(payment, contactInfo);
         } else if (payer.isSetRecurrent()) {
@@ -179,48 +138,48 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
             ContactInfo contactInfo = recurrent.getContactInfo();
 
             fillPaymentToolUnion(payment, paymentTool);
-            payment.setPaymentRecurrentPayerParentInvoiceId(recurrentParent.getInvoiceId());
-            payment.setPaymentRecurrentPayerParentPaymentId(recurrentParent.getPaymentId());
+            payment.setRecurrentPayerParentInvoiceId(recurrentParent.getInvoiceId());
+            payment.setRecurrentPayerParentPaymentId(recurrentParent.getPaymentId());
             fillContactInfo(payment, contactInfo);
         }
     }
 
     private void fillPaymentToolUnion(Payment payment, PaymentTool paymentTool) {
-        payment.setPaymentTool(TBaseUtil.unionFieldToEnum(paymentTool, com.rbkmoney.reporter.domain.enums.PaymentTool.class));
+        payment.setTool(TBaseUtil.unionFieldToEnum(paymentTool, com.rbkmoney.reporter.domain.enums.PaymentTool.class));
         if (paymentTool.isSetBankCard()) {
             BankCard bankCard = paymentTool.getBankCard();
 
-            payment.setPaymentBankCardToken(bankCard.getToken());
-            payment.setPaymentBankCardSystem(bankCard.getPaymentSystem().toString());
-            payment.setPaymentBankCardBin(bankCard.getBin());
-            payment.setPaymentBankCardMaskedPan(bankCard.getMaskedPan());
+            payment.setBankCardToken(bankCard.getToken());
+            payment.setBankCardSystem(bankCard.getPaymentSystem().toString());
+            payment.setBankCardBin(bankCard.getBin());
+            payment.setBankCardMaskedPan(bankCard.getMaskedPan());
             if (bankCard.isSetTokenProvider()) {
-                payment.setPaymentBankCardTokenProvider(TypeUtil.toEnumField(bankCard.getTokenProvider().name(), BankCardTokenProvider.class));
+                payment.setBankCardTokenProvider(TypeUtil.toEnumField(bankCard.getTokenProvider().name(), BankCardTokenProvider.class));
             }
         } else if (paymentTool.isSetPaymentTerminal()) {
             PaymentTerminal paymentTerminal = paymentTool.getPaymentTerminal();
 
-            payment.setPaymentTerminalProvider(paymentTerminal.getTerminalType().toString());
+            payment.setTerminalProvider(paymentTerminal.getTerminalType().toString());
         } else if (paymentTool.isSetDigitalWallet()) {
             DigitalWallet digitalWallet = paymentTool.getDigitalWallet();
 
-            payment.setPaymentDigitalWalletId(digitalWallet.getId());
-            payment.setPaymentDigitalWalletProvider(digitalWallet.getProvider().toString());
+            payment.setDigitalWalletId(digitalWallet.getId());
+            payment.setDigitalWalletProvider(digitalWallet.getProvider().toString());
         }
     }
 
     private void fillContactInfo(Payment payment, ContactInfo contactInfo) {
-        payment.setPaymentPhoneNumber(contactInfo.getPhoneNumber());
-        payment.setPaymentEmail(contactInfo.getEmail());
+        payment.setPhoneNumber(contactInfo.getPhoneNumber());
+        payment.setEmail(contactInfo.getEmail());
     }
 
     private void fillInvoicePaymentFlow(InvoicePaymentFlow paymentFlow, Payment payment) {
-        payment.setPaymentFlow(TBaseUtil.unionFieldToEnum(paymentFlow, PaymentFlow.class));
+        payment.setFlow(TBaseUtil.unionFieldToEnum(paymentFlow, PaymentFlow.class));
         if (paymentFlow.isSetHold()) {
             InvoicePaymentFlowHold hold = paymentFlow.getHold();
 
-            payment.setPaymentHoldOnExpiration(OnHoldExpiration.valueOf(hold.getOnHoldExpiration().name()));
-            payment.setPaymentHoldUntil(TypeUtil.stringToLocalDateTime(hold.getHeldUntil()));
+            payment.setHoldOnExpiration(OnHoldExpiration.valueOf(hold.getOnHoldExpiration().name()));
+            payment.setHoldUntil(TypeUtil.stringToLocalDateTime(hold.getHeldUntil()));
         }
     }
 
@@ -228,8 +187,8 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
         if (invoicePayment.isSetContext()) {
             Content content = invoicePayment.getContext();
 
-            payment.setPaymentContextType(content.getType());
-            payment.setPaymentContext(content.getData());
+            payment.setContextType(content.getType());
+            payment.setContext(content.getData());
         }
     }
 

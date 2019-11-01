@@ -1,6 +1,5 @@
 package com.rbkmoney.reporter.dao.mapper.dto;
 
-import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.PaymentTool;
 import lombok.Data;
 
@@ -13,7 +12,6 @@ public class RefundPaymentRegistryReportData {
     private Long id;
     private LocalDateTime refundEventCreatedAt;
     private LocalDateTime paymentEventCreatedAt;
-    private InvoiceEventType eventType;
     private UUID partyId;
     private String partyShopId;
     private String invoiceId;

@@ -1,6 +1,8 @@
 package com.rbkmoney.reporter.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.reports.*;
@@ -52,14 +54,38 @@ public class DamselUtil {
         }
     }
 
-    public static Map<FeeType, Long> getFees(List<FinalCashFlowPosting> finalCashFlowPostings) {
-        return finalCashFlowPostings.stream()
-                .collect(
-                        Collectors.groupingBy(
-                                DamselUtil::getFeeType,
-                                Collectors.summingLong(posting -> posting.getVolume().getAmount())
-                        )
-                );
+    public static Map<FeeType, Long> getFees(List<FinalCashFlowPosting> cashFlowPostings) {
+        if (cashFlowPostings != null && !cashFlowPostings.isEmpty()) {
+            return cashFlowPostings.stream()
+                    .collect(
+                            Collectors.groupingBy(
+                                    DamselUtil::getFeeType,
+                                    Collectors.summingLong(posting -> posting.getVolume().getAmount())
+                            )
+                    );
+        } else {
+            return Map.of();
+        }
+    }
+
+    public static Map<FeeType, String> getCurrency(List<FinalCashFlowPosting> cashFlowPostings) {
+        if (cashFlowPostings != null && !cashFlowPostings.isEmpty()) {
+            return cashFlowPostings.stream()
+                    .collect(
+                            Collectors.groupingBy(
+                                    DamselUtil::getFeeType,
+                                    Collectors.mapping(
+                                            o -> o.getVolume().getCurrency().getSymbolicCode(),
+                                            Collectors.collectingAndThen(
+                                                    Collectors.toList(),
+                                                    values -> values.isEmpty() ? null : values.get(0)
+                                            )
+                                    )
+                            )
+                    );
+        } else {
+            return Map.of();
+        }
     }
 
     public static FeeType getFeeType(FinalCashFlowPosting cashFlowPosting) {
@@ -128,4 +154,21 @@ public class DamselUtil {
         return new InvalidRequest(Arrays.asList(messages));
     }
 
+    public static String toPayoutSummaryStatString(List<com.rbkmoney.damsel.payout_processing.PayoutSummaryItem> payoutSummaryItems) {
+        try {
+            return new ObjectMapper().writeValueAsString(payoutSummaryItems.stream()
+                    .map(
+                            payoutSummaryItem -> {
+                                try {
+                                    return new TBaseProcessor().process(payoutSummaryItem, new JsonHandler());
+                                } catch (IOException ex) {
+                                    throw new RuntimeJsonMappingException(ex.getMessage());
+                                }
+                            }
+                    ).collect(Collectors.toList())
+            );
+        } catch (IOException ex) {
+            throw new RuntimeJsonMappingException(ex.getMessage());
+        }
+    }
 }

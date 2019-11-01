@@ -4,7 +4,6 @@ import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.Party;
 import com.rbkmoney.damsel.domain.PaymentInstitutionRef;
 import com.rbkmoney.damsel.domain.Shop;
-import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.exception.ContractNotFoundException;
@@ -12,41 +11,25 @@ import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.PartyNotFoundException;
 import com.rbkmoney.reporter.exception.ShopNotFoundException;
 import com.rbkmoney.reporter.service.PartyService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class PartyServiceImpl implements PartyService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final UserInfo userInfo = new UserInfo("reporter", UserType.internal_user(new InternalUser()));
 
     private final PartyManagementSrv.Iface partyManagementClient;
 
-    @Autowired
-    public PartyServiceImpl(PartyManagementSrv.Iface partyManagementClient) {
-        this.partyManagementClient = partyManagementClient;
-    }
-
-    @Override
-    public Party getParty(String partyId) throws PartyNotFoundException {
-        return getParty(partyId, Instant.now());
-    }
-
     @Override
     public Party getParty(String partyId, Instant timestamp) throws PartyNotFoundException {
         return getParty(partyId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
-    }
-
-    @Override
-    public Party getParty(String partyId, long partyRevision) throws PartyNotFoundException {
-        return getParty(partyId, PartyRevisionParam.revision(partyRevision));
     }
 
     @Override
@@ -88,11 +71,6 @@ public class PartyServiceImpl implements PartyService {
     }
 
     @Override
-    public Shop getShop(String partyId, String shopId, long partyRevision) throws ShopNotFoundException, PartyNotFoundException {
-        return getShop(partyId, shopId, PartyRevisionParam.revision(partyRevision));
-    }
-
-    @Override
     public Shop getShop(String partyId, String shopId, Instant timestamp) throws ShopNotFoundException, PartyNotFoundException {
         return getShop(partyId, shopId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
     }
@@ -111,32 +89,6 @@ public class PartyServiceImpl implements PartyService {
     }
 
     @Override
-    public Contract getContract(String partyId, String contractId) throws ContractNotFoundException, PartyNotFoundException {
-        log.info("Trying to get contract, partyId='{}', contractId='{}'", partyId, contractId);
-        try {
-            Contract contract = partyManagementClient.getContract(userInfo, partyId, contractId);
-            log.info("Contract has been found, partyId='{}', contractId='{}'", partyId, contractId);
-            return contract;
-        } catch (PartyNotFound ex) {
-            throw new PartyNotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
-        } catch (ContractNotFound ex) {
-            throw new ContractNotFoundException(String.format("Contract not found, partyId='%s', contractId='%s'", partyId, contractId));
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to get contract, partyId='%s', contractId='%s'", partyId, contractId), ex);
-        }
-    }
-
-    @Override
-    public Contract getContract(String partyId, String contractId, long partyRevision) throws ContractNotFoundException, PartyNotFoundException {
-        return getContract(partyId, contractId, PartyRevisionParam.revision(partyRevision));
-    }
-
-    @Override
-    public Contract getContract(String partyId, String contractId, Instant timestamp) throws ContractNotFoundException, PartyNotFoundException {
-        return getContract(partyId, contractId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
-    }
-
-    @Override
     public Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws ContractNotFoundException, PartyNotFoundException {
         log.info("Trying to get contract, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
         Party party = getParty(partyId, partyRevisionParam);
@@ -152,11 +104,6 @@ public class PartyServiceImpl implements PartyService {
     @Override
     public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId) throws ContractNotFoundException, PartyNotFoundException {
         return getPaymentInstitutionRef(partyId, contractId, Instant.now());
-    }
-
-    @Override
-    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, long partyRevision) throws ContractNotFoundException, PartyNotFoundException {
-        return getPaymentInstitutionRef(partyId, contractId, PartyRevisionParam.revision(partyRevision));
     }
 
     @Override
@@ -187,23 +134,4 @@ public class PartyServiceImpl implements PartyService {
             return null;
         }
     }
-
-    @Override
-    public Value getMetaData(String partyId, String namespace) throws NotFoundException {
-        try {
-            return partyManagementClient.getMetaData(userInfo, partyId, namespace);
-        } catch (PartyMetaNamespaceNotFound ex) {
-            return null;
-        } catch (PartyNotFound ex) {
-            throw new NotFoundException(
-                    String.format("Party not found, partyId='%s', namespace='%s'", partyId, namespace),
-                    ex
-            );
-        } catch (TException ex) {
-            throw new RuntimeException(
-                    String.format("Failed to get namespace, partyId='%s', namespace='%s'", partyId, namespace), ex
-            );
-        }
-    }
-
 }

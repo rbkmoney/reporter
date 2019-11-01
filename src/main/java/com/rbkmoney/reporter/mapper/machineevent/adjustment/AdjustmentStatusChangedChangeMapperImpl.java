@@ -5,6 +5,7 @@ import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentAdjustmentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.geck.common.util.TBaseUtil;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.AdjustmentState;
@@ -14,35 +15,11 @@ import com.rbkmoney.reporter.util.DamselUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Component
 public class AdjustmentStatusChangedChangeMapperImpl implements InvoiceChangeMapper {
-
-    @Override
-    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
-        InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
-        InvoicePaymentAdjustmentChange invoicePaymentAdjustmentChange =
-                getInvoicePaymentAdjustmentChange(invoicePaymentChange);
-        InvoicePaymentAdjustmentStatus invoicePaymentAdjustmentStatus =
-                getInvoicePaymentAdjustmentStatus(invoicePaymentAdjustmentChange);
-        AdjustmentStatus status = TBaseUtil.unionFieldToEnum(invoicePaymentAdjustmentStatus, AdjustmentStatus.class);
-
-        String invoiceId = baseEvent.getSourceId();
-        Long sequenceId = baseEvent.getEventId();
-
-        AdjustmentState adjustmentState = new AdjustmentState();
-        adjustmentState.setInvoiceId(invoiceId);
-        adjustmentState.setSequenceId(sequenceId);
-        adjustmentState.setChangeId(changeId);
-        adjustmentState.setCreatedAt(DamselUtil.getAdjustmentStatusCreatedAt(invoicePaymentAdjustmentStatus));
-        adjustmentState.setStatus(status);
-
-        log.info("Adjustment with eventType=statusChanged and status {} has been mapped, invoiceId={}, " +
-                "paymentId={}, adjustmentId={}", status, invoiceId, invoicePaymentChange.getId(),
-                invoicePaymentAdjustmentChange.getId());
-
-        return new MapperResult(adjustmentState);
-    }
 
     @Override
     public boolean canMap(InvoiceChange payload) {
@@ -52,20 +29,47 @@ public class AdjustmentStatusChangedChangeMapperImpl implements InvoiceChangeMap
     }
 
     @Override
-    public String[] getIgnoreProperties() {
-        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
-                "adjustmentStatus", "adjustmentStatusCreatedAt"};
+    public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
+        InvoicePaymentChange damselPaymentChange = payload.getInvoicePaymentChange();
+        InvoicePaymentAdjustmentChange damselAdjustmentChange = getInvoicePaymentAdjustmentChange(damselPaymentChange);
+        InvoicePaymentAdjustmentStatus damselAdjustmentStatus = getInvoicePaymentAdjustmentStatus(damselAdjustmentChange);
+
+        String invoiceId = baseEvent.getSourceId();
+        long sequenceId = baseEvent.getEventId();
+        LocalDateTime eventCreatedAt = TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt());
+        String paymentId = damselPaymentChange.getId();
+        String adjustmentId = damselAdjustmentChange.getId();
+        AdjustmentStatus status = TBaseUtil.unionFieldToEnum(damselAdjustmentStatus, AdjustmentStatus.class);
+
+        AdjustmentState adjustmentState = getAdjustmentState(damselAdjustmentStatus, invoiceId, sequenceId, changeId, eventCreatedAt, paymentId, adjustmentId, status);
+
+        log.info("Adjustment with eventType=[statusChanged] and status {} has been mapped, invoiceId={}, paymentId={}, adjustmentId={}", status.getLiteral(), invoiceId, paymentId, adjustmentId);
+
+        return new MapperResult(adjustmentState);
     }
 
-    private InvoicePaymentAdjustmentChange getInvoicePaymentAdjustmentChange(InvoicePaymentChange invoicePaymentChange) {
-        return invoicePaymentChange
+    private AdjustmentState getAdjustmentState(InvoicePaymentAdjustmentStatus damselAdjustmentStatus, String invoiceId, long sequenceId, Integer changeId, LocalDateTime eventCreatedAt, String paymentId, String adjustmentId, AdjustmentStatus status) {
+        AdjustmentState adjustmentState = new AdjustmentState();
+        adjustmentState.setInvoiceId(invoiceId);
+        adjustmentState.setSequenceId(sequenceId);
+        adjustmentState.setChangeId(changeId);
+        adjustmentState.setEventCreatedAt(eventCreatedAt);
+        adjustmentState.setPaymentId(paymentId);
+        adjustmentState.setAdjustmentId(adjustmentId);
+        adjustmentState.setStatus(status);
+        adjustmentState.setStatusCreatedAt(DamselUtil.getAdjustmentStatusCreatedAt(damselAdjustmentStatus));
+
+        return adjustmentState;
+    }
+
+    private InvoicePaymentAdjustmentChange getInvoicePaymentAdjustmentChange(InvoicePaymentChange damselPaymentChange) {
+        return damselPaymentChange
                 .getPayload().getInvoicePaymentAdjustmentChange();
     }
 
-    private InvoicePaymentAdjustmentStatus getInvoicePaymentAdjustmentStatus(InvoicePaymentAdjustmentChange invoicePaymentAdjustmentChange) {
-        return invoicePaymentAdjustmentChange
+    private InvoicePaymentAdjustmentStatus getInvoicePaymentAdjustmentStatus(InvoicePaymentAdjustmentChange damselAdjustmentChange) {
+        return damselAdjustmentChange
                 .getPayload().getInvoicePaymentAdjustmentStatusChanged()
                 .getStatus();
     }
-
 }

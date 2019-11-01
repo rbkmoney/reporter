@@ -1,14 +1,13 @@
 package com.rbkmoney.reporter.mapper;
 
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
+import org.jooq.Query;
 
 import java.util.List;
 import java.util.Map;
 
-public interface InvoiceBatchMapper<R, C> {
+public interface InvoiceBatchMapper<P, C> {
 
-    R map(InvoiceChangeMapper mapper, MapperPayload payload, List<R> invoicingEntities) throws Exception;
-
-    R map(InvoiceChangeMapper mapper, MapperPayload payload, List<R> invoicingEntities, Map<InvoiceUniqueBatchKey, C> consumerCache);
+    List<Query> map(InvoiceChangeMapper mapper, MapperPayload payload, Map<InvoiceUniqueBatchKey, P> producerCache, Map<InvoiceUniqueBatchKey, C> consumerCache);
 
 }

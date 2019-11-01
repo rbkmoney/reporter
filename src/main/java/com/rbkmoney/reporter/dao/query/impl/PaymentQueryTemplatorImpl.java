@@ -2,19 +2,11 @@ package com.rbkmoney.reporter.dao.query.impl;
 
 import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.dao.query.PaymentQueryTemplator;
-import com.rbkmoney.reporter.domain.tables.pojos.CashFlow;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentRouting;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentShortId;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentState;
+import com.rbkmoney.reporter.domain.tables.pojos.*;
 import com.rbkmoney.reporter.domain.tables.records.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.rbkmoney.reporter.domain.Tables.*;
 
@@ -30,7 +22,7 @@ public class PaymentQueryTemplatorImpl extends AbstractGenericDao implements Pay
         PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, payment);
         return getDslContext().insertInto(PAYMENT)
                 .set(paymentRecord)
-                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
+                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.PAYMENT_ID)
                 .doNothing();
     }
 
@@ -62,25 +54,20 @@ public class PaymentQueryTemplatorImpl extends AbstractGenericDao implements Pay
     }
 
     @Override
-    public Query getSavePaymentTerminalQuery(PaymentShortId paymentShortId) {
-        PaymentShortIdRecord paymentShortIdRecord = getDslContext().newRecord(PAYMENT_SHORT_ID, paymentShortId);
-        return getDslContext().insertInto(PAYMENT_SHORT_ID)
+    public Query getSavePaymentTerminalQuery(PaymentTerminalReceipt paymentTerminalReceipt) {
+        PaymentTerminalReceiptRecord paymentShortIdRecord = getDslContext().newRecord(PAYMENT_TERMINAL_RECEIPT, paymentTerminalReceipt);
+        return getDslContext().insertInto(PAYMENT_TERMINAL_RECEIPT)
                 .set(paymentShortIdRecord)
-                .onConflict(PAYMENT_SHORT_ID.INVOICE_ID, PAYMENT_SHORT_ID.SEQUENCE_ID, PAYMENT_SHORT_ID.CHANGE_ID)
+                .onConflict(PAYMENT_TERMINAL_RECEIPT.INVOICE_ID, PAYMENT_TERMINAL_RECEIPT.SEQUENCE_ID, PAYMENT_TERMINAL_RECEIPT.CHANGE_ID)
                 .doNothing();
     }
 
     @Override
-    public List<Query> getSavePaymentCashFlowQuery(List<CashFlow> cashFlowList) {
-        List<Query> queries = new ArrayList<>();
-        for (CashFlow cashFlow : cashFlowList) {
-            CashFlowRecord cashFlowRecord = getDslContext().newRecord(CASH_FLOW, cashFlow);
-            queries.add(getDslContext().insertInto(CASH_FLOW)
-                    .set(cashFlowRecord)
-                    .onConflict(CASH_FLOW.INVOICE_ID, CASH_FLOW.SEQUENCE_ID, CASH_FLOW.CHANGE_ID)
-                    .doNothing());
-        }
-        return queries;
+    public Query getSavePaymentFeeQuery(PaymentFee paymentFee) {
+        PaymentFeeRecord paymentFeeRecord = getDslContext().newRecord(PAYMENT_FEE, paymentFee);
+        return getDslContext().insertInto(PAYMENT_FEE)
+                .set(paymentFeeRecord)
+                .onConflict(PAYMENT_FEE.INVOICE_ID, PAYMENT_FEE.SEQUENCE_ID, PAYMENT_FEE.CHANGE_ID)
+                .doNothing();
     }
-
 }

@@ -1,25 +1,16 @@
 package com.rbkmoney.reporter.dao.impl;
 
-import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.dao.impl.AbstractGenericDao;
-import com.rbkmoney.reporter.batch.InvoiceBatchType;
-import com.rbkmoney.reporter.dao.BatchDao;
 import com.rbkmoney.reporter.dao.RefundDao;
-import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.mapper.RefundPaymentRegistryReportDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.dto.RefundPaymentRegistryReportData;
-import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
+import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.Refund;
-import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.mapper.MapperResult;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -28,136 +19,92 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
+import static com.rbkmoney.reporter.domain.Tables.INVOICE;
+import static com.rbkmoney.reporter.domain.Tables.PAYMENT_STATE;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.Refund.REFUND;
+import static com.rbkmoney.reporter.domain.tables.RefundState.REFUND_STATE;
 
 @Component
-public class RefundDaoImpl extends AbstractGenericDao implements RefundDao, BatchDao {
+public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
 
-    private final RowMapper<Refund> refundRowMapper;
     private final RefundPaymentRegistryReportDataRowMapper reportDataRowMapper;
 
     @Autowired
     public RefundDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
-        refundRowMapper = new RecordRowMapper<>(REFUND, Refund.class);
         reportDataRowMapper = new RefundPaymentRegistryReportDataRowMapper();
-    }
-
-    @Override
-    public Long save(Refund refund) throws DaoException {
-        RefundRecord record = getDslContext().newRecord(REFUND, refund);
-        Query query = getDslContext().insertInto(REFUND)
-                .set(record)
-                .onConflict(REFUND.INVOICE_ID, REFUND.SEQUENCE_ID, REFUND.CHANGE_ID)
-                .doNothing()
-                .returning(REFUND.ID);
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        execute(query, keyHolder);
-        return Optional.ofNullable(keyHolder.getKey()).map(Number::longValue).orElse(null);
-    }
-
-    @Override
-    public Refund get(String invoiceId, String paymentId, String refundId) throws DaoException {
-        Query query = getDslContext().selectFrom(REFUND)
-                .where(
-                        REFUND.INVOICE_ID.eq(invoiceId)
-                                .and(REFUND.PAYMENT_ID.eq(paymentId))
-                                .and(REFUND.REFUND_ID.eq(refundId))
-                )
-                .orderBy(REFUND.ID.desc())
-                .limit(1);
-
-        return fetchOne(query, refundRowMapper);
     }
 
     @Override
     public Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException {
         String key = "funds_refunded";
-        Query query = getDslContext().select(
-                RoutinesWrapper.getRefundAmount().minus(RoutinesWrapper.getRefundFee()).as(key)
 
-        )
+        Query query = getDslContext().select(DSL.sum(REFUND.AMOUNT).minus(DSL.sum(DSL.coalesce(REFUND.FEE, 0L))).as(key))
                 .from(REFUND)
+                .innerJoin(REFUND_STATE)
+                .on(
+                        REFUND_STATE.INVOICE_ID.eq(REFUND.INVOICE_ID)
+                                .and(REFUND_STATE.PAYMENT_ID.eq(REFUND.PAYMENT_ID))
+                                .and(REFUND_STATE.STATUS.eq(RefundStatus.succeeded))
+                                .and(fromTime.map(REFUND_STATE.EVENT_CREATED_AT::ge).orElse(DSL.trueCondition()))
+                                .and(REFUND_STATE.EVENT_CREATED_AT.lt(toTime))
+                )
                 .where(
                         REFUND.PARTY_ID.eq(UUID.fromString(partyId))
                                 .and(REFUND.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(REFUND.REFUND_CURRENCY_CODE.eq(currencyCode))
-                                .and(REFUND.REFUND_STATUS.eq(RefundStatus.succeeded))
-                                .and(fromTime.map(REFUND.EVENT_CREATED_AT::ge).orElse(DSL.trueCondition()))
-                                .and(REFUND.EVENT_CREATED_AT.lt(toTime))
+                                .and(REFUND.FEE_CURRENCY_CODE.eq(currencyCode))
                 );
-        return Optional.ofNullable(
-                fetchOne(
-                        query,
-                        (rs, i) -> ImmutableMap.<String, Long>builder()
-                                .put(key, rs.getLong(key))
-                                .build()
-                )
-        ).orElse(
-                ImmutableMap.<String, Long>builder()
-                        .put(key, 0L)
-                        .build()
-        );
+
+        return Optional.ofNullable(fetchOne(query, (rs, i) -> Map.of(key, rs.getLong(key)))).orElse(Map.of(key, 0L));
     }
 
     @Override
     public List<RefundPaymentRegistryReportData> getRefundPaymentRegistryReportData(String partyId, String partyShopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
-        Query query = getDslContext()
-                .select(
-                        REFUND.ID,
-                        REFUND.EVENT_CREATED_AT,
-                        PAYMENT.EVENT_CREATED_AT,
-                        REFUND.EVENT_TYPE,
-                        REFUND.PARTY_ID,
-                        REFUND.PARTY_SHOP_ID,
-                        REFUND.INVOICE_ID,
-                        REFUND.PAYMENT_ID,
-                        PAYMENT.PAYMENT_TOOL,
-                        PAYMENT.PAYMENT_EMAIL,
-                        RoutinesWrapper.getRefundCashFlowAmount(),
-                        INVOICE.INVOICE_PRODUCT
-                )
+        Query query = getDslContext().select(
+                REFUND.ID,
+                REFUND_STATE.EVENT_CREATED_AT,
+                PAYMENT_STATE.EVENT_CREATED_AT,
+                REFUND.PARTY_ID,
+                REFUND.PARTY_SHOP_ID,
+                REFUND.INVOICE_ID,
+                REFUND.PAYMENT_ID,
+                PAYMENT.TOOL,
+                PAYMENT.EMAIL,
+                REFUND.AMOUNT,
+                INVOICE.PRODUCT
+        )
                 .from(REFUND)
-                .leftJoin(PAYMENT)
+                .innerJoin(REFUND_STATE)
                 .on(
-                        PAYMENT.PARTY_ID.eq(UUID.fromString(partyId))
-                                .and(PAYMENT.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(PAYMENT.EVENT_CREATED_AT.ge(fromTime))
-                                .and(PAYMENT.EVENT_CREATED_AT.lt(toTime))
-                                .and(REFUND.INVOICE_ID.eq(PAYMENT.INVOICE_ID))
-                                .and(REFUND.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                        REFUND_STATE.INVOICE_ID.eq(REFUND.INVOICE_ID)
+                                .and(REFUND_STATE.PAYMENT_ID.eq(REFUND.PAYMENT_ID))
+                                .and(REFUND_STATE.STATUS.eq(RefundStatus.succeeded))
+                                .and(REFUND_STATE.EVENT_CREATED_AT.ge(fromTime))
+                                .and(REFUND_STATE.EVENT_CREATED_AT.lt(toTime))
+                )
+                .innerJoin(PAYMENT_STATE)
+                .on(
+                        PAYMENT_STATE.INVOICE_ID.eq(REFUND.INVOICE_ID)
+                                .and(PAYMENT_STATE.PAYMENT_ID.eq(REFUND.PAYMENT_ID))
+                                .and(PAYMENT_STATE.STATUS.eq(InvoicePaymentStatus.captured))
+                                .and(PAYMENT_STATE.EVENT_CREATED_AT.ge(fromTime))
+                                .and(PAYMENT_STATE.EVENT_CREATED_AT.lt(toTime))
+                )
+                .innerJoin(PAYMENT)
+                .on(
+                        PAYMENT.INVOICE_ID.eq(REFUND.INVOICE_ID)
+                                .and(PAYMENT.PAYMENT_ID.eq(REFUND.PAYMENT_ID))
                 )
                 .leftJoin(INVOICE)
                 .on(
-                        INVOICE.PARTY_ID.eq(UUID.fromString(partyId))
-                                .and(INVOICE.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(INVOICE.EVENT_CREATED_AT.ge(fromTime))
-                                .and(INVOICE.EVENT_CREATED_AT.lt(toTime))
-                                .and(REFUND.INVOICE_ID.eq(INVOICE.INVOICE_ID))
+                        INVOICE.INVOICE_ID.eq(REFUND.INVOICE_ID)
                 )
                 .where(
                         REFUND.PARTY_ID.eq(UUID.fromString(partyId))
                                 .and(REFUND.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(REFUND.EVENT_CREATED_AT.ge(fromTime))
-                                .and(REFUND.EVENT_CREATED_AT.lt(toTime))
-                )
-                .orderBy(REFUND.ID);
+                );
+
         return fetch(query, reportDataRowMapper);
-    }
-
-    @Override
-    public boolean isInvoiceChangeType(InvoiceBatchType invoiceChangeTypeEnum) {
-        return invoiceChangeTypeEnum.equals(InvoiceBatchType.REFUND);
-    }
-
-    @Override
-    public Query getSaveEventQuery(MapperResult entity) {
-        RefundRecord record = getDslContext().newRecord(REFUND, entity.getRefund());
-        return getDslContext().insertInto(REFUND)
-                .set(record)
-                .onConflict(REFUND.INVOICE_ID, REFUND.SEQUENCE_ID, REFUND.CHANGE_ID)
-                .doNothing();
     }
 }

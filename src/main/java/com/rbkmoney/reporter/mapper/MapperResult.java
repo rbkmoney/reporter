@@ -3,8 +3,6 @@ package com.rbkmoney.reporter.mapper;
 import com.rbkmoney.reporter.domain.tables.pojos.*;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class MapperResult {
 
@@ -17,9 +15,9 @@ public class MapperResult {
     private Payment payment;
     private PaymentCost paymentCost;
     private PaymentState paymentState;
-    private List<CashFlow> cashFlowList;
     private PaymentRouting paymentRouting;
-    private PaymentShortId paymentShortId;
+    private PaymentTerminalReceipt paymentTerminalReceipt;
+    private PaymentFee paymentFee;
 
     private Refund refund;
     private RefundState refundState;
@@ -33,17 +31,12 @@ public class MapperResult {
                         PaymentState paymentState,
                         PaymentCost paymentCost,
                         PaymentRouting paymentRouting,
-                        List<CashFlow> cashFlowList) {
+                        PaymentFee paymentFee) {
         this.payment = payment;
         this.paymentState = paymentState;
         this.paymentCost = paymentCost;
         this.paymentRouting = paymentRouting;
-        this.cashFlowList = cashFlowList;
-    }
-
-    public MapperResult(Payment payment, PaymentCost paymentCost) {
-        this.payment = payment;
-        this.paymentCost = paymentCost;
+        this.paymentFee = paymentFee;
     }
 
     public MapperResult(Adjustment adjustment, AdjustmentState adjustmentState) {
@@ -51,38 +44,13 @@ public class MapperResult {
         this.adjustmentState = adjustmentState;
     }
 
-    public MapperResult(Refund refund, RefundState refundState, List<CashFlow> cashFlowList) {
+    public MapperResult(Refund refund, RefundState refundState) {
         this.refund = refund;
         this.refundState = refundState;
-        this.cashFlowList = cashFlowList;
-    }
-
-    public MapperResult(AdjustmentState adjustmentState) {
-        this.adjustmentState = adjustmentState;
-    }
-
-    public MapperResult(PaymentRouting paymentRouting) {
-        this.paymentRouting = paymentRouting;
     }
 
     public MapperResult(InvoiceState invoiceState) {
         this.invoiceState = invoiceState;
-    }
-
-    public MapperResult(PaymentState paymentState) {
-        this.paymentState = paymentState;
-    }
-
-    public MapperResult(RefundState refundState) {
-        this.refundState = refundState;
-    }
-
-    public MapperResult(PaymentCost paymentCost) {
-        this.paymentCost = paymentCost;
-    }
-
-    public MapperResult(PaymentShortId paymentShortId) {
-        this.paymentShortId = paymentShortId;
     }
 
     public MapperResult(PaymentState paymentState, PaymentCost paymentCost) {
@@ -90,8 +58,28 @@ public class MapperResult {
         this.paymentCost = paymentCost;
     }
 
-    public MapperResult(List<CashFlow> cashFlowList) {
-        this.cashFlowList = cashFlowList;
+    public MapperResult(PaymentCost paymentCost) {
+        this.paymentCost = paymentCost;
     }
 
+    public MapperResult(PaymentCost paymentCost, PaymentFee paymentFee) {
+        this.paymentCost = paymentCost;
+        this.paymentFee = paymentFee;
+    }
+
+    public MapperResult(PaymentRouting paymentRouting) {
+        this.paymentRouting = paymentRouting;
+    }
+
+    public MapperResult(PaymentTerminalReceipt paymentTerminalReceipt) {
+        this.paymentTerminalReceipt = paymentTerminalReceipt;
+    }
+
+    public MapperResult(AdjustmentState adjustmentState) {
+        this.adjustmentState = adjustmentState;
+    }
+
+    public MapperResult(RefundState refundState) {
+        this.refundState = refundState;
+    }
 }

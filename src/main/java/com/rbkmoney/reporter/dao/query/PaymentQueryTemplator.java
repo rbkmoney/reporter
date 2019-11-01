@@ -1,14 +1,7 @@
 package com.rbkmoney.reporter.dao.query;
 
-import com.rbkmoney.reporter.domain.tables.pojos.CashFlow;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentRouting;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentShortId;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentState;
+import com.rbkmoney.reporter.domain.tables.pojos.*;
 import org.jooq.Query;
-
-import java.util.List;
 
 public interface PaymentQueryTemplator {
 
@@ -20,8 +13,8 @@ public interface PaymentQueryTemplator {
 
     Query getSavePaymentRoutingQuery(PaymentRouting paymentRouting);
 
-    Query getSavePaymentTerminalQuery(PaymentShortId paymentShortId);
+    Query getSavePaymentTerminalQuery(PaymentTerminalReceipt paymentTerminalReceipt);
 
-    List<Query> getSavePaymentCashFlowQuery(List<CashFlow> cashFlowList);
+    Query getSavePaymentFeeQuery(PaymentFee paymentFee);
 
 }

@@ -17,11 +17,7 @@ public interface ContractMetaDao {
 
     ContractMeta getExclusive(String partyId, String contractId) throws DaoException;
 
-    List<ContractMeta> getByCalendarAndSchedulerId(int calendarId, int schedulerId) throws DaoException;
-
     List<ContractMeta> getAllActiveContracts() throws DaoException;
-
-    void saveLastClosingBalance(String partyId, String contractId, long lastClosingBalance) throws DaoException;
 
     void disableContract(String partyId, String contractId) throws DaoException;
 

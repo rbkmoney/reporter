@@ -5,26 +5,31 @@ import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TBaseUtil;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.reporter.dao.query.PayoutQueryTemplator;
+import com.rbkmoney.reporter.domain.enums.PayoutAccountType;
 import com.rbkmoney.reporter.domain.enums.PayoutStatus;
 import com.rbkmoney.reporter.domain.enums.PayoutType;
-import com.rbkmoney.reporter.domain.enums.*;
 import com.rbkmoney.reporter.domain.tables.pojos.Payout;
-import com.rbkmoney.reporter.service.PayoutService;
-import com.rbkmoney.reporter.util.json.FinalCashFlowUtil;
-import com.rbkmoney.reporter.util.json.PayoutSummaryUtil;
+import com.rbkmoney.reporter.domain.tables.pojos.PayoutState;
+import com.rbkmoney.reporter.service.BatchService;
+import com.rbkmoney.reporter.util.DamselUtil;
 import com.rbkmoney.sink.common.handle.stockevent.event.change.PayoutChangeEventHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.Query;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class PayoutCreatedChangeEventHandler implements PayoutChangeEventHandler {
 
-    private final PayoutService payoutService;
+    private final PayoutQueryTemplator payoutQueryTemplator;
+    private final BatchService batchService;
 
     @Override
     public boolean accept(PayoutChange payload) {
@@ -41,24 +46,33 @@ public class PayoutCreatedChangeEventHandler implements PayoutChangeEventHandler
 
         log.info("Start payout created handling, payoutId={}", payoutId);
 
+        Payout payout = getPayout(damselPayout, damselPayoutType, payoutId);
+
+        PayoutState payoutState = getPayoutState(event, damselPayout, payoutId);
+
+        Query savePayoutQuery = payoutQueryTemplator.getSavePayoutQuery(payout);
+        Query savePayoutStateQuery = payoutQueryTemplator.getSavePayoutStateQuery(payoutState);
+
+        List<Query> queries = List.of(savePayoutQuery, savePayoutStateQuery);
+
+        batchService.save(queries);
+
+        log.info("Payout has been created, payoutId={}", payoutId);
+    }
+
+    private Payout getPayout(com.rbkmoney.damsel.payout_processing.Payout damselPayout, com.rbkmoney.damsel.payout_processing.PayoutType damselPayoutType, String payoutId) {
         Payout payout = new Payout();
-        payout.setEventId(event.getId());
-        payout.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
-        payout.setEventType(PayoutEventType.PAYOUT_CREATED);
-        payout.setEventCategory(PayoutEventCategory.PAYOUT);
-        payout.setPayoutId(payoutId);
         payout.setPartyId(UUID.fromString(damselPayout.getPartyId()));
         payout.setPartyShopId(damselPayout.getShopId());
+        payout.setPayoutId(payoutId);
         payout.setContractId(damselPayout.getContractId());
-        payout.setPayoutCreatedAt(TypeUtil.stringToLocalDateTime(damselPayout.getCreatedAt()));
-        payout.setPayoutStatus(TBaseUtil.unionFieldToEnum(damselPayout.getStatus(), PayoutStatus.class));
-        payout.setPayoutAmount(damselPayout.getAmount());
-        payout.setPayoutFee(damselPayout.getFee());
-        payout.setPayoutCurrencyCode(damselPayout.getCurrency().getSymbolicCode());
-        payout.setPayoutCashFlow(FinalCashFlowUtil.toDtoFinalCashFlow(damselPayout.getPayoutFlow()));
-        payout.setPayoutType(TBaseUtil.unionFieldToEnum(damselPayoutType, PayoutType.class));
+        payout.setCreatedAt(TypeUtil.stringToLocalDateTime(damselPayout.getCreatedAt()));
+        payout.setAmount(damselPayout.getAmount());
+        payout.setFee(damselPayout.getFee());
+        payout.setCurrencyCode(damselPayout.getCurrency().getSymbolicCode());
+        payout.setType(TBaseUtil.unionFieldToEnum(damselPayoutType, PayoutType.class));
         if (damselPayoutType.isSetWallet()) {
-            payout.setPayoutWalletId(damselPayoutType.getWallet().getWalletId());
+            payout.setWalletId(damselPayoutType.getWallet().getWalletId());
         } else if (damselPayoutType.isSetBankAccount()) {
             PayoutAccount payoutAccount = damselPayoutType.getBankAccount();
 
@@ -67,73 +81,83 @@ public class PayoutCreatedChangeEventHandler implements PayoutChangeEventHandler
                 RussianBankAccount bankAccount = account.getBankAccount();
                 LegalAgreement legalAgreement = account.getLegalAgreement();
 
-                payout.setPayoutAccountType(PayoutAccountType.RUSSIAN_PAYOUT_ACCOUNT);
-                payout.setPayoutAccountBankId(bankAccount.getAccount());
-                payout.setPayoutAccountBankCorrId(bankAccount.getBankPostAccount());
-                payout.setPayoutAccountBankLocalCode(bankAccount.getBankBik());
-                payout.setPayoutAccountBankName(bankAccount.getBankName());
-                payout.setPayoutAccountPurpose(account.getPurpose());
-                payout.setPayoutAccountInn(account.getInn());
-                payout.setPayoutAccountLegalAgreementId(legalAgreement.getLegalAgreementId());
-                payout.setPayoutAccountLegalAgreementSignedAt(TypeUtil.stringToLocalDateTime(legalAgreement.getSignedAt()));
+                payout.setAccountType(PayoutAccountType.RUSSIAN_PAYOUT_ACCOUNT);
+                payout.setAccountBankId(bankAccount.getAccount());
+                payout.setAccountBankCorrId(bankAccount.getBankPostAccount());
+                payout.setAccountBankLocalCode(bankAccount.getBankBik());
+                payout.setAccountBankName(bankAccount.getBankName());
+                payout.setAccountPurpose(account.getPurpose());
+                payout.setAccountInn(account.getInn());
+                payout.setAccountLegalAgreementId(legalAgreement.getLegalAgreementId());
+                payout.setAccountLegalAgreementSignedAt(TypeUtil.stringToLocalDateTime(legalAgreement.getSignedAt()));
             } else if (payoutAccount.isSetInternationalPayoutAccount()) {
                 InternationalPayoutAccount account = payoutAccount.getInternationalPayoutAccount();
                 InternationalLegalEntity legalEntity = account.getLegalEntity();
                 InternationalBankAccount bankAccount = account.getBankAccount();
                 LegalAgreement legalAgreement = account.getLegalAgreement();
 
-                payout.setPayoutAccountType(PayoutAccountType.INTERNATIONAL_PAYOUT_ACCOUNT);
-                payout.setPayoutAccountTradingName(legalEntity.getTradingName());
-                payout.setPayoutAccountLegalName(legalEntity.getLegalName());
-                payout.setPayoutAccountActualAddress(legalEntity.getActualAddress());
-                payout.setPayoutAccountRegisteredAddress(legalEntity.getRegisteredAddress());
-                payout.setPayoutAccountRegisteredNumber(legalEntity.getRegisteredNumber());
-                payout.setPayoutAccountPurpose(account.getPurpose());
-                payout.setPayoutAccountBankId(bankAccount.getAccountHolder());
-                payout.setPayoutAccountBankIban(bankAccount.getIban());
-                payout.setPayoutAccountBankNumber(bankAccount.getNumber());
+                payout.setAccountType(PayoutAccountType.INTERNATIONAL_PAYOUT_ACCOUNT);
+                payout.setAccountTradingName(legalEntity.getTradingName());
+                payout.setAccountLegalName(legalEntity.getLegalName());
+                payout.setAccountActualAddress(legalEntity.getActualAddress());
+                payout.setAccountRegisteredAddress(legalEntity.getRegisteredAddress());
+                payout.setAccountRegisteredNumber(legalEntity.getRegisteredNumber());
+                payout.setAccountPurpose(account.getPurpose());
+                payout.setAccountBankId(bankAccount.getAccountHolder());
+                payout.setAccountBankIban(bankAccount.getIban());
+                payout.setAccountBankNumber(bankAccount.getNumber());
                 if (bankAccount.isSetBank()) {
                     InternationalBankDetails bankDetails = bankAccount.getBank();
 
-                    payout.setPayoutAccountBankName(bankDetails.getName());
-                    payout.setPayoutAccountBankAddress(bankDetails.getAddress());
-                    payout.setPayoutAccountBankBic(bankDetails.getBic());
-                    payout.setPayoutAccountBankAbaRtn(bankDetails.getAbaRtn());
+                    payout.setAccountBankName(bankDetails.getName());
+                    payout.setAccountBankAddress(bankDetails.getAddress());
+                    payout.setAccountBankBic(bankDetails.getBic());
+                    payout.setAccountBankAbaRtn(bankDetails.getAbaRtn());
                     if (bankDetails.isSetCountry()) {
                         String country = bankDetails.getCountry().toString();
 
-                        payout.setPayoutAccountBankCountryCode(country);
+                        payout.setAccountBankCountryCode(country);
                     }
                 }
                 if (bankAccount.isSetCorrespondentAccount()) {
                     InternationalBankAccount correspondentAccount = bankAccount.getCorrespondentAccount();
 
-                    payout.setPayoutInternationalCorrespondentAccountBankAccount(correspondentAccount.getAccountHolder());
-                    payout.setPayoutInternationalCorrespondentAccountBankNumber(correspondentAccount.getNumber());
-                    payout.setPayoutInternationalCorrespondentAccountBankIban(correspondentAccount.getIban());
+                    payout.setInternationalCorrespondentAccountBankAccount(correspondentAccount.getAccountHolder());
+                    payout.setInternationalCorrespondentAccountBankNumber(correspondentAccount.getNumber());
+                    payout.setInternationalCorrespondentAccountBankIban(correspondentAccount.getIban());
                     if (correspondentAccount.isSetBank()) {
                         InternationalBankDetails corrBankDetails = correspondentAccount.getBank();
 
-                        payout.setPayoutInternationalCorrespondentAccountBankName(corrBankDetails.getName());
-                        payout.setPayoutInternationalCorrespondentAccountBankAddress(corrBankDetails.getAddress());
-                        payout.setPayoutInternationalCorrespondentAccountBankBic(corrBankDetails.getBic());
-                        payout.setPayoutInternationalCorrespondentAccountBankAbaRtn(corrBankDetails.getAbaRtn());
+                        payout.setInternationalCorrespondentAccountBankName(corrBankDetails.getName());
+                        payout.setInternationalCorrespondentAccountBankAddress(corrBankDetails.getAddress());
+                        payout.setInternationalCorrespondentAccountBankBic(corrBankDetails.getBic());
+                        payout.setInternationalCorrespondentAccountBankAbaRtn(corrBankDetails.getAbaRtn());
                         if (corrBankDetails.isSetCountry()) {
                             String country = corrBankDetails.getCountry().toString();
 
-                            payout.setPayoutInternationalCorrespondentAccountBankCountryCode(country);
+                            payout.setInternationalCorrespondentAccountBankCountryCode(country);
                         }
                     }
                 }
-                payout.setPayoutAccountLegalAgreementId(legalAgreement.getLegalAgreementId());
-                payout.setPayoutAccountLegalAgreementSignedAt(TypeUtil.stringToLocalDateTime(legalAgreement.getSignedAt()));
+                payout.setAccountLegalAgreementId(legalAgreement.getLegalAgreementId());
+                payout.setAccountLegalAgreementSignedAt(TypeUtil.stringToLocalDateTime(legalAgreement.getSignedAt()));
             }
         }
         if (damselPayout.isSetSummary()) {
-            payout.setPayoutSummary(PayoutSummaryUtil.toDtoPayoutSummary(damselPayout.getSummary()));
+            List<PayoutSummaryItem> payoutSummaryItems = damselPayout.getSummary().stream()
+                    .filter(payoutSummaryItem -> payoutSummaryItem.getOperationType() != OperationType.adjustment)
+                    .collect(Collectors.toList());
+            payout.setSummary(DamselUtil.toPayoutSummaryStatString(payoutSummaryItems));
         }
+        return payout;
+    }
 
-        payoutService.save(payout);
-        log.info("Payout has been created, payoutId={}", payoutId);
+    private PayoutState getPayoutState(Event event, com.rbkmoney.damsel.payout_processing.Payout damselPayout, String payoutId) {
+        PayoutState payoutState = new PayoutState();
+        payoutState.setEventId(event.getId());
+        payoutState.setEventCreatedAt(TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
+        payoutState.setPayoutId(payoutId);
+        payoutState.setStatus(TBaseUtil.unionFieldToEnum(damselPayout.getStatus(), PayoutStatus.class));
+        return payoutState;
     }
 }

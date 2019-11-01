@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.exception;
 
 public class ParseException extends RuntimeException {
+
     public ParseException() {
     }
 

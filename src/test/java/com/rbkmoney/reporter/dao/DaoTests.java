@@ -1,18 +1,26 @@
 package com.rbkmoney.reporter.dao;
 
-import com.rbkmoney.reporter.domain.enums.*;
-import com.rbkmoney.reporter.domain.tables.pojos.*;
+import com.rbkmoney.reporter.batch.impl.InvoiceUniqueBatchKeyImpl;
+import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
+import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentRegistryReportData;
+import com.rbkmoney.reporter.dao.mapper.dto.RefundPaymentRegistryReportData;
+import com.rbkmoney.reporter.domain.enums.ReportStatus;
+import com.rbkmoney.reporter.domain.enums.ReportType;
+import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
+import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
+import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
+import static com.rbkmoney.geck.common.util.TypeUtil.stringToTemporal;
+import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -41,100 +49,108 @@ public class DaoTests extends AbstractAppDaoTests {
     private ContractMetaDao contractMetaDao;
 
     @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void adjustmentDaoTest() throws DaoException {
-        Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
-        adjustment.setId(null);
-        adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_CREATED);
-        Long id = adjustmentDao.save(adjustment);
-        adjustment.setId(id);
-        assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
+    @Sql("classpath:data/sql/adjustment_dao_test.sql")
+    public void adjustmentDaoTest() {
+        Map<String, Long> shopAccountingReportData = adjustmentDao.getShopAccountingReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b32",
+                "test_shop_1",
+                "RUB",
+                Optional.of(toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))),
+                toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))
+        );
 
-        adjustment.setId(null);
-        adjustment.setEventType(InvoiceEventType.INVOICE_PAYMENT_ADJUSTMENT_STATUS_CHANGED);
-        adjustment.setAdjustmentStatus(AdjustmentStatus.captured);
-        adjustment.setChangeId(adjustment.getChangeId() + 1);
-        id = adjustmentDao.save(adjustment);
-        adjustment.setId(id);
-        assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
+        assertEquals(0L, (long) shopAccountingReportData.get("funds_adjusted"));
+
+        shopAccountingReportData = adjustmentDao.getShopAccountingReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b32",
+                "test_shop_1",
+                "RUB",
+                Optional.of(toLocalDateTime(stringToTemporal("2021-08-23T12:12:50Z"))),
+                toLocalDateTime(stringToTemporal("2022-08-23T12:12:54Z"))
+        );
+
+        assertEquals(1L, (long) shopAccountingReportData.get("funds_adjusted"));
     }
 
     @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void duplicationTest() throws DaoException {
-        Adjustment adjustment = random(Adjustment.class, "adjustmentCashFlow", "adjustmentCashFlowInverseOld");
-        adjustment.setId(null);
-        adjustmentDao.save(adjustment);
-        assertNull(adjustmentDao.save(adjustment));
+    @Sql("classpath:data/sql/invoice_dao_test.sql")
+    public void invoiceDaoTest() {
+        PartyData partyData = invoiceDao.getPartyData(new InvoiceUniqueBatchKeyImpl("uAykKfsktM"));
+
+        assertEquals(UUID.fromString("db79ad6c-a507-43ed-9ecf-3bbd88475b32"), partyData.getPartyId());
     }
 
     @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void invoiceDaoTest() throws DaoException {
-        Invoice invoice = random(Invoice.class);
-        invoice.setId(null);
-        invoice.setEventType(InvoiceEventType.INVOICE_CREATED);
-        Long id = invoiceDao.save(invoice);
-        invoice.setId(id);
-        assertEquals(invoice, invoiceDao.get(invoice.getInvoiceId()));
+    @Sql("classpath:data/sql/payment_dao_test.sql")
+    public void paymentDaoTest() {
+        PaymentPartyData paymentPartyData = paymentDao.getPaymentPartyData(new PaymentInvoiceUniqueBatchKey("uAykKfsktM", "1"));
 
-        invoice.setId(null);
-        invoice.setEventType(InvoiceEventType.INVOICE_STATUS_CHANGED);
-        invoice.setInvoiceStatus(InvoiceStatus.paid);
-        invoice.setChangeId(invoice.getChangeId() + 1);
-        id = invoiceDao.save(invoice);
-        invoice.setId(id);
-        assertEquals(invoice, invoiceDao.get(invoice.getInvoiceId()));
-        assertEquals(invoice.getPartyId(), invoiceDao.getPartyData(invoice.getInvoiceId()).getPartyId());
+        assertEquals(1234L, (long) paymentPartyData.getPaymentAmount());
+
+        Map<String, Long> shopAccountingReportData = paymentDao.getShopAccountingReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b33",
+                "test_shop_1",
+                "RUB",
+                Optional.of(toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))),
+                toLocalDateTime(stringToTemporal("2022-08-23T12:12:54Z"))
+        );
+
+        Long fundsAcquired = shopAccountingReportData.get("funds_acquired");
+        Long feeCharged = shopAccountingReportData.get("fee_charged");
+
+        assertEquals(247L, (long) fundsAcquired);
+        assertEquals(100L, (long) feeCharged);
+
+        List<PaymentRegistryReportData> paymentRegistryReportDataList = paymentDao.getPaymentRegistryReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b35",
+                "test_shop_1",
+                toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z")),
+                toLocalDateTime(stringToTemporal("2022-08-23T12:12:54Z"))
+        );
+
+        assertEquals(124L, (long) paymentRegistryReportDataList.get(0).getPaymentAmount());
+        assertEquals(100L, (long) paymentRegistryReportDataList.get(0).getPaymentFee());
+        assertEquals(125L, (long) paymentRegistryReportDataList.get(1).getPaymentAmount());
+        assertEquals(101L, (long) paymentRegistryReportDataList.get(1).getPaymentProviderFee());
     }
 
     @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void paymentDaoTest() throws DaoException {
-        Payment payment = random(Payment.class, "paymentCashFlow");
-        payment.setId(null);
-        payment.setPaymentFingerprint("b334ba917e0e863283832f5d74a8cd1c'\"\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n" +
-                "\u000B\f\n" +
-                "\u000E\u000F\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001A\u001B\u001C\u001D\u001E\u001F !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKL" +
-                "MNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u007F\u0080\u0081\u0082\u0083\u0084\u0085\u0086\u0087\u0088\u0089\u008A\u008B\u008C\u008D\u008E\u008F\u0090\u0091\u0092\u0093" +
-                "\u0094\u0095\u0096\u0097\u0098\u0099\u009A\u009B\u009C\u009D\u009E\u009F ¡¢£¤¥¦§¨©ª«¬\u00AD®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ\"'");
-        Long id = paymentDao.save(payment);
+    @Sql("classpath:data/sql/payout_dao_test.sql")
+    public void payoutDaoTest() {
+        Map<String, Long> shopAccountingReportData = payoutDao.getShopAccountingReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b32",
+                "test_shop_1",
+                "RUB",
+                Optional.of(toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))),
+                toLocalDateTime(stringToTemporal("2022-08-23T12:12:54Z"))
+        );
 
-        payment.setId(id);
-        payment.setPaymentFingerprint(payment.getPaymentFingerprint().replace("\u0000", "\\u0000"));
-        assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
-        assertEquals(payment.getPartyId(), paymentDao.getPaymentPartyData(payment.getInvoiceId(), payment.getPaymentId()).getPartyId());
-        assertEquals(payment.getPaymentAmount(), paymentDao.getPaymentPartyData(payment.getInvoiceId(), payment.getPaymentId()).getPaymentAmount());
+        assertEquals(1L, (long) shopAccountingReportData.get("funds_paid_out"));
     }
 
     @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void refundDaoTest() throws DaoException {
-        Refund refund = random(Refund.class, "refundCashFlow");
-        refund.setId(null);
-        refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_CREATED);
-        Long id = refundDao.save(refund);
-        refund.setId(id);
-        assertEquals(refund, refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
+    @Sql("classpath:data/sql/refund_dao_test.sql")
+    public void refundDaoTest() {
+        Map<String, Long> shopAccountingReportData = refundDao.getShopAccountingReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b32",
+                "test_shop_1",
+                "RUB",
+                Optional.of(toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z"))),
+                toLocalDateTime(stringToTemporal("2022-08-23T12:12:54Z"))
+        );
 
-        refund.setId(null);
-        refund.setEventType(InvoiceEventType.INVOICE_PAYMENT_REFUND_STATUS_CHANGED);
-        refund.setRefundStatus(RefundStatus.succeeded);
-        refund.setChangeId(refund.getChangeId() + 1);
-        id = refundDao.save(refund);
-        refund.setId(id);
-        assertEquals(refund, refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
-    }
+        assertEquals(22L, (long) shopAccountingReportData.get("funds_refunded"));
 
-    @Test
-    @Sql("classpath:data/sql/truncate.sql")
-    public void payoutDaoTest() throws DaoException {
-        Payout payout = random(Payout.class, "payoutCashFlow", "payoutSummary");
-        payout.setId(null);
-        payout.setEventCategory(PayoutEventCategory.PAYOUT);
-        Long id = payoutDao.save(payout);
-        payout.setId(id);
-        assertEquals(payout, payoutDao.get(payout.getPayoutId()));
+
+        List<RefundPaymentRegistryReportData> refundPaymentRegistryReportData = refundDao.getRefundPaymentRegistryReportData(
+                "db79ad6c-a507-43ed-9ecf-3bbd88475b35",
+                "test_shop_1",
+                toLocalDateTime(stringToTemporal("2017-08-31T21:00:00Z")),
+                toLocalDateTime(stringToTemporal("2022-08-23T12:12:54Z"))
+        );
+
+        assertEquals(123L, (long) refundPaymentRegistryReportData.get(0).getRefundAmount());
+        assertEquals(124L, (long) refundPaymentRegistryReportData.get(1).getRefundAmount());
     }
 
     @Test

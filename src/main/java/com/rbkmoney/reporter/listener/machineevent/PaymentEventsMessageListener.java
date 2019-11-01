@@ -7,13 +7,10 @@ import com.rbkmoney.reporter.batch.InvoiceBatchManager;
 import com.rbkmoney.reporter.batch.InvoiceBatchService;
 import com.rbkmoney.reporter.batch.InvoiceBatchType;
 import com.rbkmoney.reporter.batch.InvoiceUniqueBatchKey;
-import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.Refund;
+import com.rbkmoney.reporter.dao.mapper.dto.PartyData;
+import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.handle.InvoiceBatchHandler;
 import com.rbkmoney.reporter.mapper.MapperPayload;
-import com.rbkmoney.reporter.mapper.MapperResult;
 import com.rbkmoney.reporter.service.BatchService;
 import com.rbkmoney.sink.common.parser.Parser;
 import lombok.RequiredArgsConstructor;
@@ -38,10 +35,10 @@ public class PaymentEventsMessageListener {
     private final InvoiceBatchManager invoiceBatchManager;
     private final BatchService batchService;
 
-    private final InvoiceBatchHandler<Invoice, Void> invoiceBatchHandler;
-    private final InvoiceBatchHandler<Payment, Invoice> paymentInvoiceBatchHandler;
-    private final InvoiceBatchHandler<Adjustment, Payment> adjustmentInvoiceBatchHandler;
-    private final InvoiceBatchHandler<Refund, Payment> refundInvoiceBatchHandler;
+    private final InvoiceBatchHandler<PartyData, Void> invoiceBatchHandler;
+    private final InvoiceBatchHandler<PaymentPartyData, PartyData> paymentInvoiceBatchHandler;
+    private final InvoiceBatchHandler<Void, PaymentPartyData> adjustmentInvoiceBatchHandler;
+    private final InvoiceBatchHandler<Void, PaymentPartyData> refundInvoiceBatchHandler;
 
     @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "kafkaListenerContainerFactory")
     public void listen(List<ConsumerRecord<String, SinkEvent>> messages, Acknowledgment ack) {
@@ -50,18 +47,17 @@ public class PaymentEventsMessageListener {
 
         log.info("Start handling batch with size:, size={}, {}", size, recordInfo);
 
-        Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> mapperPayloadsByUniqueKeyByType =
-                getMapperPayloadsByUniqueKeyByType(messages);
+        Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> mapperPayloadsByUniqueKeyByType = getMapperPayloadsByUniqueKeyByType(messages);
 
         List<Query> saveEventQueries = new ArrayList<>();
 
-        Map<InvoiceUniqueBatchKey, Invoice> invoiceCache = new HashMap<>();
-        Map<InvoiceUniqueBatchKey, Payment> paymentCache = new HashMap<>();
+        Map<InvoiceUniqueBatchKey, PartyData> partyDataCache = new HashMap<>();
+        Map<InvoiceUniqueBatchKey, PaymentPartyData> paymentPartyDataCache = new HashMap<>();
 
-        List<Query> invoiceSaveEventQueries = invoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, invoiceCache, null);
-        List<Query> paymentEventQueries = paymentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, paymentCache, invoiceCache);
-        List<Query> adjustmentEventQueries = adjustmentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, null, paymentCache);
-        List<Query> refundEventQueries = refundInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, MapperResult::new, null, paymentCache);
+        List<Query> invoiceSaveEventQueries = invoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, partyDataCache, null);
+        List<Query> paymentEventQueries = paymentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, paymentPartyDataCache, partyDataCache);
+        List<Query> adjustmentEventQueries = adjustmentInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, null, paymentPartyDataCache);
+        List<Query> refundEventQueries = refundInvoiceBatchHandler.handle(mapperPayloadsByUniqueKeyByType, null, paymentPartyDataCache);
 
         saveEventQueries.addAll(invoiceSaveEventQueries);
         saveEventQueries.addAll(paymentEventQueries);
@@ -78,9 +74,7 @@ public class PaymentEventsMessageListener {
         ack.acknowledge();
     }
 
-    private Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> getMapperPayloadsByUniqueKeyByType(
-            List<ConsumerRecord<String, SinkEvent>> messages
-    ) {
+    private Map<InvoiceBatchService, Map<InvoiceUniqueBatchKey, List<MapperPayload>>> getMapperPayloadsByUniqueKeyByType(List<ConsumerRecord<String, SinkEvent>> messages) {
         return messages.stream()
                 .map(ConsumerRecord::value)
                 .map(sinkEvent -> Map.entry(sinkEvent.getEvent(), paymentEventPayloadMachineEventParser.parse(sinkEvent.getEvent())))
@@ -91,8 +85,11 @@ public class PaymentEventsMessageListener {
                                 .collect(Collectors.toList())
                 )
                 .flatMap(List::stream)
-                .collect(Collectors.groupingBy(mapperPayload ->
-                        invoiceBatchManager.getInvoiceBatchService(mapperPayload.getInvoiceChange())))
+                .collect(
+                        Collectors.groupingBy(
+                                mapperPayload -> invoiceBatchManager.getInvoiceBatchService(mapperPayload.getInvoiceChange())
+                        )
+                )
                 .entrySet().stream()
                 .filter(not(typeEntry -> typeEntry.getKey().getInvoiceBatchType().equals(InvoiceBatchType.OTHER)))
                 .map(

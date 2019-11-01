@@ -35,7 +35,7 @@
         <metrics.version>1.1.0</metrics.version>
         <shared.resources.version>0.3.6</shared.resources.version>
         <eventstock.version>1.2.6</eventstock.version>
-        <damsel.version>1.320-95ff602</damsel.version>
+        <damsel.version>1.337-0aecae2</damsel.version>
         <!---->
         <db.name>reporter</db.name>
         <db.schema>rpt</db.schema>
@@ -48,7 +48,7 @@
         <db.embedded.schema>${db.schema}</db.embedded.schema>
         <db.embedded.user>${db.user}</db.embedded.user>
         <db.embedded.password>${db.password}</db.embedded.password>
-        <db.embedded.port>15432</db.embedded.port>
+        <db.embedded.port>5432</db.embedded.port>
         <db.embedded.url>jdbc:postgresql://localhost:${db.embedded.port}/${db.embedded.name}</db.embedded.url>
     </properties>
 
@@ -187,6 +187,11 @@
             <groupId>com.cronutils</groupId>
             <artifactId>cron-utils</artifactId>
             <version>7.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>${caffeine.version}</version>
         </dependency>
 
         <!--Test libs-->
@@ -347,55 +352,6 @@
                             <includes>.*</includes>
                             <excludes>schema_version|flyway_schema_history</excludes>
                             <inputSchema>${db.embedded.schema}</inputSchema>
-                            <customTypes>
-                                <customType>
-                                    <name>FinalCashFlow</name>
-                                    <type>com.rbkmoney.reporter.util.json.FinalCashFlow</type>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                </customType>
-                                <customType>
-                                    <name>PayoutSummary</name>
-                                    <type>com.rbkmoney.reporter.util.json.PayoutSummary</type>
-                                    <binding>com.rbkmoney.reporter.util.json.PayoutSummaryBinding</binding>
-                                </customType>
-                            </customTypes>
-                            <forcedTypes>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                    <expression>.*\.payment.payment_cash_flow</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                    <expression>.*\.adjustment.adjustment_cash_flow</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                    <expression>.*\.adjustment.adjustment_cash_flow_inverse_old</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                    <expression>.*\.refund.refund_cash_flow</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.PayoutSummary</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.PayoutSummaryBinding</binding>
-                                    <expression>.*\.payout.payout_summary</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                    <expression>.*\.payout.payout_cash_flow</expression>
-                                </forcedType>
-                                <forcedType>
-                                    <userType>com.rbkmoney.reporter.util.json.FinalCashFlow</userType>
-                                    <binding>com.rbkmoney.reporter.util.json.FinalCashFlowBinding</binding>
-                                    <expression>.*\.data_with_cash_flows</expression>
-                                </forcedType>
-                            </forcedTypes>
                         </database>
                         <target>
                             <packageName>com.rbkmoney.reporter.domain</packageName>

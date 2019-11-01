@@ -1,19 +1,14 @@
 package com.rbkmoney.reporter.service;
 
+import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
 import com.rbkmoney.reporter.exception.NotFoundException;
 import com.rbkmoney.reporter.exception.StorageException;
 
 public interface PaymentService {
 
-    Long save(Payment payment) throws StorageException;
+    void savePaymentPartyData(PaymentInvoiceUniqueBatchKey uniqueBatchKey, PaymentPartyData paymentPartyData);
 
-    Payment get(String invoiceId, String paymentId) throws StorageException, NotFoundException;
-
-    PaymentPartyData getPaymentPartyData(String invoiceId, String paymentId) throws StorageException, NotFoundException;
-
-    PaymentCost getPaymentCost(String invoiceId, String paymentId) throws StorageException, NotFoundException;
+    PaymentPartyData getPaymentPartyData(PaymentInvoiceUniqueBatchKey uniqueBatchKey) throws StorageException, NotFoundException;
 
 }

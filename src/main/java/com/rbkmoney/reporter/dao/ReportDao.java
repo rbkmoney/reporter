@@ -23,8 +23,6 @@ public interface ReportDao {
 
     List<Report> getPendingReports(int limit) throws DaoException;
 
-    List<Report> getPendingReportsByType(ReportType reportType) throws DaoException;
-
     List<Report> getReportsByRange(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
 
     long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, ReportType reportType, String timezone, LocalDateTime createdAt) throws DaoException;

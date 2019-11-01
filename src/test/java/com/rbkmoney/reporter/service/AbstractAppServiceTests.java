@@ -1,10 +1,8 @@
 package com.rbkmoney.reporter.service;
 
-import com.rbkmoney.easyway.AbstractTestUtils;
-import com.rbkmoney.easyway.TestContainers;
-import com.rbkmoney.easyway.TestContainersBuilder;
-import com.rbkmoney.easyway.TestContainersParameters;
+import com.rbkmoney.easyway.*;
 import com.rbkmoney.reporter.config.ApplicationConfig;
+import com.rbkmoney.reporter.config.CacheConfig;
 import com.rbkmoney.reporter.config.SchedulerConfig;
 import com.rbkmoney.reporter.config.StorageConfig;
 import com.rbkmoney.reporter.scheduler.impl.PendingReportScheduledJobImpl;
@@ -24,6 +22,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.FailureDetectingExternalResource;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @RunWith(SpringRunner.class)
@@ -32,6 +31,7 @@ import java.util.function.Supplier;
                 ApplicationConfig.class,
                 SchedulerConfig.class,
                 StorageConfig.class,
+                CacheConfig.class,
                 PendingReportScheduledJobImpl.class
         },
         initializers = AbstractAppServiceTests.Initializer.class
@@ -80,12 +80,15 @@ public abstract class AbstractAppServiceTests extends AbstractTestUtils {
             super.initialize(configurableApplicationContext);
             TestPropertyValues.of(
                     testContainers.getEnvironmentProperties(
-                            environmentProperties -> {
-                            }
+                            getEnvironmentPropertiesConsumer()
                     )
             )
                     .applyTo(configurableApplicationContext);
         }
+    }
+
+    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
+        return environmentProperties -> environmentProperties.put("info.single-instance-mode", "true");
     }
 
     private static Supplier<TestContainersParameters> getTestContainersParametersSupplier() {

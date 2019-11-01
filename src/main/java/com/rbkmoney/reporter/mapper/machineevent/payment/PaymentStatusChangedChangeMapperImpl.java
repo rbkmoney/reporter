@@ -20,16 +20,14 @@ import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
+import static com.rbkmoney.reporter.util.MapperUtil.getPaymentCost;
+import static com.rbkmoney.reporter.util.MapperUtil.getPaymentState;
+
 @Component
 @Slf4j
 public class PaymentStatusChangedChangeMapperImpl implements InvoiceChangeMapper {
-
-    @Override
-    public String[] getIgnoreProperties() {
-        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
-                "paymentAmount", "paymentCurrencyCode", "paymentStatus", "paymentOperationFailureClass",
-                "paymentExternalFailure", "paymentExternalFailureReason"};
-    }
 
     @Override
     public boolean canMap(InvoiceChange payload) {
@@ -39,51 +37,38 @@ public class PaymentStatusChangedChangeMapperImpl implements InvoiceChangeMapper
 
     @Override
     public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
-        InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
-        InvoicePaymentStatusChanged invoicePaymentStatusChanged = getInvoicePaymentStatusChanged(invoicePaymentChange);
-        com.rbkmoney.damsel.domain.InvoicePaymentStatus invoicePaymentStatusChangedStatus =
-                invoicePaymentStatusChanged.getStatus();
+        InvoicePaymentChange damselPaymentChange = payload.getInvoicePaymentChange();
+        InvoicePaymentStatusChanged damselPaymentStatusChanged = getInvoicePaymentStatusChanged(damselPaymentChange);
+        var status = damselPaymentStatusChanged.getStatus();
 
-        String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
+        long sequenceId = baseEvent.getEventId();
+        LocalDateTime eventCreatedAt = TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt());
+        String paymentId = damselPaymentChange.getId();
 
-        PaymentState state = new PaymentState();
-        state.setInvoiceId(invoiceId);
-        state.setSequenceId(baseEvent.getEventId());
-        state.setChangeId(changeId);
-        state.setPaymentId(paymentId);
-        state.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        state.setPaymentStatus(TBaseUtil.unionFieldToEnum(invoicePaymentStatusChangedStatus, InvoicePaymentStatus.class));
+        PaymentState paymentState = getPaymentState(invoiceId, changeId, sequenceId, eventCreatedAt, paymentId, status);
 
         PaymentCost paymentCost = null;
-        if (invoicePaymentStatusChangedStatus.isSetCaptured()) {
-            InvoicePaymentCaptured invoicePaymentCaptured = invoicePaymentStatusChangedStatus.getCaptured();
+        if (status.isSetCaptured()) {
+            InvoicePaymentCaptured invoicePaymentCaptured = status.getCaptured();
             if (invoicePaymentCaptured.isSetCost()) {
                 Cash cost = invoicePaymentCaptured.getCost();
 
-                paymentCost = new PaymentCost();
-                paymentCost.setInvoiceId(invoiceId);
-                paymentCost.setSequenceId(baseEvent.getEventId());
-                paymentCost.setChangeId(changeId);
-                paymentCost.setPaymentId(paymentId);
-                paymentCost.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-                paymentCost.setAmount(cost.getAmount());
-                paymentCost.setCurrency(cost.getCurrency().getSymbolicCode());
+                paymentCost = getPaymentCost(invoiceId, sequenceId, changeId, eventCreatedAt, paymentId, cost.getAmount(), cost.getCurrency().getSymbolicCode());
             }
-        } else if (invoicePaymentStatusChangedStatus.isSetFailed()) {
-            OperationFailure operationFailure = invoicePaymentStatusChangedStatus.getFailed().getFailure();
-            state.setPaymentOperationFailureClass(TBaseUtil.unionFieldToEnum(operationFailure, FailureClass.class));
+        } else if (status.isSetFailed()) {
+            OperationFailure operationFailure = status.getFailed().getFailure();
+            paymentState.setOperationFailureClass(TBaseUtil.unionFieldToEnum(operationFailure, FailureClass.class));
             if (operationFailure.isSetFailure()) {
                 Failure failure = operationFailure.getFailure();
-                state.setExternalFailure(TErrorUtil.toStringVal(failure));
-                state.setExternalFailureReason(failure.getReason());
+                paymentState.setExternalFailure(TErrorUtil.toStringVal(failure));
+                paymentState.setExternalFailureReason(failure.getReason());
             }
         }
 
-        log.info("Payment with eventType=statusChanged and status {} has been mapped, invoiceId={}, paymentId={}",
-                TBaseUtil.unionFieldToEnum(invoicePaymentStatusChangedStatus, InvoicePaymentStatus.class), invoiceId, paymentId);
+        log.info("Payment with eventType=[statusChanged] and status {} has been mapped, invoiceId={}, paymentId={}", TBaseUtil.unionFieldToEnum(status, InvoicePaymentStatus.class), invoiceId, paymentId);
 
-        return paymentCost == null ? new MapperResult(state) : new MapperResult(state, paymentCost);
+        return new MapperResult(paymentState, paymentCost);
     }
 
     private InvoicePaymentStatusChanged getInvoicePaymentStatusChanged(InvoicePaymentChange invoicePaymentChange) {

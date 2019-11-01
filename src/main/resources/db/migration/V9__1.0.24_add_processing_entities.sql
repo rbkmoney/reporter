@@ -1,46 +1,42 @@
 -- invoice
-
-CREATE TYPE rpt.invoice_event_type AS ENUM ('INVOICE_CREATED', 'INVOICE_STATUS_CHANGED',
-    'INVOICE_PAYMENT_STARTED', 'INVOICE_PAYMENT_STATUS_CHANGED', 'INVOICE_PAYMENT_ADJUSTMENT_CREATED',
-    'INVOICE_PAYMENT_ADJUSTMENT_STATUS_CHANGED', 'INVOICE_PAYMENT_REFUND_CREATED', 'INVOICE_PAYMENT_REFUND_STATUS_CHANGED',
-    'INVOICE_PAYMENT_ADJUSTED', 'PAYMENT_TERMINAL_RECIEPT', 'INVOICE_PAYMENT_ROUTE_CHANGED',
-    'INVOICE_PAYMENT_CASH_FLOW_CHANGED');
 CREATE TYPE rpt.invoice_status AS ENUM ('unpaid', 'paid', 'cancelled', 'fulfilled');
 
 CREATE TABLE rpt.invoice
 (
-    id                     BIGSERIAL                   NOT NULL,
-    event_created_at       TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    event_type             rpt.invoice_event_type      NOT NULL,
-    invoice_id             CHARACTER VARYING           NOT NULL,
-    sequence_id            BIGINT                      NOT NULL,
-    change_id              INT                         NOT NULL,
-    party_id               UUID                        NOT NULL,
-    invoice_party_revision BIGINT,
-    party_shop_id          CHARACTER VARYING           NOT NULL,
-    invoice_created_at     TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    invoice_status         rpt.invoice_status          NOT NULL,
-    invoice_status_details CHARACTER VARYING,
-    invoice_product        CHARACTER VARYING           NOT NULL,
-    invoice_description    CHARACTER VARYING,
-    invoice_cart_json      CHARACTER VARYING,
-    invoice_due            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    invoice_amount         BIGINT                      NOT NULL,
-    invoice_currency_code  CHARACTER VARYING           NOT NULL,
-    invoice_context_type   CHARACTER VARYING,
-    invoice_context        BYTEA,
-    invoice_template_id    CHARACTER VARYING,
-    wtime                  TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    CONSTRAINT invoice_pkey PRIMARY KEY (id),
-    CONSTRAINT invoice_ukey
-        UNIQUE (invoice_id, sequence_id, change_id)
+    id             BIGSERIAL                   NOT NULL,
+    party_id       UUID                        NOT NULL,
+    party_shop_id  CHARACTER VARYING           NOT NULL,
+    invoice_id     CHARACTER VARYING           NOT NULL,
+    party_revision BIGINT,
+    created_at     TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    product        CHARACTER VARYING           NOT NULL,
+    description    CHARACTER VARYING,
+    cart_json      CHARACTER VARYING,
+    due            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    amount         BIGINT                      NOT NULL,
+    currency_code  CHARACTER VARYING           NOT NULL,
+    context_type   CHARACTER VARYING,
+    context        BYTEA,
+    template_id    CHARACTER VARYING,
+    CONSTRAINT invoice_pkey PRIMARY KEY (id)
 );
+CREATE UNIQUE INDEX invoice_id_idx ON rpt.invoice (invoice_id);
+CREATE UNIQUE INDEX invoice_created_at_idx ON rpt.invoice (created_at);
 
-CREATE INDEX invoice_invoice_id_event_created_at_idx ON rpt.invoice (invoice_id, event_created_at);
-CREATE INDEX invoice_invoice_created_at_idx ON rpt.invoice (invoice_created_at);
+CREATE TABLE rpt.invoice_state
+(
+    id               BIGSERIAL                   NOT NULL,
+    invoice_id       CHARACTER VARYING           NOT NULL,
+    sequence_id      BIGINT                      NOT NULL,
+    change_id        INT                         NOT NULL,
+    event_created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    status           rpt.invoice_status          NOT NULL,
+    status_details   CHARACTER VARYING           NULL,
+    CONSTRAINT invoice_state_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX invoice_status_idx ON rpt.invoice_state (invoice_id, sequence_id, change_id);
 
 -- payment
-
 CREATE TYPE rpt.invoice_payment_status AS ENUM ('pending', 'processed', 'captured', 'cancelled', 'failed', 'refunded');
 CREATE TYPE rpt.payment_tool AS ENUM ('bank_card', 'payment_terminal', 'digital_wallet');
 CREATE TYPE rpt.bank_card_token_provider AS ENUM ('applepay', 'googlepay', 'samsungpay');
@@ -51,218 +47,275 @@ CREATE TYPE rpt.failure_class AS ENUM ('operation_timeout', 'failure');
 
 CREATE TABLE rpt.payment
 (
-    id                                        BIGSERIAL                   NOT NULL,
-    event_created_at                          TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    event_type                                rpt.invoice_event_type      NOT NULL,
-    invoice_id                                CHARACTER VARYING           NOT NULL,
-    sequence_id                               BIGINT                      NOT NULL,
-    change_id                                 INT                         NOT NULL,
-    party_id                                  UUID                        NOT NULL,
-    party_shop_id                             CHARACTER VARYING           NOT NULL,
-    payment_id                                CHARACTER VARYING           NOT NULL,
-    payment_created_at                        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    payment_domain_revision                   BIGINT                      NOT NULL,
-    payment_party_revision                    BIGINT,
-    payment_status                            rpt.invoice_payment_status  NOT NULL,
-    payment_operation_failure_class           rpt.failure_class,
-    payment_external_failure                  CHARACTER VARYING,
-    payment_external_failure_reason           CHARACTER VARYING,
-    -- Payer { UNION
-    payment_payer_type                        rpt.payment_payer_type      NOT NULL,
-    --  PaymentResourcePayer {
-    --    DisposablePaymentResource {
-    --      PaymentTool { UNION
-    payment_tool                              rpt.payment_tool            NOT NULL,
-    --        BankCard
-    payment_bank_card_token                   CHARACTER VARYING,
-    payment_bank_card_system                  CHARACTER VARYING,
-    payment_bank_card_bin                     CHARACTER VARYING,
-    payment_bank_card_masked_pan              CHARACTER VARYING,
-    payment_bank_card_token_provider          rpt.bank_card_token_provider,
-    --        PaymentTerminal
-    payment_terminal_provider                 CHARACTER VARYING,
-    --        DigitalWallet
-    payment_digital_wallet_id                 CHARACTER VARYING,
-    payment_digital_wallet_provider           CHARACTER VARYING,
-    --      (PaymentTool) }
-    payment_session_id                        CHARACTER VARYING,
-    --      ClientInfo {
-    payment_fingerprint                       CHARACTER VARYING,
-    payment_ip                                CHARACTER VARYING,
-    --      (ClientInfo) }
-    --    (DisposablePaymentResource) }
-    --    ContactInfo {
-    payment_phone_number                      CHARACTER VARYING,
-    payment_email                             CHARACTER VARYING,
-    --    (ContactInfo) }
-    --  (PaymentResourcePayer) }
-    --  CustomerPayer {
-    payment_customer_id                       CHARACTER VARYING,
-    --    + PaymentTool {}
-    --    + ContactInfo {}
-    --  (CustomerPayer) }
-    --  RecurrentPayer {
-    --    + PaymentTool {}
-    --    RecurrentParentPayment {
-    payment_recurrent_payer_parent_invoice_id CHARACTER VARYING,
-    payment_recurrent_payer_parent_payment_id CHARACTER VARYING,
-    --      + ContactInfo {}
-    --    (RecurrentParentPayment)}
-    --  (RecurrentPayer) }
-    -- (Payer) }
-    payment_amount                            BIGINT                      NOT NULL,
-    payment_origin_amount                     BIGINT                      NOT NULL,
-    payment_currency_code                     CHARACTER VARYING           NOT NULL,
-    payment_flow                              rpt.payment_flow            NOT NULL,
-    payment_hold_on_expiration                rpt.on_hold_expiration,
-    payment_hold_until                        TIMESTAMP WITHOUT TIME ZONE,
-    payment_make_recurrent_flag               BOOLEAN,
-    payment_context_type                      CHARACTER VARYING,
-    payment_context                           BYTEA,
-    payment_provider_id                       INTEGER,
-    payment_terminal_id                       INTEGER,
-    payment_cash_flow                         JSONB,
-    payment_short_id                          CHARACTER VARYING,
-    wtime                                     TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    CONSTRAINT payment_pkey PRIMARY KEY (id),
-    CONSTRAINT payment_ukey
-        UNIQUE (invoice_id, sequence_id, change_id)
+    id                                BIGSERIAL                   NOT NULL,
+    party_id                          UUID                        NOT NULL,
+    party_shop_id                     CHARACTER VARYING           NOT NULL,
+    invoice_id                        CHARACTER VARYING           NOT NULL,
+    payment_id                        CHARACTER VARYING           NOT NULL,
+    created_at                        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    domain_revision                   BIGINT                      NOT NULL,
+    party_revision                    BIGINT,
+    payer_type                        rpt.payment_payer_type      NOT NULL,
+    tool                              rpt.payment_tool            NOT NULL,
+    bank_card_token                   CHARACTER VARYING,
+    bank_card_system                  CHARACTER VARYING,
+    bank_card_bin                     CHARACTER VARYING,
+    bank_card_masked_pan              CHARACTER VARYING,
+    bank_card_token_provider          rpt.bank_card_token_provider,
+    terminal_provider                 CHARACTER VARYING,
+    digital_wallet_id                 CHARACTER VARYING,
+    digital_wallet_provider           CHARACTER VARYING,
+    session_id                        CHARACTER VARYING,
+    fingerprint                       CHARACTER VARYING,
+    ip                                CHARACTER VARYING,
+    phone_number                      CHARACTER VARYING,
+    email                             CHARACTER VARYING,
+    customer_id                       CHARACTER VARYING,
+    recurrent_payer_parent_invoice_id CHARACTER VARYING,
+    recurrent_payer_parent_payment_id CHARACTER VARYING,
+    flow                              rpt.payment_flow            NOT NULL,
+    hold_on_expiration                rpt.on_hold_expiration,
+    hold_until                        TIMESTAMP WITHOUT TIME ZONE,
+    make_recurrent_flag               BOOLEAN,
+    context_type                      CHARACTER VARYING,
+    context                           BYTEA,
+    CONSTRAINT payment_pkey PRIMARY KEY (id)
 );
+CREATE UNIQUE INDEX payment_id_idx on rpt.payment (invoice_id, payment_id);
+CREATE UNIQUE INDEX payment_created_at_idx ON rpt.payment (created_at);
 
-CREATE INDEX payment_payment_id_event_created_at_idx on rpt.payment (payment_id, event_created_at);
-CREATE INDEX payment_payment_created_at_idx ON rpt.payment (payment_created_at);
+CREATE TABLE rpt.payment_state
+(
+    id                      BIGSERIAL                   NOT NULL,
+    invoice_id              CHARACTER VARYING           NOT NULL,
+    sequence_id             BIGINT                      NOT NULL,
+    change_id               INT                         NOT NULL,
+    event_created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id              CHARACTER VARYING           NOT NULL,
+    status                  rpt.invoice_payment_status  NOT NULL,
+    operation_failure_class rpt.failure_class           NULL,
+    external_failure        CHARACTER VARYING           NULL,
+    external_failure_reason CHARACTER VARYING           NULL,
+    CONSTRAINT payment_status_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX payment_status_idx ON rpt.payment_state (invoice_id, sequence_id, change_id);
+
+CREATE TABLE rpt.payment_routing
+(
+    id               BIGSERIAL                   NOT NULL,
+    invoice_id       CHARACTER VARYING           NOT NULL,
+    sequence_id      BIGINT                      NOT NULL,
+    change_id        INT                         NOT NULL,
+    event_created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id       CHARACTER VARYING           NOT NULL,
+    provider_id      INTEGER                     NOT NULL,
+    terminal_id      INTEGER                     NOT NULL,
+    CONSTRAINT payment_route_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX payment_route_idx ON rpt.payment_routing (invoice_id, sequence_id, change_id);
+
+CREATE TABLE rpt.payment_terminal_receipt
+(
+    id               BIGSERIAL                   NOT NULL,
+    invoice_id       CHARACTER VARYING           NOT NULL,
+    sequence_id      BIGINT                      NOT NULL,
+    change_id        INT                         NOT NULL,
+    event_created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id       CHARACTER VARYING           NOT NULL,
+    payment_short_id CHARACTER VARYING           NOT NULL,
+    CONSTRAINT payment_terminal_receipt_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX payment_terminal_receipt_idx ON rpt.payment_terminal_receipt (invoice_id, sequence_id, change_id);
+
+CREATE TABLE rpt.payment_cost
+(
+    id               BIGSERIAL                   NOT NULL,
+    invoice_id       CHARACTER VARYING           NOT NULL,
+    sequence_id      BIGINT                      NOT NULL,
+    change_id        INT                         NOT NULL,
+    event_created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id       CHARACTER VARYING           NOT NULL,
+    amount           BIGINT                      NOT NULL,
+    origin_amount    BIGINT,
+    currency_code    CHARACTER VARYING           NOT NULL,
+    CONSTRAINT payment_cost_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX payment_cost_idx ON rpt.payment_cost (invoice_id, sequence_id, change_id);
+
+CREATE TABLE rpt.payment_fee
+(
+    id                         BIGSERIAL                   NOT NULL,
+    invoice_id                 CHARACTER VARYING           NOT NULL,
+    sequence_id                BIGINT                      NOT NULL,
+    change_id                  INT                         NOT NULL,
+    event_created_at           TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id                 CHARACTER VARYING           NOT NULL,
+    fee                        BIGINT,
+    fee_currency_code          CHARACTER VARYING,
+    provider_fee               BIGINT,
+    provider_fee_currency_code CHARACTER VARYING,
+    external_fee               BIGINT,
+    external_fee_currency_code CHARACTER VARYING,
+    CONSTRAINT payment_fee_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX payment_fee_idx ON rpt.payment_fee (invoice_id, sequence_id, change_id);
 
 -- adjustment
-
 CREATE TYPE rpt.adjustment_status AS ENUM ('pending', 'captured', 'cancelled', 'processed');
 
 CREATE TABLE rpt.adjustment
 (
-    id                               BIGSERIAL                   NOT NULL,
-    event_created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    event_type                       rpt.invoice_event_type      NOT NULL,
-    invoice_id                       CHARACTER VARYING           NOT NULL,
-    sequence_id                      BIGINT                      NOT NULL,
-    change_id                        INT                         NOT NULL,
-    payment_id                       CHARACTER VARYING           NOT NULL,
-    party_id                         UUID                        NOT NULL,
-    party_shop_id                    CHARACTER VARYING           NOT NULL,
-    adjustment_id                    CHARACTER VARYING           NOT NULL,
-    adjustment_status                rpt.adjustment_status       NOT NULL,
-    adjustment_status_created_at     TIMESTAMP WITHOUT TIME ZONE,
-    adjustment_created_at            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    adjustment_domain_revision       BIGINT,
-    adjustment_reason                CHARACTER VARYING           NOT NULL,
-    adjustment_cash_flow             JSONB,
-    adjustment_cash_flow_inverse_old JSONB,
-    adjustment_party_revision        BIGINT,
-    wtime                            TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    CONSTRAINT adjustment_pkey PRIMARY KEY (id),
-    CONSTRAINT adjustment_ukey
-        UNIQUE (invoice_id, sequence_id, change_id)
+    id                             BIGSERIAL                   NOT NULL,
+    party_id                       UUID                        NOT NULL,
+    party_shop_id                  CHARACTER VARYING           NOT NULL,
+    invoice_id                     CHARACTER VARYING           NOT NULL,
+    payment_id                     CHARACTER VARYING           NOT NULL,
+    adjustment_id                  CHARACTER VARYING           NOT NULL,
+    created_at                     TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    domain_revision                BIGINT,
+    reason                         CHARACTER VARYING           NOT NULL,
+    party_revision                 BIGINT,
+    fee                            BIGINT,
+    fee_currency_code              CHARACTER VARYING,
+    provider_fee                   BIGINT,
+    provider_fee_currency_code     CHARACTER VARYING,
+    external_fee                   BIGINT,
+    external_fee_currency_code     CHARACTER VARYING,
+    old_fee                        BIGINT,
+    old_fee_currency_code          CHARACTER VARYING,
+    old_provider_fee               BIGINT,
+    old_provider_fee_currency_code CHARACTER VARYING,
+    old_external_fee               BIGINT,
+    old_external_fee_currency_code CHARACTER VARYING,
+    CONSTRAINT adjustment_pkey PRIMARY KEY (id)
 );
+CREATE UNIQUE INDEX adjustment_id_idx on rpt.adjustment (invoice_id, payment_id, adjustment_id);
+CREATE UNIQUE INDEX adjustment_created_at_idx ON rpt.adjustment (created_at);
 
-CREATE INDEX adjustment_adjustment_id_event_created_at_idx on rpt.adjustment (adjustment_id, event_created_at);
-CREATE INDEX adjustment_adjustment_created_at_idx ON rpt.adjustment (adjustment_created_at);
+CREATE TABLE rpt.adjustment_state
+(
+    id                BIGSERIAL                   NOT NULL,
+    invoice_id        CHARACTER VARYING           NOT NULL,
+    sequence_id       BIGINT                      NOT NULL,
+    change_id         INT                         NOT NULL,
+    event_created_at  TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id        CHARACTER VARYING           NOT NULL,
+    adjustment_id     CHARACTER VARYING           NOT NULL,
+    status            rpt.adjustment_status       NOT NULL,
+    status_created_at TIMESTAMP WITHOUT TIME ZONE,
+    CONSTRAINT adjustment_status_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX adjustment_status_idx ON rpt.adjustment_state (invoice_id, sequence_id, change_id);
 
 -- refund
-
 CREATE TYPE rpt.refund_status AS ENUM ('pending', 'succeeded', 'failed');
 
 CREATE TABLE rpt.refund
 (
-    id                             BIGSERIAL                   NOT NULL,
-    event_created_at               TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    event_type                     rpt.invoice_event_type      NOT NULL,
-    invoice_id                     CHARACTER VARYING           NOT NULL,
-    sequence_id                    BIGINT                      NOT NULL,
-    change_id                      INT                         NOT NULL,
-    payment_id                     CHARACTER VARYING           NOT NULL,
-    party_id                       UUID                        NOT NULL,
-    party_shop_id                  CHARACTER VARYING           NOT NULL,
-    refund_id                      CHARACTER VARYING           NOT NULL,
-    refund_status                  rpt.refund_status           NOT NULL,
-    refund_operation_failure_class rpt.failure_class,
-    refund_external_failure        CHARACTER VARYING,
-    refund_external_failure_reason CHARACTER VARYING,
-    refund_created_at              TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    refund_domain_revision         BIGINT,
-    refund_party_revision          BIGINT,
-    refund_currency_code           CHARACTER VARYING           NOT NULL,
-    refund_amount                  BIGINT                      NOT NULL,
-    refund_reason                  CHARACTER VARYING,
-    refund_cash_flow               JSONB,
-    wtime                          TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    CONSTRAINT refund_pkey PRIMARY KEY (id),
-    CONSTRAINT refund_ukey
-        UNIQUE (invoice_id, sequence_id, change_id)
+    id                         BIGSERIAL                   NOT NULL,
+    party_id                   UUID                        NOT NULL,
+    party_shop_id              CHARACTER VARYING           NOT NULL,
+    invoice_id                 CHARACTER VARYING           NOT NULL,
+    payment_id                 CHARACTER VARYING           NOT NULL,
+    refund_id                  CHARACTER VARYING           NOT NULL,
+    created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    domain_revision            BIGINT,
+    party_revision             BIGINT,
+    amount                     BIGINT                      NOT NULL,
+    currency_code              CHARACTER VARYING           NOT NULL,
+    reason                     CHARACTER VARYING,
+    fee                        BIGINT,
+    fee_currency_code          CHARACTER VARYING,
+    provider_fee               BIGINT,
+    provider_fee_currency_code CHARACTER VARYING,
+    external_fee               BIGINT,
+    external_fee_currency_code CHARACTER VARYING,
+    CONSTRAINT refund_pkey PRIMARY KEY (id)
 );
+CREATE UNIQUE INDEX refund_id_idx on rpt.refund (invoice_id, payment_id, refund_id);
+CREATE UNIQUE INDEX refund_created_at_idx ON rpt.refund (created_at);
 
-CREATE INDEX refund_refund_id_event_created_at_idx on rpt.refund (refund_id, event_created_at);
-CREATE INDEX refund_refund_created_at_idx ON rpt.refund (refund_created_at);
+CREATE TABLE rpt.refund_state
+(
+    id                      BIGSERIAL                   NOT NULL,
+    invoice_id              CHARACTER VARYING           NOT NULL,
+    sequence_id             BIGINT                      NOT NULL,
+    change_id               INT                         NOT NULL,
+    event_created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payment_id              CHARACTER VARYING           NOT NULL,
+    refund_id               CHARACTER VARYING           NOT NULL,
+    status                  rpt.refund_status           NOT NULL,
+    operation_failure_class rpt.failure_class           NULL,
+    external_failure        CHARACTER VARYING           NULL,
+    external_failure_reason CHARACTER VARYING           NULL,
+    CONSTRAINT refund_status_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX refund_status_idx ON rpt.refund_state (invoice_id, sequence_id, change_id);
 
 -- payout
 
-CREATE TYPE rpt.payout_event_category AS ENUM ('PAYOUT');
-CREATE TYPE rpt.payout_event_type AS ENUM ('PAYOUT_CREATED', 'PAYOUT_STATUS_CHANGED');
 CREATE TYPE rpt.payout_status AS ENUM ('unpaid', 'paid', 'cancelled', 'confirmed');
 CREATE TYPE rpt.payout_type AS ENUM ('bank_card', 'bank_account', 'wallet');
 CREATE TYPE rpt.payout_account_type AS ENUM ('RUSSIAN_PAYOUT_ACCOUNT', 'INTERNATIONAL_PAYOUT_ACCOUNT');
 
 CREATE TABLE rpt.payout
 (
-    id                                                           BIGSERIAL                   NOT NULL,
-    event_id                                                     BIGINT                      NOT NULL,
-    event_created_at                                             TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    event_type                                                   rpt.payout_event_type       NOT NULL,
-    event_category                                               rpt.payout_event_category   NOT NULL,
-    payout_id                                                    CHARACTER VARYING           NOT NULL,
-    party_id                                                     UUID                        NOT NULL,
-    party_shop_id                                                CHARACTER VARYING           NOT NULL,
-    contract_id                                                  CHARACTER VARYING           NOT NULL,
-    payout_created_at                                            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    payout_status                                                rpt.payout_status           NOT NULL,
-    payout_amount                                                BIGINT                      NOT NULL,
-    payout_fee                                                   BIGINT,
-    payout_currency_code                                         CHARACTER VARYING           NOT NULL,
-    payout_cash_flow                                             JSONB,
-    payout_type                                                  rpt.payout_type             NOT NULL,
-    payout_wallet_id                                             CHARACTER VARYING,
-    payout_account_type                                          rpt.payout_account_type,
-    payout_account_bank_id                                       CHARACTER VARYING,
-    payout_account_bank_corr_id                                  CHARACTER VARYING,
-    payout_account_bank_local_code                               CHARACTER VARYING,
-    payout_account_bank_name                                     CHARACTER VARYING,
-    payout_account_purpose                                       CHARACTER VARYING,
-    payout_account_inn                                           CHARACTER VARYING,
-    payout_account_legal_agreement_id                            CHARACTER VARYING,
-    payout_account_legal_agreement_signed_at                     TIMESTAMP WITHOUT TIME ZONE,
-    payout_account_trading_name                                  CHARACTER VARYING,
-    payout_account_legal_name                                    CHARACTER VARYING,
-    payout_account_actual_address                                CHARACTER VARYING,
-    payout_account_registered_address                            CHARACTER VARYING,
-    payout_account_registered_number                             CHARACTER VARYING,
-    payout_account_bank_iban                                     CHARACTER VARYING,
-    payout_account_bank_number                                   CHARACTER VARYING,
-    payout_account_bank_address                                  CHARACTER VARYING,
-    payout_account_bank_bic                                      CHARACTER VARYING,
-    payout_account_bank_aba_rtn                                  CHARACTER VARYING,
-    payout_account_bank_country_code                             CHARACTER VARYING,
-    payout_cancel_details                                        CHARACTER VARYING,
-    payout_international_correspondent_account_bank_account      CHARACTER VARYING,
-    payout_international_correspondent_account_bank_number       CHARACTER VARYING,
-    payout_international_correspondent_account_bank_iban         CHARACTER VARYING,
-    payout_international_correspondent_account_bank_name         CHARACTER VARYING,
-    payout_international_correspondent_account_bank_address      CHARACTER VARYING,
-    payout_international_correspondent_account_bank_bic          CHARACTER VARYING,
-    payout_international_correspondent_account_bank_aba_rtn      CHARACTER VARYING,
-    payout_international_correspondent_account_bank_country_code CHARACTER VARYING,
-    payout_summary                                               JSONB,
-    wtime                                                        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
-    CONSTRAINT payout_pkey PRIMARY KEY (id),
-    CONSTRAINT payout_ukey
-        UNIQUE (event_id, event_type, payout_status)
+    id                                                    BIGSERIAL                   NOT NULL,
+    party_id                                              UUID                        NOT NULL,
+    party_shop_id                                         CHARACTER VARYING           NOT NULL,
+    payout_id                                             CHARACTER VARYING           NOT NULL,
+    contract_id                                           CHARACTER VARYING           NOT NULL,
+    created_at                                            TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    amount                                                BIGINT                      NOT NULL,
+    fee                                                   BIGINT                      NOT NULL,
+    currency_code                                         CHARACTER VARYING           NOT NULL,
+    type                                                  rpt.payout_type             NOT NULL,
+    wallet_id                                             CHARACTER VARYING,
+    account_type                                          rpt.payout_account_type,
+    account_bank_id                                       CHARACTER VARYING,
+    account_bank_corr_id                                  CHARACTER VARYING,
+    account_bank_local_code                               CHARACTER VARYING,
+    account_bank_name                                     CHARACTER VARYING,
+    account_purpose                                       CHARACTER VARYING,
+    account_inn                                           CHARACTER VARYING,
+    account_legal_agreement_id                            CHARACTER VARYING,
+    account_legal_agreement_signed_at                     TIMESTAMP WITHOUT TIME ZONE,
+    account_trading_name                                  CHARACTER VARYING,
+    account_legal_name                                    CHARACTER VARYING,
+    account_actual_address                                CHARACTER VARYING,
+    account_registered_address                            CHARACTER VARYING,
+    account_registered_number                             CHARACTER VARYING,
+    account_bank_iban                                     CHARACTER VARYING,
+    account_bank_number                                   CHARACTER VARYING,
+    account_bank_address                                  CHARACTER VARYING,
+    account_bank_bic                                      CHARACTER VARYING,
+    account_bank_aba_rtn                                  CHARACTER VARYING,
+    account_bank_country_code                             CHARACTER VARYING,
+    international_correspondent_account_bank_account      CHARACTER VARYING,
+    international_correspondent_account_bank_number       CHARACTER VARYING,
+    international_correspondent_account_bank_iban         CHARACTER VARYING,
+    international_correspondent_account_bank_name         CHARACTER VARYING,
+    international_correspondent_account_bank_address      CHARACTER VARYING,
+    international_correspondent_account_bank_bic          CHARACTER VARYING,
+    international_correspondent_account_bank_aba_rtn      CHARACTER VARYING,
+    international_correspondent_account_bank_country_code CHARACTER VARYING,
+    summary                                               CHARACTER VARYING,
+    CONSTRAINT payout_pkey PRIMARY KEY (id)
 );
+CREATE UNIQUE INDEX payout_id_idx on rpt.payout (payout_id);
+CREATE UNIQUE INDEX payout_created_at_idx ON rpt.payout (created_at);
+
+CREATE TABLE rpt.payout_state
+(
+    id               BIGSERIAL                   NOT NULL,
+    event_id         BIGINT                      NOT NULL,
+    event_created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    payout_id        CHARACTER VARYING           NOT NULL,
+    status           rpt.payout_status           NOT NULL,
+    cancel_details   CHARACTER VARYING,
+    CONSTRAINT payout_status_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX payout_status_idx ON rpt.payout_state (payout_id, event_id, event_created_at);
 
 -- add cash flow aggregate functions
 
@@ -451,139 +504,6 @@ begin
 end;
 $$;
 
-create or replace function rpt.get_payment_amount_sfunc(prev_sum_value bigint, rpt.payment) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_amount(payment_cash_flow, payment_amount)
-                    from (select ($2).*) as payment
-                ),
-                0
-            )
-        );
-end;
-$$;
-
-create or replace function rpt.get_payment_fee_sfunc(prev_sum_value bigint, rpt.payment) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_fee(payment_cash_flow, 0)
-                    from (select ($2).*) as payment
-                ),
-                0
-            )
-        );
-end;
-$$;
-
-create or replace function rpt.get_adjustment_fee_sfunc(prev_sum_value bigint, rpt.adjustment) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_fee(adjustment_cash_flow, 0)
-                    from (select ($2).*) as adjustment
-                ),
-                0
-            )
-        );
-end;
-$$;
-
-create or replace function rpt.get_refund_amount_sfunc(prev_sum_value bigint, rpt.refund) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_amount(refund_cash_flow, refund_amount)
-                    from (select ($2).*) as refund
-                ),
-                0
-            )
-        );
-end;
-$$;
-
-create or replace function rpt.get_refund_fee_sfunc(prev_sum_value bigint, rpt.refund) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_fee(refund_cash_flow, 0)
-                    from (select ($2).*) as refund
-                ),
-                0
-            )
-        );
-end;
-$$;
-
-create or replace function rpt.get_payout_amount_sfunc(prev_sum_value bigint, rpt.payout) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_amount(payout_cash_flow, payout_amount)
-                    from (select ($2).*) as payout
-                ),
-                0
-            )
-        );
-end;
-$$;
-
-create or replace function rpt.get_payout_fee_sfunc(prev_sum_value bigint, rpt.payout) returns bigint
-    immutable
-    parallel safe
-    language plpgsql
-as
-$$
-begin
-    return prev_sum_value + (
-        coalesce(
-                (
-                    select rpt.get_cash_flow_fee(payout_cash_flow, 0)
-                    from (select ($2).*) as payout
-                ),
-                0
-            )
-        );
-end;
-$$;
-
 create or replace function rpt.sum_finalfunc(sum_value bigint) returns bigint
     immutable
     parallel safe
@@ -594,66 +514,3 @@ begin
     return sum_value;
 end;
 $$;
-
-drop aggregate if exists rpt.get_payment_amount(rpt.payment);
-create aggregate rpt.get_payment_amount(rpt.payment) (
-    sfunc = rpt.get_payment_amount_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );
-
-drop aggregate if exists rpt.get_payment_fee(rpt.payment);
-create aggregate rpt.get_payment_fee(rpt.payment) (
-    sfunc = rpt.get_payment_fee_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );
-
-drop aggregate if exists rpt.get_adjustment_fee(rpt.adjustment);
-create aggregate rpt.get_adjustment_fee(rpt.adjustment) (
-    sfunc = rpt.get_adjustment_fee_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );
-
-drop aggregate if exists rpt.get_refund_amount(rpt.refund);
-create aggregate rpt.get_refund_amount(rpt.refund) (
-    sfunc = rpt.get_refund_amount_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );
-
-drop aggregate if exists rpt.get_refund_fee(rpt.refund);
-create aggregate rpt.get_refund_fee(rpt.refund) (
-    sfunc = rpt.get_refund_fee_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );
-
-drop aggregate if exists rpt.get_payout_amount(rpt.payout);
-create aggregate rpt.get_payout_amount(rpt.payout) (
-    sfunc = rpt.get_payout_amount_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );
-
-drop aggregate if exists rpt.get_payout_fee(rpt.payout);
-create aggregate rpt.get_payout_fee(rpt.payout) (
-    sfunc = rpt.get_payout_fee_sfunc,
-    stype = bigint,
-    finalfunc = rpt.sum_finalfunc,
-    parallel = safe,
-    initcond = 0
-    );

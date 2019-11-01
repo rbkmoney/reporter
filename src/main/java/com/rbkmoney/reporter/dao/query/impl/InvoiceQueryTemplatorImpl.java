@@ -6,10 +6,9 @@ import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.InvoiceState;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceStateRecord;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.springframework.stereotype.Component;
-
-import javax.sql.DataSource;
 
 import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 import static com.rbkmoney.reporter.domain.tables.InvoiceState.INVOICE_STATE;
@@ -17,7 +16,7 @@ import static com.rbkmoney.reporter.domain.tables.InvoiceState.INVOICE_STATE;
 @Component
 public class InvoiceQueryTemplatorImpl extends AbstractGenericDao implements InvoiceQueryTemplator {
 
-    public InvoiceQueryTemplatorImpl(DataSource dataSource) {
+    public InvoiceQueryTemplatorImpl(HikariDataSource dataSource) {
         super(dataSource);
     }
 
@@ -26,7 +25,7 @@ public class InvoiceQueryTemplatorImpl extends AbstractGenericDao implements Inv
         InvoiceRecord invoiceRecord = getDslContext().newRecord(INVOICE, invoice);
         return getDslContext().insertInto(INVOICE)
                 .set(invoiceRecord)
-                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID, INVOICE.CHANGE_ID)
+                .onConflict(INVOICE.INVOICE_ID)
                 .doNothing();
     }
 
@@ -35,7 +34,7 @@ public class InvoiceQueryTemplatorImpl extends AbstractGenericDao implements Inv
         InvoiceStateRecord invoiceStateRecord = getDslContext().newRecord(INVOICE_STATE, invoiceState);
         return getDslContext().insertInto(INVOICE_STATE)
                 .set(invoiceStateRecord)
-                .onConflict(INVOICE.INVOICE_ID, INVOICE.SEQUENCE_ID, INVOICE.CHANGE_ID)
+                .onConflict(INVOICE_STATE.INVOICE_ID, INVOICE_STATE.SEQUENCE_ID, INVOICE_STATE.CHANGE_ID)
                 .doNothing();
     }
 

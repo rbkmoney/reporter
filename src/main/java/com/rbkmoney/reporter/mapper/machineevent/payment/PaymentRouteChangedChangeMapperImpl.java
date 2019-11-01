@@ -6,23 +6,19 @@ import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentRouteChanged;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.PaymentRouting;
 import com.rbkmoney.reporter.mapper.InvoiceChangeMapper;
 import com.rbkmoney.reporter.mapper.MapperResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
+import static com.rbkmoney.reporter.util.MapperUtil.getPaymentRouting;
+
 @Component
 @Slf4j
 public class PaymentRouteChangedChangeMapperImpl implements InvoiceChangeMapper {
-
-    @Override
-    public String[] getIgnoreProperties() {
-        return new String[]{"id", "wtime", "current", "eventCreatedAt", "eventType", "sequenceId", "changeId",
-                "paymentProviderId", "paymentTerminalId"};
-    }
 
     @Override
     public boolean canMap(InvoiceChange payload) {
@@ -32,23 +28,18 @@ public class PaymentRouteChangedChangeMapperImpl implements InvoiceChangeMapper 
 
     @Override
     public MapperResult map(InvoiceChange payload, MachineEvent baseEvent, Integer changeId) {
-        InvoicePaymentChange invoicePaymentChange = payload.getInvoicePaymentChange();
-        InvoicePaymentRouteChanged invoicePaymentRouteChanged = invoicePaymentChange.getPayload().getInvoicePaymentRouteChanged();
-        PaymentRoute paymentRoute = invoicePaymentRouteChanged.getRoute();
+        InvoicePaymentChange damselPaymentChange = payload.getInvoicePaymentChange();
+        InvoicePaymentRouteChanged damselPaymentRouteChanged = damselPaymentChange.getPayload().getInvoicePaymentRouteChanged();
+        PaymentRoute paymentRoute = damselPaymentRouteChanged.getRoute();
 
-        String paymentId = invoicePaymentChange.getId();
         String invoiceId = baseEvent.getSourceId();
+        long sequenceId = baseEvent.getEventId();
+        LocalDateTime eventCreatedAt = TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt());
+        String paymentId = damselPaymentChange.getId();
 
-        PaymentRouting paymentRouting = new PaymentRouting();
-        paymentRouting.setInvoiceId(invoiceId);
-        paymentRouting.setSequenceId(baseEvent.getEventId());
-        paymentRouting.setChangeId(changeId);
-        paymentRouting.setPaymentId(paymentId);
-        paymentRouting.setCreatedAt(TypeUtil.stringToLocalDateTime(baseEvent.getCreatedAt()));
-        paymentRouting.setProviderId(paymentRoute.getProvider().getId());
-        paymentRouting.setTerminalId(paymentRoute.getTerminal().getId());
+        PaymentRouting paymentRouting = getPaymentRouting(invoiceId, changeId, sequenceId, eventCreatedAt, paymentId, paymentRoute);
 
-        log.info("Payment with eventType=routeChanged has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
+        log.info("Payment with eventType=[routeChanged] has been mapped, invoiceId={}, paymentId={}", invoiceId, paymentId);
 
         return new MapperResult(paymentRouting);
     }

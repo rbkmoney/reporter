@@ -8,9 +8,6 @@ import javax.servlet.*;
 import javax.servlet.annotation.WebServlet;
 import java.io.IOException;
 
-/**
- * Created by tolkonepiu on 18/07/2017.
- */
 @WebServlet("/reports")
 public class ReportsServlet extends GenericServlet {
 
@@ -34,5 +31,4 @@ public class ReportsServlet extends GenericServlet {
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
         thriftServlet.service(req, res);
     }
-
 }

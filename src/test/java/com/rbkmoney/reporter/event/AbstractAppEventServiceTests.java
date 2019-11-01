@@ -1,10 +1,10 @@
 package com.rbkmoney.reporter.event;
 
 import com.rbkmoney.easyway.*;
-import com.rbkmoney.reporter.config.ApplicationConfig;
-import com.rbkmoney.reporter.config.InvoiceBatchHandlerConfig;
-import com.rbkmoney.reporter.config.KafkaPaymentMachineEventConfig;
-import com.rbkmoney.reporter.config.PayoutEventStockConfig;
+import com.rbkmoney.reporter.config.*;
+import com.rbkmoney.reporter.dao.impl.CommonBatchDao;
+import com.rbkmoney.reporter.dao.impl.InvoiceDaoImpl;
+import com.rbkmoney.reporter.dao.impl.PaymentDaoImpl;
 import com.rbkmoney.reporter.handle.stockevent.PayoutCreatedChangeEventHandler;
 import com.rbkmoney.reporter.service.impl.*;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +30,20 @@ import java.util.function.Supplier;
 @ContextConfiguration(
         classes = {
                 ApplicationConfig.class,
+                CacheConfig.class,
                 InvoiceBatchHandlerConfig.class,
                 KafkaPaymentMachineEventConfig.class,
                 PayoutEventStockConfig.class,
                 PayoutCreatedChangeEventHandler.class,
-                PayoutServiceImpl.class
+                CommonBatchDao.class,
+                InvoiceDaoImpl.class,
+                PaymentDaoImpl.class
         },
         initializers = AbstractAppEventServiceTests.Initializer.class
 )
 @ComponentScan(
         basePackages = {
-                "com.rbkmoney.reporter.dao",
+                "com.rbkmoney.reporter.dao.query",
                 "com.rbkmoney.reporter.service",
                 "com.rbkmoney.reporter.mapper",
                 "com.rbkmoney.reporter.batch"
@@ -49,7 +52,11 @@ import java.util.function.Supplier;
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = S3StorageServiceImpl.class),
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = JobServiceImpl.class),
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ReportServiceImpl.class),
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TaskServiceImpl.class)
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TaskServiceImpl.class),
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ReportingServiceImpl.class),
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = EventServiceImpl.class),
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PaymentRegistryTemplateImpl.class),
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ProvisionOfServiceTemplateImpl.class)
         }
 )
 @AutoConfigureJdbc

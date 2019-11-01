@@ -1,30 +1,18 @@
 package com.rbkmoney.reporter.dao.impl;
 
-import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.dao.impl.AbstractGenericDao;
-import com.rbkmoney.reporter.batch.InvoiceBatchType;
-import com.rbkmoney.reporter.dao.BatchDao;
+import com.rbkmoney.reporter.batch.impl.PaymentInvoiceUniqueBatchKey;
 import com.rbkmoney.reporter.dao.PaymentDao;
-import com.rbkmoney.reporter.dao.mapper.PaymentCostRowMapper;
 import com.rbkmoney.reporter.dao.mapper.PaymentPartyDataRowMapper;
 import com.rbkmoney.reporter.dao.mapper.PaymentRegistryReportDataRowMapper;
-import com.rbkmoney.reporter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentPartyData;
 import com.rbkmoney.reporter.dao.mapper.dto.PaymentRegistryReportData;
-import com.rbkmoney.reporter.dao.routines.RoutinesWrapper;
-import com.rbkmoney.reporter.domain.enums.InvoiceEventType;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
-import com.rbkmoney.reporter.domain.tables.pojos.PaymentCost;
-import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.mapper.MapperResult;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -33,169 +21,159 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.rbkmoney.reporter.domain.Tables.PAYMENT_COST;
-import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
+import static com.rbkmoney.reporter.domain.Tables.*;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 
 @Component
-public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao, BatchDao {
+public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
 
-    private final RowMapper<Payment> paymentRowMapper;
     private final PaymentRegistryReportDataRowMapper reportDataRowMapper;
     private final PaymentPartyDataRowMapper paymentPartyDataRowMapper;
-    private final PaymentCostRowMapper paymentCostRowMapper;
 
     @Autowired
     public PaymentDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
-        paymentRowMapper = new RecordRowMapper<>(PAYMENT, Payment.class);
         reportDataRowMapper = new PaymentRegistryReportDataRowMapper();
         paymentPartyDataRowMapper = new PaymentPartyDataRowMapper();
-        paymentCostRowMapper = new PaymentCostRowMapper();
     }
 
     @Override
-    public Long save(Payment payment) throws DaoException {
-        PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, payment);
-        Query query = getDslContext().insertInto(PAYMENT)
-                .set(paymentRecord)
-                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
-                .doNothing()
-                .returning(PAYMENT.ID);
-        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        execute(query, keyHolder);
-        return keyHolder.getKey().longValue();
-    }
-
-    @Override
-    public Payment get(String invoiceId, String paymentId) throws DaoException {
-        Query query = getDslContext().selectFrom(PAYMENT)
-                .where(
-                        PAYMENT.INVOICE_ID.eq(invoiceId)
-                                .and(PAYMENT.PAYMENT_ID.eq(paymentId))
-                )
-                .orderBy(PAYMENT.ID.desc())
-                .limit(1);
-
-        return fetchOne(query, paymentRowMapper);
-    }
-
-    @Override
-    public PaymentPartyData getPaymentPartyData(String invoiceId, String paymentId) throws DaoException {
+    public PaymentPartyData getPaymentPartyData(PaymentInvoiceUniqueBatchKey uniqueBatchKey) throws DaoException {
         Query query = getDslContext()
                 .select(
                         PAYMENT.PARTY_ID,
                         PAYMENT.PARTY_SHOP_ID,
+                        PAYMENT_COST.AMOUNT,
+                        PAYMENT_COST.CURRENCY_CODE
                 )
                 .from(PAYMENT)
-                .where(
-                        PAYMENT.INVOICE_ID.eq(invoiceId)
-                                .and(PAYMENT.PAYMENT_ID.eq(paymentId))
+                .innerJoin(PAYMENT_COST)
+                .on(
+                        PAYMENT_COST.ID.eq(
+                                getDslContext().select(DSL.max(PAYMENT_COST.ID))
+                                        .from(PAYMENT_COST)
+                                        .where(
+                                                PAYMENT_COST.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                                        .and(PAYMENT_COST.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                        )
+                        )
                 )
-                .orderBy(PAYMENT.ID.desc())
+                .where(
+                        PAYMENT.INVOICE_ID.eq(uniqueBatchKey.getInvoiceId())
+                                .and(PAYMENT.PAYMENT_ID.eq(uniqueBatchKey.getPaymentId()))
+                )
                 .limit(1);
-        return fetchOne(query, paymentPartyDataRowMapper);
-    }
 
-    @Override
-    public PaymentCost getPaymentCost(String invoiceId, String paymentId) throws DaoException {
-        Query query = getDslContext()
-                .selectFrom(PAYMENT_COST)
-                .where(
-                        PAYMENT_COST.INVOICE_ID.eq(invoiceId)
-                                .and(PAYMENT_COST.PAYMENT_ID.eq(paymentId))
-                )
-                .orderBy(PAYMENT_COST.CREATED_AT.desc())
-                .limit(1);
-        return fetchOne(query, paymentCostRowMapper);
+        return fetchOne(query, paymentPartyDataRowMapper);
     }
 
     @Override
     public Map<String, Long> getShopAccountingReportData(String partyId, String partyShopId, String currencyCode, Optional<LocalDateTime> fromTime, LocalDateTime toTime) throws DaoException {
         String amountKey = "funds_acquired";
         String feeKey = "fee_charged";
+
         Query query = getDslContext().select(
-                RoutinesWrapper.getPaymentAmount().as(amountKey),
-                RoutinesWrapper.getPaymentFee().as(feeKey)
+                DSL.sum(PAYMENT_COST.AMOUNT).as(amountKey),
+                DSL.sum(DSL.coalesce(PAYMENT_FEE.FEE, 0L)).as(feeKey)
         )
                 .from(PAYMENT)
+                .innerJoin(PAYMENT_STATE)
+                .on(
+                        PAYMENT_STATE.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                .and(PAYMENT_STATE.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                .and(PAYMENT_STATE.STATUS.eq(InvoicePaymentStatus.captured))
+                                .and(fromTime.map(PAYMENT_STATE.EVENT_CREATED_AT::ge).orElse(DSL.trueCondition()))
+                                .and(PAYMENT_STATE.EVENT_CREATED_AT.lt(toTime))
+                )
+                .innerJoin(PAYMENT_COST)
+                .on(
+                        PAYMENT_COST.ID.eq(
+                                getDslContext().select(DSL.max(PAYMENT_COST.ID))
+                                        .from(PAYMENT_COST)
+                                        .where(
+                                                PAYMENT_COST.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                                        .and(PAYMENT_COST.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                        )
+                        )
+                                .and(PAYMENT_COST.CURRENCY_CODE.eq(currencyCode))
+                )
+                .leftJoin(PAYMENT_FEE)
+                .on(
+                        PAYMENT_FEE.ID.eq(
+                                getDslContext().select(DSL.max(PAYMENT_FEE.ID))
+                                        .from(PAYMENT_FEE)
+                                        .where(
+                                                PAYMENT_FEE.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                                        .and(PAYMENT_FEE.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                        )
+                        )
+                                .and(PAYMENT_FEE.FEE_CURRENCY_CODE.eq(currencyCode))
+                )
                 .where(
                         PAYMENT.PARTY_ID.eq(UUID.fromString(partyId))
                                 .and(PAYMENT.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(PAYMENT.PAYMENT_CURRENCY_CODE.eq(currencyCode))
-                                .and(PAYMENT.PAYMENT_STATUS.eq(InvoicePaymentStatus.captured))
-                                .and(PAYMENT.EVENT_TYPE.eq(InvoiceEventType.INVOICE_PAYMENT_STATUS_CHANGED))
-                                .and(fromTime.map(PAYMENT.EVENT_CREATED_AT::ge).orElse(DSL.trueCondition()))
-                                .and(PAYMENT.EVENT_CREATED_AT.lt(toTime))
                 );
-        return Optional.ofNullable(
-                fetchOne(
-                        query,
-                        (rs, i) -> ImmutableMap.<String, Long>builder()
-                                .put(amountKey, rs.getLong(amountKey))
-                                .put(feeKey, rs.getLong(feeKey))
-                                .build()
-                )
-        ).orElse(
-                ImmutableMap.<String, Long>builder()
-                        .put(amountKey, 0L)
-                        .put(feeKey, 0L)
-                        .build()
-        );
+
+        return Optional.ofNullable(fetchOne(query, (rs, i) -> Map.of(amountKey, rs.getLong(amountKey), feeKey, rs.getLong(feeKey)))).orElse(Map.of(amountKey, 0L, feeKey, 0L));
     }
 
     @Override
     public List<PaymentRegistryReportData> getPaymentRegistryReportData(String partyId, String partyShopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
-        Query query = getDslContext()
-                .select(
-                        PAYMENT.ID,
-                        PAYMENT.EVENT_CREATED_AT,
-                        PAYMENT.EVENT_TYPE,
-                        PAYMENT.PARTY_ID,
-                        PAYMENT.PARTY_SHOP_ID,
-                        PAYMENT.INVOICE_ID,
-                        PAYMENT.PAYMENT_ID,
-                        PAYMENT.PAYMENT_TOOL,
-                        PAYMENT.PAYMENT_EMAIL,
-                        RoutinesWrapper.getPaymentCashFlowAmount(),
-                        RoutinesWrapper.getPaymentCashFlowFee(),
-                        RoutinesWrapper.getPaymentCashFlowProviderFee(),
-                        RoutinesWrapper.getPaymentCashFlowExternalFee(),
-                        INVOICE.INVOICE_PRODUCT
-                )
+        Query query = getDslContext().select(
+                PAYMENT.ID,
+                PAYMENT_STATE.EVENT_CREATED_AT,
+                PAYMENT.PARTY_ID,
+                PAYMENT.PARTY_SHOP_ID,
+                PAYMENT.INVOICE_ID,
+                PAYMENT.PAYMENT_ID,
+                PAYMENT.TOOL,
+                PAYMENT.EMAIL,
+                PAYMENT_COST.AMOUNT,
+                PAYMENT_FEE.FEE,
+                PAYMENT_FEE.PROVIDER_FEE,
+                PAYMENT_FEE.EXTERNAL_FEE,
+                INVOICE.PRODUCT
+        )
                 .from(PAYMENT)
+                .innerJoin(PAYMENT_STATE)
+                .on(
+                        PAYMENT_STATE.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                .and(PAYMENT_STATE.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                .and(PAYMENT_STATE.STATUS.eq(InvoicePaymentStatus.captured))
+                                .and(PAYMENT_STATE.EVENT_CREATED_AT.ge(fromTime))
+                                .and(PAYMENT_STATE.EVENT_CREATED_AT.lt(toTime))
+                )
+                .innerJoin(PAYMENT_COST)
+                .on(
+                        PAYMENT_COST.ID.eq(
+                                getDslContext().select(DSL.max(PAYMENT_COST.ID))
+                                        .from(PAYMENT_COST)
+                                        .where(
+                                                PAYMENT_COST.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                                        .and(PAYMENT_COST.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                        )
+                        )
+                )
+                .leftJoin(PAYMENT_FEE)
+                .on(
+                        PAYMENT_FEE.ID.eq(
+                                getDslContext().select(DSL.max(PAYMENT_FEE.ID))
+                                        .from(PAYMENT_FEE)
+                                        .where(
+                                                PAYMENT_FEE.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                                                        .and(PAYMENT_FEE.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                                        )
+                        )
+                )
                 .leftJoin(INVOICE)
                 .on(
-                        INVOICE.PARTY_ID.eq(UUID.fromString(partyId))
-                                .and(INVOICE.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(INVOICE.INVOICE_ID.eq(PAYMENT.INVOICE_ID))
-                                .and(INVOICE.EVENT_CREATED_AT.ge(fromTime))
-                                .and(INVOICE.EVENT_CREATED_AT.lt(toTime))
+                        INVOICE.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
                 )
                 .where(
                         PAYMENT.PARTY_ID.eq(UUID.fromString(partyId))
                                 .and(PAYMENT.PARTY_SHOP_ID.eq(partyShopId))
-                                .and(PAYMENT.EVENT_CREATED_AT.ge(fromTime))
-                                .and(PAYMENT.EVENT_CREATED_AT.lt(toTime))
-                                .and(PAYMENT.EVENT_TYPE.eq(InvoiceEventType.INVOICE_PAYMENT_STATUS_CHANGED))
-                                .and(PAYMENT.PAYMENT_STATUS.eq(InvoicePaymentStatus.captured))
+                );
 
-                )
-                .orderBy(PAYMENT.ID);
         return fetch(query, reportDataRowMapper);
-    }
-
-    @Override
-    public boolean isInvoiceChangeType(InvoiceBatchType invoiceChangeTypeEnum) {
-        return invoiceChangeTypeEnum.equals(InvoiceBatchType.PAYMENT);
-    }
-
-    @Override
-    public Query getSaveEventQuery(MapperResult entity) {
-        PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, entity.getPayment());
-        return getDslContext().insertInto(PAYMENT)
-                .set(paymentRecord)
-                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.SEQUENCE_ID, PAYMENT.CHANGE_ID)
-                .doNothing();
     }
 }
