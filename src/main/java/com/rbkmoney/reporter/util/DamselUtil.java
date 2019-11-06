@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.payout_processing.PayoutSummaryItem;
 import com.rbkmoney.damsel.reports.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
@@ -156,19 +157,22 @@ public class DamselUtil {
 
     public static String toPayoutSummaryStatString(List<com.rbkmoney.damsel.payout_processing.PayoutSummaryItem> payoutSummaryItems) {
         try {
-            return new ObjectMapper().writeValueAsString(payoutSummaryItems.stream()
-                    .map(
-                            payoutSummaryItem -> {
-                                try {
-                                    return new TBaseProcessor().process(payoutSummaryItem, new JsonHandler());
-                                } catch (IOException ex) {
-                                    throw new RuntimeJsonMappingException(ex.getMessage());
-                                }
-                            }
-                    ).collect(Collectors.toList())
-            );
+            return new ObjectMapper().writeValueAsString(convertJsonFromPayoutSummary(payoutSummaryItems));
         } catch (IOException ex) {
             throw new RuntimeJsonMappingException(ex.getMessage());
         }
+    }
+
+    private static List<JsonNode> convertJsonFromPayoutSummary(List<PayoutSummaryItem> payoutSummaryItems) {
+        return payoutSummaryItems.stream()
+                .map(
+                        payoutSummaryItem -> {
+                            try {
+                                return new TBaseProcessor().process(payoutSummaryItem, new JsonHandler());
+                            } catch (IOException ex) {
+                                throw new RuntimeJsonMappingException(ex.getMessage());
+                            }
+                        }
+                ).collect(Collectors.toList());
     }
 }
