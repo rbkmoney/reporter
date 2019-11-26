@@ -3,10 +3,13 @@ package com.rbkmoney.reporter.service.impl;
 import com.rbkmoney.damsel.merch_stat.*;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.model.ReportCreatorDto;
 import com.rbkmoney.reporter.service.PartyService;
+import com.rbkmoney.reporter.service.ReportCreatorService;
 import com.rbkmoney.reporter.service.StatisticService;
 import com.rbkmoney.reporter.service.TemplateService;
 import com.rbkmoney.reporter.util.TimeUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,19 +21,14 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class PaymentRegistryTemplateImpl implements TemplateService {
 
     private final StatisticService statisticService;
 
     private final PartyService partyService;
 
-    @Autowired
-    public PaymentRegistryTemplateImpl(
-            StatisticService statisticService,
-            PartyService partyService) {
-        this.statisticService = statisticService;
-        this.partyService = partyService;
-    }
+    private final ReportCreatorService reportCreatorService;
 
     @Override
     public boolean accept(ReportType reportType) {
@@ -62,8 +60,8 @@ public class PaymentRegistryTemplateImpl implements TemplateService {
         Map<String, String> purposes = statisticService.getPurposes(report.getPartyId(), report.getPartyShopId(),
                 report.getFromTime().toInstant(ZoneOffset.UTC), report.getToTime().toInstant(ZoneOffset.UTC));
 
-        ReportCreator reportCreator = new ReportCreator(fromTime, toTime, paymentsIterator, refundsIterator, report,
+        ReportCreatorDto reportCreatorDto = new ReportCreatorDto(fromTime, toTime, paymentsIterator, refundsIterator, report,
                 outputStream, shopUrls, purposes, statisticService);
-        reportCreator.createReport();
+        reportCreatorService.createReport(reportCreatorDto);
     }
 }

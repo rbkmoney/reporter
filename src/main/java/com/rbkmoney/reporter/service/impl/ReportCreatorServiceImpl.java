@@ -1,9 +1,9 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.damsel.merch_stat.*;
-import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.NotFoundException;
-import com.rbkmoney.reporter.service.StatisticService;
+import com.rbkmoney.reporter.model.ReportCreatorDto;
+import com.rbkmoney.reporter.service.ReportCreatorService;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
@@ -12,47 +12,38 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.time.ZoneId;
-import java.util.Iterator;
-import java.util.Map;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-@RequiredArgsConstructor
-public class ReportCreator {
+@Service
+public class ReportCreatorServiceImpl implements ReportCreatorService {
 
-    private final String fromTime;
-    private final String toTime;
-    private final Iterator<StatPayment> paymentsIterator;
-    private final Iterator<StatRefund> refundsIterator;
-    private final Report report;
-    private final OutputStream outputStream;
-    private final Map<String, String> shopUrls;
-    private final Map<String, String> purposes;
-    private final StatisticService statisticService;
     private int limit = SpreadsheetVersion.EXCEL2007.getLastRowIndex();
 
     public void setLimit(int limit) {
         this.limit = limit;
     }
 
-    public void createReport() throws IOException {
+    @Override
+    public void createReport(ReportCreatorDto reportCreatorDto) throws IOException {
         try (SXSSFWorkbook wb = new SXSSFWorkbook(100)) {
             Sheet sh = createSheet(wb);
             AtomicInteger rownum = new AtomicInteger(0);
 
-            createPaymentsHeadRow(wb, sh, rownum);
+            createPaymentsHeadRow(reportCreatorDto, wb, sh, rownum);
             createPaymentsColumnsDesciptionRow(wb, sh, rownum);
 
             AtomicLong totalAmnt = new AtomicLong();
             AtomicLong totalPayoutAmnt = new AtomicLong();
             AtomicLong totalRefundAmnt = new AtomicLong();
 
-            while (paymentsIterator.hasNext()) {
-                createPaymentRow(sh, totalAmnt, totalPayoutAmnt, rownum, paymentsIterator.next());
+            while (reportCreatorDto.getPaymentsIterator().hasNext()) {
+                createPaymentRow(reportCreatorDto, sh, totalAmnt, totalPayoutAmnt, rownum, reportCreatorDto.getPaymentsIterator().next());
                 sh = checkAndReset(wb, sh, rownum);
             }
             sh = checkAndReset(wb, sh, rownum);
@@ -62,19 +53,19 @@ public class ReportCreator {
             sh = checkAndReset(wb, sh, rownum);
             sh.createRow(rownum.getAndIncrement());
             sh = checkAndReset(wb, sh, rownum);
-            createRefundsHeadRow(wb, sh, rownum);
+            createRefundsHeadRow(reportCreatorDto, wb, sh, rownum);
             sh = checkAndReset(wb, sh, rownum);
             createRefundsColumnsDescriptionRow(wb, sh, rownum);
             sh = checkAndReset(wb, sh, rownum);
 
-            while (refundsIterator.hasNext()) {
-                createRefundRow(sh, totalRefundAmnt, rownum, refundsIterator.next());
+            while (reportCreatorDto.getRefundsIterator().hasNext()) {
+                createRefundRow(reportCreatorDto, sh, totalRefundAmnt, rownum, reportCreatorDto.getRefundsIterator().next());
                 sh = checkAndReset(wb, sh, rownum);
             }
             sh = checkAndReset(wb, sh, rownum);
             createTotalRefundAmountRow(wb, sh, totalRefundAmnt, rownum);
-            wb.write(outputStream);
-            outputStream.close();
+            wb.write(reportCreatorDto.getOutputStream());
+            reportCreatorDto.getOutputStream().close();
             wb.dispose();
         }
     }
@@ -107,11 +98,12 @@ public class ReportCreator {
         rowTotalRefundAmount.getCell(3).setCellValue(FormatUtil.formatCurrency(totalRefundAmnt.longValue()));
     }
 
-    private void createRefundRow(Sheet sh, AtomicLong totalRefundAmnt, AtomicInteger rownum, StatRefund r) {
-        ZoneId reportZoneId = ZoneId.of(report.getTimezone());
+    private void createRefundRow(ReportCreatorDto reportCreatorDto, Sheet sh,
+                                 AtomicLong totalRefundAmnt, AtomicInteger rownum, StatRefund r) {
+        ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
 
         Row row = sh.createRow(rownum.getAndIncrement());
-        StatPayment statPayment = statisticService.getCapturedPayment(report.getPartyId(), report.getPartyShopId(), r.getInvoiceId(), r.getPaymentId());
+        StatPayment statPayment = reportCreatorDto.getStatisticService().getCapturedPayment(reportCreatorDto.getReport().getPartyId(), reportCreatorDto.getReport().getPartyShopId(), r.getInvoiceId(), r.getPaymentId());
         row.createCell(0).setCellValue(TimeUtil.toLocalizedDateTime(r.getStatus().getSucceeded().getAt(), reportZoneId));
         row.createCell(1).setCellValue(TimeUtil.toLocalizedDateTime(statPayment.getStatus().getCaptured().getAt(), reportZoneId));
         row.createCell(2).setCellValue(r.getInvoiceId() + "." + r.getPaymentId());
@@ -127,10 +119,10 @@ public class ReportCreator {
             payerEmail = statPayment.getPayer().getPaymentResource().getEmail();
         }
         row.createCell(5).setCellValue(payerEmail);
-        row.createCell(6).setCellValue(shopUrls.get(r.getShopId()));
-        String purpose = purposes.get(r.getInvoiceId());
+        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(r.getShopId()));
+        String purpose = reportCreatorDto.getPurposes().get(r.getInvoiceId());
         if (purpose == null) {
-            StatInvoice invoice = statisticService.getInvoice(r.getInvoiceId());
+            StatInvoice invoice = reportCreatorDto.getStatisticService().getInvoice(r.getInvoiceId());
             purpose = invoice.getProduct();
         }
         row.createCell(7).setCellValue(purpose);
@@ -160,14 +152,14 @@ public class ReportCreator {
         rowSecondRefunds.getCell(10).setCellValue("Валюта");
     }
 
-    private void createRefundsHeadRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
+    private void createRefundsHeadRow(ReportCreatorDto reportCreatorDto, Workbook wb, Sheet sh, AtomicInteger rownum) {
         Row rowFirstRefunds = sh.createRow(rownum.getAndIncrement());
         for (int i = 0; i < 11; ++i) {
             rowFirstRefunds.createCell(i);
         }
         sh.addMergedRegion(new CellRangeAddress(rownum.get() - 1, rownum.get() - 1, 0, 7));
         Cell cellFirstRefunds = rowFirstRefunds.getCell(0);
-        cellFirstRefunds.setCellValue(String.format("Возвраты за период с %s по %s", fromTime, toTime));
+        cellFirstRefunds.setCellValue(String.format("Возвраты за период с %s по %s", reportCreatorDto.getFromTime(), reportCreatorDto.getToTime()));
         CellUtil.setAlignment(cellFirstRefunds, HorizontalAlignment.CENTER);
         CellUtil.setFont(cellFirstRefunds, createBoldFont(wb));
     }
@@ -196,8 +188,9 @@ public class ReportCreator {
         return borderStyle;
     }
 
-    private void createPaymentRow(Sheet sh, AtomicLong totalAmnt, AtomicLong totalPayoutAmnt,  AtomicInteger rownum, StatPayment p) {
-        ZoneId reportZoneId = ZoneId.of(report.getTimezone());
+    private void createPaymentRow(ReportCreatorDto reportCreatorDto, Sheet sh,
+                                  AtomicLong totalAmnt, AtomicLong totalPayoutAmnt,  AtomicInteger rownum, StatPayment p) {
+        ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
         Row row = sh.createRow(rownum.getAndIncrement());
         row.createCell(0).setCellValue(p.getInvoiceId() + "." + p.getId());
         row.createCell(1).setCellValue(TimeUtil.toLocalizedDateTime(p.getStatus().getCaptured().getAt(), reportZoneId));
@@ -209,10 +202,10 @@ public class ReportCreator {
         totalPayoutAmnt.addAndGet(p.getAmount() - p.getFee());
         String payerEmail = getEmail(p.getPayer());
         row.createCell(5).setCellValue(payerEmail);
-        row.createCell(6).setCellValue(shopUrls.get(p.getShopId()));
-        String purpose = purposes.get(p.getInvoiceId());
+        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(p.getShopId()));
+        String purpose = reportCreatorDto.getPurposes().get(p.getInvoiceId());
         if (purpose == null) {
-            StatInvoice invoice = statisticService.getInvoice(p.getInvoiceId());
+            StatInvoice invoice = reportCreatorDto.getStatisticService().getInvoice(p.getInvoiceId());
             purpose = invoice.getProduct();
         }
         row.createCell(7).setCellValue(purpose);
@@ -240,7 +233,7 @@ public class ReportCreator {
         rowSecondPayments.getCell(9).setCellValue("Валюта");
     }
 
-    private void createPaymentsHeadRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
+    private void createPaymentsHeadRow(ReportCreatorDto reportCreatorDto, Workbook wb, Sheet sh, AtomicInteger rownum) {
         Row rowFirstPayments = sh.createRow(rownum.getAndIncrement());
 
         for (int i = 0; i < 10; ++i) {
@@ -248,7 +241,7 @@ public class ReportCreator {
         }
         sh.addMergedRegion(new CellRangeAddress(rownum.get() - 1, rownum.get() - 1, 0, 7));
         Cell cellFirstPayments = rowFirstPayments.getCell(0);
-        cellFirstPayments.setCellValue(String.format("Платежи за период с %s по %s", fromTime, toTime));
+        cellFirstPayments.setCellValue(String.format("Платежи за период с %s по %s", reportCreatorDto.getFromTime(), reportCreatorDto.getToTime()));
         CellUtil.setAlignment(cellFirstPayments, HorizontalAlignment.CENTER);
         CellUtil.setFont(cellFirstPayments, createBoldFont(wb));
     }

@@ -3,6 +3,7 @@ package com.rbkmoney.reporter.service.impl;
 import com.rbkmoney.damsel.merch_stat.StatPayment;
 import com.rbkmoney.damsel.merch_stat.StatRefund;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.model.ReportCreatorDto;
 import com.rbkmoney.reporter.service.BuildUtils;
 import com.rbkmoney.reporter.service.StatisticService;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-public class ReportCreatorTest {
+public class ReportCreatorServiceImplTest {
 
     @Test
     public void createBigSizeReportTest() throws IOException {
@@ -52,11 +53,13 @@ public class ReportCreatorTest {
 
         Path tempFile = Files.createTempFile("check_limit", ".xlsx");
         try {
-            ReportCreator reportCreator = new ReportCreator("2019-03-22T06:12:27Z", "2019-04-22T06:12:27Z",
+            ReportCreatorDto reportCreatorDto = new ReportCreatorDto("2019-03-22T06:12:27Z", "2019-04-22T06:12:27Z",
                     paymentsIterator, refundsIterator, report,
                     Files.newOutputStream(tempFile), shopUrls, purposes, statisticsService);
-            reportCreator.setLimit(10);
-            reportCreator.createReport();
+
+            ReportCreatorServiceImpl reportCreatorServiceImpl = new ReportCreatorServiceImpl();
+            reportCreatorServiceImpl.setLimit(10);
+            reportCreatorServiceImpl.createReport(reportCreatorDto);
             Workbook wb = new XSSFWorkbook(Files.newInputStream(tempFile));
             assertNotNull(wb.getSheetAt(0));
             assertNotNull(wb.getSheetAt(1));
