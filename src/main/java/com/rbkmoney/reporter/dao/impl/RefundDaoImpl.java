@@ -72,7 +72,9 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
                 PAYMENT.TOOL,
                 PAYMENT.EMAIL,
                 REFUND.AMOUNT,
-                INVOICE.PRODUCT
+                INVOICE.PRODUCT,
+                REFUND.REASON,
+                REFUND.CURRENCY_CODE
         )
                 .from(REFUND)
                 .innerJoin(REFUND_STATE)

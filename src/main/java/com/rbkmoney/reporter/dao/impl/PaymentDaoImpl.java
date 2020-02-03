@@ -132,7 +132,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                 PAYMENT_FEE.FEE,
                 PAYMENT_FEE.PROVIDER_FEE,
                 PAYMENT_FEE.EXTERNAL_FEE,
-                INVOICE.PRODUCT
+                INVOICE.PRODUCT,
+                PAYMENT_COST.CURRENCY_CODE
         )
                 .from(PAYMENT)
                 .innerJoin(PAYMENT_STATE)

@@ -35,7 +35,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -49,7 +48,6 @@ import java.util.Map;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -160,51 +158,51 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
             Cell openingBalanceCell = sheet.getRow(23).getCell(3);
             assertEquals("#,##0.00", openingBalanceCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    BigDecimal.valueOf(FormatUtil.formatCurrency(getAvailableFunds(previousAccountingData))),
-                    BigDecimal.valueOf(openingBalanceCell.getNumericCellValue())
+                    FormatUtil.formatCurrency(getAvailableFunds(previousAccountingData)),
+                    openingBalanceCell.getStringCellValue()
             );
 
             Cell fundsPaidOutCell = sheet.getRow(26).getCell(3);
             assertEquals("#,##0.00", fundsPaidOutCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    BigDecimal.valueOf(FormatUtil.formatCurrency(currentShopAccountingData.get(FUNDS_PAID_OUT))),
-                    BigDecimal.valueOf(fundsPaidOutCell.getNumericCellValue())
+                    FormatUtil.formatCurrency(currentShopAccountingData.get(FUNDS_PAID_OUT)),
+                    fundsPaidOutCell.getStringCellValue()
             );
 
             Cell fundsRefundedCell = sheet.getRow(28).getCell(3);
             assertEquals("#,##0.00", fundsRefundedCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    BigDecimal.valueOf(FormatUtil.formatCurrency(currentShopAccountingData.get(FUNDS_REFUNDED))),
-                    BigDecimal.valueOf(fundsRefundedCell.getNumericCellValue())
+                    FormatUtil.formatCurrency(currentShopAccountingData.get(FUNDS_REFUNDED)),
+                    fundsRefundedCell.getStringCellValue()
             );
 
             Cell closingBalanceCell = sheet.getRow(29).getCell(3);
             assertEquals("#,##0.00", closingBalanceCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    BigDecimal.valueOf(FormatUtil.formatCurrency(getAvailableFunds(previousAccountingData) + getAvailableFunds(currentShopAccountingData))),
-                    BigDecimal.valueOf(closingBalanceCell.getNumericCellValue())
+                    FormatUtil.formatCurrency(getAvailableFunds(previousAccountingData) + getAvailableFunds(currentShopAccountingData)),
+                    closingBalanceCell.getStringCellValue()
             );
 
             Cell fundsAcquiredCell = sheet.getRow(17).getCell(3);
             assertEquals("#,##0.00", fundsAcquiredCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    BigDecimal.valueOf(FormatUtil.formatCurrency(currentShopAccountingData.get(FUNDS_ACQUIRED))),
-                    BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue())
+                    FormatUtil.formatCurrency(currentShopAccountingData.get(FUNDS_ACQUIRED)),
+                    fundsAcquiredCell.getStringCellValue()
             );
             assertEquals(
-                    BigDecimal.valueOf(fundsAcquiredCell.getNumericCellValue()),
-                    BigDecimal.valueOf(sheet.getRow(24).getCell(3).getNumericCellValue())
+                    fundsAcquiredCell.getStringCellValue(),
+                    sheet.getRow(24).getCell(3).getStringCellValue()
             );
 
             Cell feeChargedCell = sheet.getRow(19).getCell(3);
             assertEquals("#,##0.00", feeChargedCell.getCellStyle().getDataFormatString());
             assertEquals(
-                    BigDecimal.valueOf(FormatUtil.formatCurrency(currentShopAccountingData.get(FEE_CHARGED))),
-                    BigDecimal.valueOf(feeChargedCell.getNumericCellValue())
+                    FormatUtil.formatCurrency(currentShopAccountingData.get(FEE_CHARGED)),
+                    feeChargedCell.getStringCellValue()
             );
             assertEquals(
-                    BigDecimal.valueOf(feeChargedCell.getNumericCellValue()),
-                    BigDecimal.valueOf(sheet.getRow(25).getCell(3).getNumericCellValue())
+                    feeChargedCell.getStringCellValue(),
+                    sheet.getRow(25).getCell(3).getStringCellValue()
             );
 
             assertEquals(
@@ -243,14 +241,14 @@ public class ReportsBuildingTests extends AbstractAppReportBuildingTests {
 
             Cell paymentsTotalSum = sheet.getRow(payments.size() + 2).getCell(3);
             long expectedSum = payments.stream().mapToLong(PaymentRegistryReportData::getPaymentAmount).sum();
-            assertTrue(FormatUtil.formatCurrency(expectedSum) - paymentsTotalSum.getNumericCellValue() < 0.00001);
+            assertEquals(FormatUtil.formatCurrency(expectedSum), paymentsTotalSum.getStringCellValue());
 
             Cell refundsHeaderCell = sheet.getRow(payments.size() + 2 + 3).getCell(0);
             assertEquals(String.format("Возвраты за период с %s по %s", from, to), refundsHeaderCell.getStringCellValue());
 
             Cell refundsTotalSum = sheet.getRow(payments.size() + 2 + 3 + refunds.size() + 2).getCell(3);
             long expectedRefundSum = refunds.stream().mapToLong(RefundPaymentRegistryReportData::getRefundAmount).sum();
-            assertTrue(FormatUtil.formatCurrency(expectedRefundSum) - refundsTotalSum.getNumericCellValue() < 0.00001);
+            assertEquals(FormatUtil.formatCurrency(expectedRefundSum), refundsTotalSum.getStringCellValue());
         } finally {
             Files.deleteIfExists(tempFile);
         }

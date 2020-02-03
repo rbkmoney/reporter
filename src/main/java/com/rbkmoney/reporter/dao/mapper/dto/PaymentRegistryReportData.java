@@ -22,5 +22,6 @@ public class PaymentRegistryReportData {
     private Long paymentExternalFee;
     private Long paymentProviderFee;
     private String invoiceProduct;
+    private String currencySymbolicCode;
 
 }

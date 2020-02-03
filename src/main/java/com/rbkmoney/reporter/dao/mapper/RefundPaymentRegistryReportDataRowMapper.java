@@ -32,6 +32,8 @@ public class RefundPaymentRegistryReportDataRowMapper implements RowMapper<Refun
         data.setPaymentEmail(rs.getString(PAYMENT.EMAIL.getName()));
         data.setRefundAmount(rs.getLong(REFUND.AMOUNT.getName()));
         data.setInvoiceProduct(rs.getString(INVOICE.PRODUCT.getName()));
+        data.setReason(rs.getString(REFUND.REASON.getName()));
+        data.setCurrencySymbolicCode(rs.getString(REFUND.CURRENCY_CODE.getName()));
         return data;
     }
 }

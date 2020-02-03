@@ -20,5 +20,7 @@ public class RefundPaymentRegistryReportData {
     private String paymentEmail;
     private Long refundAmount;
     private String invoiceProduct;
+    private String reason;
+    private String currencySymbolicCode;
 
 }
