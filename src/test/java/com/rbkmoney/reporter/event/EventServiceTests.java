@@ -4,6 +4,7 @@ import com.rbkmoney.damsel.domain.Invoice;
 import com.rbkmoney.damsel.domain.InvoicePayment;
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustmentPending;
 import com.rbkmoney.damsel.domain.InvoicePaymentPending;
+import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefundPending;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.event_stock.SourceEvent;

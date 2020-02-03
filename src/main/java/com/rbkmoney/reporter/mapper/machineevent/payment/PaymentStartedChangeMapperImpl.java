@@ -152,7 +152,7 @@ public class PaymentStartedChangeMapperImpl implements InvoiceChangeMapper {
             payment.setBankCardToken(bankCard.getToken());
             payment.setBankCardSystem(bankCard.getPaymentSystem().toString());
             payment.setBankCardBin(bankCard.getBin());
-            payment.setBankCardMaskedPan(bankCard.getMaskedPan());
+            payment.setBankCardMaskedPan(bankCard.getLastDigits());
             if (bankCard.isSetTokenProvider()) {
                 payment.setBankCardTokenProvider(TypeUtil.toEnumField(bankCard.getTokenProvider().name(), BankCardTokenProvider.class));
             }

@@ -6,6 +6,9 @@ info:
 server:
   port: @server.port@
 management:
+  endpoint:
+    health:
+      show-details: ALWAYS
   metrics:
     export:
       statsd:
@@ -31,7 +34,7 @@ spring:
     schemas: @db.schema@
   output:
     ansi:
-      enabled: always
+      enabled: ALWAYS
 ---
 cache:
   invoice:

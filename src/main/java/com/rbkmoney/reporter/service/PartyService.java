@@ -1,6 +1,5 @@
 package com.rbkmoney.reporter.service;
 
-
 import com.rbkmoney.damsel.domain.Contract;
 import com.rbkmoney.damsel.domain.Party;
 import com.rbkmoney.damsel.domain.PaymentInstitutionRef;
