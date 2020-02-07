@@ -7,15 +7,22 @@ import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
+import com.rbkmoney.reporter.utils.TestReportDao;
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class DaoTest extends AbstractDaoConfig {
 
@@ -24,6 +31,13 @@ public class DaoTest extends AbstractDaoConfig {
 
     @Autowired
     private ContractMetaDao contractMetaDao;
+
+    @Autowired
+    private HikariDataSource dataSource;
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
+
+    private static final int REPORTS_COUNT = 500;
 
     @Test
     public void testSaveAndGet() throws DaoException {
@@ -155,5 +169,24 @@ public class DaoTest extends AbstractDaoConfig {
         assertEquals(file.getFilename(), currentFile.getFilename());
         assertEquals(file.getMd5(), currentFile.getMd5());
         assertEquals(file.getSha256(), currentFile.getSha256());
+    }
+
+    @Test
+    public void severalInstancesReportServiceTest() throws DaoException, ExecutionException, InterruptedException {
+        TestReportDao testReportDao = new TestReportDao(dataSource);
+
+        for (int i = 0; i < REPORTS_COUNT; i++) {
+            testReportDao.createPendingReport(random(String.class), random(String.class), LocalDateTime.now(),
+                    LocalDateTime.now(), ReportType.payment_registry, "UTC", LocalDateTime.now());
+        }
+
+        Future<List<Report>> firstFuture = executor.submit(() -> reportDao.getPendingReports(REPORTS_COUNT));
+        Future<List<Report>> secondFuture = executor.submit(() -> reportDao.getPendingReports(REPORTS_COUNT));
+        List<Report> firstReportList = firstFuture.get();
+        List<Report> secondReportList = secondFuture.get();
+
+        boolean isError = firstReportList == null || firstReportList.isEmpty()
+                || secondReportList == null || secondReportList.isEmpty();
+        assertFalse("One of the report lists is empty", isError);
     }
 }

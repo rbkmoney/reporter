@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.task.dao;
+package com.rbkmoney.reporter.utils;
 
 import com.rbkmoney.dao.impl.AbstractGenericDao;
 import com.rbkmoney.reporter.domain.enums.ReportStatus;
