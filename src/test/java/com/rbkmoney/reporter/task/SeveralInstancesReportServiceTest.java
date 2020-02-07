@@ -1,18 +1,15 @@
 package com.rbkmoney.reporter.task;
 
-import com.rbkmoney.eventstock.client.EventPublisher;
-import com.rbkmoney.reporter.AbstractIntegrationTest;
+import com.rbkmoney.reporter.config.AbstractSeveralInstancesConfig;
 import com.rbkmoney.reporter.dao.impl.ReportDaoImpl;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
-import com.rbkmoney.reporter.service.ReportService;
 import com.rbkmoney.reporter.task.dao.TestReportDao;
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -23,23 +20,17 @@ import java.util.concurrent.Future;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertFalse;
 
-public class SeveralInstancesReportServiceTest extends AbstractIntegrationTest {
+public class SeveralInstancesReportServiceTest extends AbstractSeveralInstancesConfig {
 
     @Autowired
     private ReportDaoImpl reportDao;
 
     @Autowired
-    private DataSource dataSource;
-
-    @MockBean
-    private ReportService reportService;
-
-    @MockBean
-    private EventPublisher eventPublisher;
+    private HikariDataSource dataSource;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
-    private static final int REPORTS_COUNT = 5000;
+    private static final int REPORTS_COUNT = 500;
 
     @Test
     public void severalInstancesReportServiceTest() throws DaoException, ExecutionException, InterruptedException {
@@ -59,5 +50,4 @@ public class SeveralInstancesReportServiceTest extends AbstractIntegrationTest {
                 || secondReportList == null || secondReportList.isEmpty();
         assertFalse("One of the report lists is empty", isError);
     }
-
 }
