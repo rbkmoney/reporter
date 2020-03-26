@@ -9,8 +9,10 @@ import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
 import com.rbkmoney.reporter.utils.TestReportDao;
 import com.zaxxer.hikari.HikariDataSource;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -27,6 +29,9 @@ import static org.junit.Assert.assertFalse;
 public class DaoTest extends AbstractDaoConfig {
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private ReportDao reportDao;
 
     @Autowired
@@ -38,6 +43,11 @@ public class DaoTest extends AbstractDaoConfig {
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     private static final int REPORTS_COUNT = 500;
+
+    @Before
+    public void setUp() throws Exception {
+        jdbcTemplate.execute("truncate rpt.report cascade");
+    }
 
     @Test
     public void testSaveAndGet() throws DaoException {
