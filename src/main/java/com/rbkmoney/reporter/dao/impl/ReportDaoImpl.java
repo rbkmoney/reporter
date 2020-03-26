@@ -161,6 +161,34 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
+    public List<Report> getReportsWithToken(String partyId,
+                                            List<String> shopIds,
+                                            List<ReportType> reportTypes,
+                                            LocalDateTime fromTime,
+                                            LocalDateTime toTime,
+                                            LocalDateTime createdAfter,
+                                            int limit) throws DaoException {
+        Condition condition = REPORT.PARTY_ID.eq(partyId)
+                .and(REPORT.FROM_TIME.ge(fromTime))
+                .and(REPORT.TO_TIME.le(toTime));
+        if (!CollectionUtils.isEmpty(reportTypes)) {
+            condition = condition.and(REPORT.TYPE.in(reportTypes));
+        }
+        if (!CollectionUtils.isEmpty(shopIds)) {
+            condition = condition.and(REPORT.PARTY_SHOP_ID.in(shopIds));
+        }
+        if (createdAfter != null) {
+            condition = condition.and(REPORT.CREATED_AT.greaterThan(createdAfter));
+        }
+        Query query = getDslContext().selectFrom(REPORT)
+                .where(condition)
+                .orderBy(REPORT.CREATED_AT.asc())
+                .limit(limit);
+
+        return fetch(query, reportRowMapper);
+    }
+
+    @Override
     public long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime,
                              ReportType reportType, String timezone, LocalDateTime createdAt) throws DaoException {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();

@@ -35,6 +35,9 @@ public interface ReportDao {
     List<Report> getReportsWithToken(String partyId, String shopId, List<ReportType> reportTypes, LocalDateTime fromTime,
                                      LocalDateTime toTime, LocalDateTime createdAfter, int limit) throws DaoException;
 
+    List<Report> getReportsWithToken(String partyId, List<String> shopIds, List<ReportType> reportTypes, LocalDateTime fromTime,
+                                     LocalDateTime toTime, LocalDateTime createdAfter, int limit) throws DaoException;
+
     long createReport(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime,
                       ReportType reportType, String timezone, LocalDateTime createdAt) throws DaoException;
 }

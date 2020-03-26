@@ -73,6 +73,31 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
     }
 
     @Override
+    public List<Report> getReportsWithToken(String partyId,
+                                            List<String> shopIds,
+                                            List<ReportType> reportTypes,
+                                            Instant fromTime,
+                                            Instant toTime,
+                                            Instant createdAfter,
+                                            int limit) throws StorageException {
+        try {
+            return reportDao.getReportsWithToken(
+                    partyId,
+                    shopIds,
+                    reportTypes,
+                    LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
+                    LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
+                    createdAfter != null ? LocalDateTime.ofInstant(createdAfter, ZoneOffset.UTC) : null,
+                    limit
+            );
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to get reports with token, " +
+                            "partyId='%s', shopIds='%s', reportTypes='%s', fromTime='%s', toTime='%s', createdAfter='%s'",
+                    partyId, shopIds, reportTypes, fromTime, toTime, createdAfter), ex);
+        }
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     public void cancelReport(long reportId) throws ReportNotFoundException, StorageException {
         log.info("Trying to cancel report, reportId='{}'", reportId);

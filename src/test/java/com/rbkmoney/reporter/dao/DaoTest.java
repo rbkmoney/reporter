@@ -109,14 +109,7 @@ public class DaoTest extends AbstractDaoConfig {
     @Test
     public void testGetReportsWithToken() throws DaoException {
         LocalDateTime currMoment = LocalDateTime.now();
-        IntStream.rangeClosed(1, 15).forEach(i -> {
-            try {
-                reportDao.createReport("partyId", "shopId", currMoment.minusSeconds(i), currMoment.plusSeconds(i),
-                        random(ReportType.class), random(TimeZone.class).getID(), currMoment.plusSeconds(i));
-            } catch (DaoException e) {
-                throw new RuntimeException();
-            }
-        });
+        createReports(currMoment);
 
         List<Report> reports = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(),
                 currMoment.minusMinutes(1), currMoment.plusMinutes(1), null, 10);
@@ -124,7 +117,19 @@ public class DaoTest extends AbstractDaoConfig {
         List<Report> reportsWithTime = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(),
                 currMoment.minusMinutes(1), currMoment.plusMinutes(1), currMoment.plusSeconds(10), 10);
         assertEquals(5, reportsWithTime.size());
+    }
 
+    @Test
+    public void testGetReportsWithTokenByShopIds() throws DaoException {
+        LocalDateTime currMoment = LocalDateTime.now();
+        createReports(currMoment);
+
+        List<Report> reports = reportDao.getReportsWithToken("partyId", List.of("shopId"), Collections.emptyList(),
+                currMoment.minusMinutes(1), currMoment.plusMinutes(1), null, 10);
+        assertEquals(10, reports.size());
+        List<Report> reportsWithTime = reportDao.getReportsWithToken("partyId", List.of("shopId"), Collections.emptyList(),
+                currMoment.minusMinutes(1), currMoment.plusMinutes(1), currMoment.plusSeconds(10), 10);
+        assertEquals(5, reportsWithTime.size());
     }
 
     @Test
@@ -189,4 +194,16 @@ public class DaoTest extends AbstractDaoConfig {
                 || secondReportList == null || secondReportList.isEmpty();
         assertFalse("One of the report lists is empty", isError);
     }
+
+    private void createReports(LocalDateTime currMoment) {
+        IntStream.rangeClosed(1, 15).forEach(i -> {
+            try {
+                reportDao.createReport("partyId", "shopId", currMoment.minusSeconds(i), currMoment.plusSeconds(i),
+                        random(ReportType.class), random(TimeZone.class).getID(), currMoment.plusSeconds(i));
+            } catch (DaoException e) {
+                throw new RuntimeException();
+            }
+        });
+    }
+
 }
