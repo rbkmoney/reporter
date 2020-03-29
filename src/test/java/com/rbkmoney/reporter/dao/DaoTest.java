@@ -121,10 +121,10 @@ public class DaoTest extends AbstractDaoConfig {
         LocalDateTime currMoment = LocalDateTime.now();
         createReports(currMoment);
 
-        List<Report> reports = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(),
+        List<Report> reports = reportDao.getReportsWithToken("partyId", Collections.singletonList("shopId"), Collections.emptyList(),
                 currMoment.minusMinutes(1), currMoment.plusMinutes(1), null, 10);
         assertEquals(10, reports.size());
-        List<Report> reportsWithTime = reportDao.getReportsWithToken("partyId", "shopId", Collections.emptyList(),
+        List<Report> reportsWithTime = reportDao.getReportsWithToken("partyId", Collections.singletonList("shopId"), Collections.emptyList(),
                 currMoment.minusMinutes(1), currMoment.plusMinutes(1), currMoment.plusSeconds(10), 10);
         assertEquals(5, reportsWithTime.size());
     }

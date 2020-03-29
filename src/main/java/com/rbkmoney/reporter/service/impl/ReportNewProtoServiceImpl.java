@@ -19,6 +19,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -58,7 +59,7 @@ public class ReportNewProtoServiceImpl implements ReportNewProtoService {
         try {
             return reportDao.getReportsWithToken(
                     partyId,
-                    shopId,
+                    Collections.singletonList(shopId),
                     reportTypes,
                     LocalDateTime.ofInstant(fromTime, ZoneOffset.UTC),
                     LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
