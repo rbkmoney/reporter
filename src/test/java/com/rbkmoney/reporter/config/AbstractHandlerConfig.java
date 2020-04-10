@@ -16,9 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(
-        classes = {
-                ReportsNewProtoHandler.class,
-        },
+        classes = ReportsNewProtoHandler.class,
         initializers = AbstractHandlerConfig.Initializer.class
 )
 @TestPropertySource("classpath:application.yml")
