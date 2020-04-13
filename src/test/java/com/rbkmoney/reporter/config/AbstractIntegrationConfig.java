@@ -61,6 +61,7 @@ public abstract class AbstractIntegrationConfig extends AbstractTestUtils {
 
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addPostgresqlTestContainer()
+            .addKafkaTestContainer()
             .addCephTestContainer()
             .build();
 
