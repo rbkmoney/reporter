@@ -1,6 +1,5 @@
 package com.rbkmoney.reporter.config;
 
-import com.rbkmoney.kafka.common.exception.handler.SeekToCurrentWithSleepBatchErrorHandler;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
 import com.rbkmoney.reporter.serde.SinkEventDeserializer;
@@ -17,9 +16,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.BatchErrorHandler;
-import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.*;
 
 import java.io.File;
 import java.util.HashMap;
@@ -98,13 +95,13 @@ public class KafkaConfig {
         factory.setBatchListener(true);
         factory.getContainerProperties().setAckOnError(false);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setBatchErrorHandler(kafkaErrorHandler());
+        factory.setErrorHandler(kafkaErrorHandler());
         factory.setConcurrency(concurrency);
         return factory;
     }
 
-    public BatchErrorHandler kafkaErrorHandler() {
-        return new SeekToCurrentWithSleepBatchErrorHandler();
+    public ErrorHandler kafkaErrorHandler() {
+        return new SeekToCurrentErrorHandler(-1);
     }
 
 }
