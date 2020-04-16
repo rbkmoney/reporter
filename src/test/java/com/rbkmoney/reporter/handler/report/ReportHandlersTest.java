@@ -15,6 +15,7 @@ import com.rbkmoney.reporter.handler.ReportsNewProtoHandler;
 import org.apache.thrift.TException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -27,6 +28,10 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
+@ContextConfiguration(
+        classes = ReportsNewProtoHandler.class,
+        initializers = AbstractHandlerConfig.Initializer.class
+)
 public class ReportHandlersTest extends AbstractHandlerConfig {
 
     @Autowired

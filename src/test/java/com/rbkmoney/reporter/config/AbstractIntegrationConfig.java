@@ -59,11 +59,11 @@ public abstract class AbstractIntegrationConfig extends AbstractTestUtils {
     @MockBean
     private PartyManagementSrv.Iface partyManagementClient;
 
-    private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
-            .addPostgresqlTestContainer()
-            .addKafkaTestContainer()
-            .addCephTestContainer()
-            .build();
+    private static TestContainers testContainers =
+            TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
+                    .addPostgresqlTestContainer()
+                    .addCephTestContainer()
+                    .build();
 
     protected String partyId = "TestPartyID";
     protected String shopId = "TestShopID";

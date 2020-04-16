@@ -16,8 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @ContextConfiguration(classes = {KafkaAutoConfiguration.class, KafkaConsumerBeanEnableConfig.class})
@@ -33,15 +32,14 @@ public class PartyManagementKafkaListenerTest extends AbstractKafkaTest {
     private S3StorageServiceImpl s3StorageService;
 
     @Test
-    public void listenEmptyChanges() throws InterruptedException {
+    public void listenEmptyChanges() {
         SinkEvent sinkEvent = new SinkEvent();
         sinkEvent.setEvent(createMessage());
 
         writeToTopic(topic, sinkEvent);
 
-        waitForTopicSync();
-
-        verify(partyManagementService, times(1)).handleEvents(anyList());
+        verify(partyManagementService, timeout(DEFAULT_KAFKA_SYNC_TIMEOUT).times(1))
+                .handleEvents(anyList());
     }
 
     private MachineEvent createMessage() {

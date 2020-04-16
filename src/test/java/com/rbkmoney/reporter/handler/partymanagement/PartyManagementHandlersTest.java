@@ -3,13 +3,14 @@ package com.rbkmoney.reporter.handler.partymanagement;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.kafka.AbstractKafkaTest;
+import com.rbkmoney.reporter.config.AbstractHandlerConfig;
 import com.rbkmoney.reporter.service.TaskService;
 import com.rbkmoney.reporter.service.impl.S3StorageServiceImpl;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,15 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class PartyManagementHandlersTest extends AbstractKafkaTest {
+@ContextConfiguration(
+        classes = {
+                ContractReportPreferencesHandler.class,
+                ContractCreatedChangesHandler.class,
+                ContractEffectHander.class,
+                PartyManagementEventHandler.class},
+        initializers = AbstractHandlerConfig.Initializer.class
+)
+public class PartyManagementHandlersTest extends AbstractHandlerConfig {
 
     @Autowired
     private EventHandler<PartyEventData> partyManagementEventHandler;
@@ -138,7 +147,6 @@ public class PartyManagementHandlersTest extends AbstractKafkaTest {
         }
         return reportPreferences;
     }
-
 
 }
 
