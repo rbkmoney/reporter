@@ -10,6 +10,7 @@ import com.rbkmoney.reporter.exception.DaoException;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -180,6 +181,7 @@ public class DaoTest extends AbstractDaoConfig {
     }
 
     @Test
+    @Ignore("disable db lock test, the test lasts more than 2 minutes")
     public void severalInstancesReportServiceTest() throws ExecutionException, InterruptedException {
         Awaitility.setDefaultPollInterval(10, TimeUnit.MILLISECONDS);
         Awaitility.setDefaultPollDelay(Duration.ZERO);
