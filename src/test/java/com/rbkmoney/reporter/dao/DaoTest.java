@@ -7,6 +7,8 @@ import com.rbkmoney.reporter.domain.tables.pojos.ContractMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.FileMeta;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.exception.DaoException;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +16,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -181,38 +181,40 @@ public class DaoTest extends AbstractDaoConfig {
 
     @Test
     public void severalInstancesReportServiceTest() throws ExecutionException, InterruptedException {
-        int count = 1000;
+        Awaitility.setDefaultPollInterval(10, TimeUnit.MILLISECONDS);
+        Awaitility.setDefaultPollDelay(Duration.ZERO);
+        Awaitility.setDefaultTimeout(Duration.ONE_MINUTE);
+        int count = 2000;
         createReports(count, LocalDateTime.now());
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         Future<List<Report>> firstFuture = executorService.submit(() -> reportDao.getPendingReports(count));
         Future<List<Report>> secondFuture = executorService.submit(() -> reportDao.getPendingReports(count));
 
-        while (!firstFuture.isDone() || !secondFuture.isDone()) {
-            Thread.sleep(100);
-        }
+        await().until(firstFuture::isDone);
+        await().until(secondFuture::isDone);
 
         assertFalse(firstFuture.get().isEmpty());
         assertFalse(secondFuture.get().isEmpty());
     }
 
     private void createReports(int count, LocalDateTime currMoment) {
-        IntStream.rangeClosed(1, count)
-                .forEach(i -> {
-                            try {
-                                reportDao.createReport(
-                                        "partyId",
-                                        "shopId",
-                                        currMoment.minusSeconds(i),
-                                        currMoment.plusSeconds(i),
-                                        random(ReportType.class),
-                                        random(TimeZone.class).getID(),
-                                        currMoment.plusSeconds(i)
-                                );
-                            } catch (DaoException e) {
-                                throw new RuntimeException();
-                            }
-                        }
-                );
+        IntStream.rangeClosed(1, count).forEach(i -> createReport(currMoment, i));
+    }
+
+    private void createReport(LocalDateTime currMoment, int i) {
+        try {
+            reportDao.createReport(
+                    "partyId",
+                    "shopId",
+                    currMoment.minusSeconds(i),
+                    currMoment.plusSeconds(i),
+                    random(ReportType.class),
+                    random(TimeZone.class).getID(),
+                    currMoment.plusSeconds(i)
+            );
+        } catch (DaoException e) {
+            throw new RuntimeException();
+        }
     }
 }
