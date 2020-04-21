@@ -184,7 +184,7 @@ public class DaoTest extends AbstractDaoConfig {
         Awaitility.setDefaultPollInterval(10, TimeUnit.MILLISECONDS);
         Awaitility.setDefaultPollDelay(Duration.ZERO);
         Awaitility.setDefaultTimeout(Duration.ONE_MINUTE);
-        int count = 2000;
+        int count = 3000;
         createReports(count, LocalDateTime.now());
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
