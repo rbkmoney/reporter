@@ -44,6 +44,12 @@ spring:
     ansi:
       enabled: ALWAYS
 
+cache:
+  invoice:
+    size: 10000
+  payment:
+    size: 10000
+
 kafka:
   bootstrap-servers: localhost:9092
   client-id: reporter
@@ -68,6 +74,22 @@ kafka:
   topics:
     party-management:
       id: mg-events-party
+      enabled: false
+      concurrency: 5
+    invoicing:
+      id: mg-invoice-100-2
+      enabled: false
+      concurrency: 5
+
+bustermaze:
+  payout:
+    polling:
+      url: http://localhost:8026/repo/payout
+      housekeeperTimeout: 15000
+      maxPoolSize: 1
+      maxQuerySize: 1000
+      delay: 10000
+      retryDelay: 1000
       enabled: false
 
 partyManagement:

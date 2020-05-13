@@ -9,6 +9,7 @@ import com.rbkmoney.reporter.dao.impl.ReportDaoImpl;
 import com.rbkmoney.reporter.job.GenerateReportJob;
 import com.rbkmoney.reporter.service.DomainConfigService;
 import com.rbkmoney.reporter.service.ReportService;
+import com.rbkmoney.reporter.service.impl.DomainConfigServiceImpl;
 import com.rbkmoney.reporter.service.impl.PartyServiceImpl;
 import com.rbkmoney.reporter.service.impl.TaskServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ import java.util.function.Supplier;
                 PartyServiceImpl.class,
                 ReportService.class,
                 GenerateReportJob.class,
-                DomainConfigService.class,
+                DomainConfigServiceImpl.class,
                 TaskServiceImpl.class,
         },
         initializers = AbstractSchedulerConfig.Initializer.class

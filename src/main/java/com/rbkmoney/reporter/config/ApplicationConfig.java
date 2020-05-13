@@ -94,14 +94,4 @@ public class ApplicationConfig {
         return Executors.newFixedThreadPool(threadPoolSize, threadFactory);
     }
 
-    @Bean
-    public MachineEventParser<PartyEventData> partyEventDataMachineEventParser(BinaryDeserializer<PartyEventData> partyEventDataBinaryDeserializer) {
-        return new PartyEventDataMachineEventParser(partyEventDataBinaryDeserializer);
-    }
-
-    @Bean
-    public BinaryDeserializer<PartyEventData> partyEventDataBinaryDeserializer() {
-        return new PartyEventDataDeserializer();
-    }
-
 }
