@@ -188,29 +188,34 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         return borderStyle;
     }
 
-    private void createPaymentRow(ReportCreatorDto reportCreatorDto, Sheet sh,
-                                  AtomicLong totalAmnt, AtomicLong totalPayoutAmnt,  AtomicInteger rownum, StatPayment p) {
+    private void createPaymentRow(ReportCreatorDto reportCreatorDto,
+                                  Sheet sh,
+                                  AtomicLong totalAmnt,
+                                  AtomicLong totalPayoutAmnt,
+                                  AtomicInteger rownum,
+                                  StatPayment payment) {
         ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
         Row row = sh.createRow(rownum.getAndIncrement());
-        row.createCell(0).setCellValue(p.getInvoiceId() + "." + p.getId());
-        row.createCell(1).setCellValue(TimeUtil.toLocalizedDateTime(p.getStatus().getCaptured().getAt(), reportZoneId));
-        PaymentTool paymentTool = getPaymentTool(p.getPayer());
+        row.createCell(0).setCellValue(payment.getInvoiceId() + "." + payment.getId());
+        row.createCell(1).setCellValue(
+                TimeUtil.toLocalizedDateTime(payment.getStatus().getCaptured().getAt(), reportZoneId));
+        PaymentTool paymentTool = getPaymentTool(payment.getPayer());
         row.createCell(2).setCellValue(paymentTool.getSetField().getFieldName());
-        row.createCell(3).setCellValue(FormatUtil.formatCurrency(p.getAmount()));
-        row.createCell(4).setCellValue(FormatUtil.formatCurrency(p.getAmount() - p.getFee()));
-        totalAmnt.addAndGet(p.getAmount());
-        totalPayoutAmnt.addAndGet(p.getAmount() - p.getFee());
-        String payerEmail = getEmail(p.getPayer());
+        row.createCell(3).setCellValue(FormatUtil.formatCurrency(payment.getAmount()));
+        row.createCell(4).setCellValue(FormatUtil.formatCurrency(payment.getAmount() - payment.getFee()));
+        totalAmnt.addAndGet(payment.getAmount());
+        totalPayoutAmnt.addAndGet(payment.getAmount() - payment.getFee());
+        String payerEmail = getEmail(payment.getPayer());
         row.createCell(5).setCellValue(payerEmail);
-        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(p.getShopId()));
-        String purpose = reportCreatorDto.getPurposes().get(p.getInvoiceId());
+        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(payment.getShopId()));
+        String purpose = reportCreatorDto.getPurposes().get(payment.getInvoiceId());
         if (purpose == null) {
-            StatInvoice invoice = reportCreatorDto.getStatisticService().getInvoice(p.getInvoiceId());
+            StatInvoice invoice = reportCreatorDto.getStatisticService().getInvoice(payment.getInvoiceId());
             purpose = invoice.getProduct();
         }
         row.createCell(7).setCellValue(purpose);
-        row.createCell(8).setCellValue(FormatUtil.formatCurrency(p.getFee()));
-        row.createCell(9).setCellValue(p.getCurrencySymbolicCode());
+        row.createCell(8).setCellValue(FormatUtil.formatCurrency(payment.getFee()));
+        row.createCell(9).setCellValue(payment.getCurrencySymbolicCode());
     }
 
     private void createPaymentsColumnsDesciptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
@@ -273,7 +278,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         }
     }
 
-    private String getEmail(Payer payer) {
+    private static String getEmail(Payer payer) {
         switch (payer.getSetField()) {
             case PAYMENT_RESOURCE:
                 return payer.getPaymentResource().getEmail();
