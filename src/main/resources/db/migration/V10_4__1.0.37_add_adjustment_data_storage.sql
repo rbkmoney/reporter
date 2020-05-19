@@ -1,4 +1,4 @@
-CREATE TYPE rpt.adjustment_status AS ENUM ('PENDING', 'CAPTURED', 'CANCELLED', 'PROCESSED');
+CREATE TYPE rpt.adjustment_status AS ENUM ('CAPTURED', 'CANCELLED');
 
 CREATE TABLE rpt.adjustment
 (
@@ -14,13 +14,8 @@ CREATE TABLE rpt.adjustment
     domain_revision                BIGINT,
     reason                         CHARACTER VARYING           NOT NULL,
     party_revision                 BIGINT,
+    amount                         BIGINT,
     currency_code                  CHARACTER VARYING,
-    fee                            BIGINT,
-    provider_fee                   BIGINT,
-    external_fee                   BIGINT,
-    old_fee                        BIGINT,
-    old_provider_fee               BIGINT,
-    old_external_fee               BIGINT,
     CONSTRAINT adjustment_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX adjustment_id_idx on rpt.adjustment (invoice_id, payment_id, adjustment_id);

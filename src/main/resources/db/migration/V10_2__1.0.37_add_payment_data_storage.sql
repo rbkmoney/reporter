@@ -1,4 +1,4 @@
-CREATE TYPE rpt.invoice_payment_status AS ENUM ('PENDING', 'PROCESSED', 'CAPTURED', 'CANCELLED', 'FAILED', 'REFUNDED');
+CREATE TYPE rpt.invoice_payment_status AS ENUM ('CAPTURED', 'CANCELLED', 'FAILED');
 CREATE TYPE rpt.payment_tool AS ENUM ('BANK_CARD', 'PAYMENT_TERMINAL', 'DIGITAL_WALLET');
 CREATE TYPE rpt.bank_card_token_provider AS ENUM ('APPLEPAY', 'GOOGLEPAY', 'SAMSUNGPAY');
 CREATE TYPE rpt.payment_flow AS ENUM ('INSTANT', 'HOLD');
@@ -13,6 +13,12 @@ CREATE TABLE rpt.payment
     shop_id                           CHARACTER VARYING           NOT NULL,
     invoice_id                        CHARACTER VARYING           NOT NULL,
     payment_id                        CHARACTER VARYING           NOT NULL,
+    amount                            BIGINT                      NOT NULL,
+    origin_amount                     BIGINT,
+    currency_code                     CHARACTER VARYING           NOT NULL,
+    fee                               BIGINT,
+    provider_fee                      BIGINT,
+    external_fee                      BIGINT,
     created_at                        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     payer_type                        rpt.payment_payer_type      NOT NULL,
     tool                              rpt.payment_tool            NOT NULL,
@@ -33,7 +39,9 @@ CREATE TABLE rpt.payment_additional_info
 (
     ext_payment_id                    BIGINT                   NOT NULL,
     domain_revision                   BIGINT                   NOT NULL,
-    party_revision                    BIGINT, --необходим ли тут bigint?
+    party_revision                    BIGINT,
+    provider_id                       INTEGER                  NOT NULL,
+    terminal_id                       INTEGER                  NOT NULL,
     bank_card_token                   CHARACTER VARYING,
     bank_card_system                  CHARACTER VARYING,
     bank_card_bin                     CHARACTER VARYING,
@@ -51,47 +59,11 @@ CREATE TABLE rpt.payment_additional_info
     hold_on_expiration                rpt.on_hold_expiration,
     hold_until                        TIMESTAMP WITHOUT TIME ZONE,
     make_recurrent_flag               BOOLEAN,
-    operation_failure_class           rpt.failure_class           NULL,
-    external_failure                  CHARACTER VARYING           NULL,
-    external_failure_reason           CHARACTER VARYING           NULL,
-    payment_short_id                  CHARACTER VARYING           NULL,
-    provider_id                       INTEGER                     NOT NULL,
-    terminal_id                       INTEGER                     NOT NULL,
-    CONSTRAINT payment_additional_pkey PRIMARY KEY (ext_payment_id)
+    operation_failure_class           rpt.failure_class,
+    external_failure                  CHARACTER VARYING,
+    external_failure_reason           CHARACTER VARYING,
+    payment_short_id                  CHARACTER VARYING,
+    CONSTRAINT payment_additional_pkey PRIMARY KEY (ext_payment_id),
+    FOREIGN KEY (ext_payment_id) REFERENCES rpt.payment (id)
 );
 CREATE UNIQUE INDEX payment_additional_id_idx on rpt.payment (invoice_id, payment_id);
-
--- как для частичной оплаты это будет выглядеть? Несколько записей cost или одна в итоге?
-CREATE TABLE rpt.payment_cost
-(
-    id               BIGSERIAL                   NOT NULL,
-    invoice_id       CHARACTER VARYING           NOT NULL,
-    sequence_id      BIGINT                      NOT NULL,
-    change_id        INT                         NOT NULL,
-    event_created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    payment_id       CHARACTER VARYING           NOT NULL,
-    ext_payment_id   BIGINT                      NOT NULL,
-    amount           BIGINT                      NOT NULL,
-    origin_amount    BIGINT,
-    currency_code    CHARACTER VARYING           NOT NULL,
-    CONSTRAINT payment_cost_pkey PRIMARY KEY (id)
-);
-CREATE UNIQUE INDEX payment_cost_idx ON rpt.payment_cost (ext_payment_id, event_created_at);
-
--- fee в итоге будет один на платеж?
-CREATE TABLE rpt.payment_fee
-(
-    id                         BIGSERIAL                   NOT NULL,
-    invoice_id                 CHARACTER VARYING           NOT NULL,
-    sequence_id                BIGINT                      NOT NULL,
-    change_id                  INT                         NOT NULL,
-    event_created_at           TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    payment_id                 CHARACTER VARYING           NOT NULL,
-    ext_payment_id             BIGINT                      NOT NULL,
-    currency_code              CHARACTER VARYING,
-    fee                        BIGINT,
-    provider_fee               BIGINT,
-    external_fee               BIGINT,
-    CONSTRAINT payment_fee_pkey PRIMARY KEY (id)
-);
-CREATE UNIQUE INDEX payment_fee_idx ON rpt.payment_fee (ext_payment_id, event_created_at);

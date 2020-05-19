@@ -1,4 +1,4 @@
-CREATE TYPE rpt.refund_status AS ENUM ('PENDING', 'SUCCEEDED', 'FAILED');
+CREATE TYPE rpt.refund_status AS ENUM ('SUCCEEDED', 'FAILED');
 
 CREATE TABLE rpt.refund
 (
@@ -27,10 +27,11 @@ CREATE UNIQUE INDEX refund_created_at_and_status_idx ON rpt.refund (status, crea
 CREATE TABLE rpt.refund_additional_info
 (
     ext_refund_id                         BIGINT                   NOT NULL,
-    operation_failure_class               rpt.failure_class           NULL,
-    external_failure                      CHARACTER VARYING           NULL,
-    external_failure_reason               CHARACTER VARYING           NULL,
+    operation_failure_class               rpt.failure_class,
+    external_failure                      CHARACTER VARYING,
+    external_failure_reason               CHARACTER VARYING,
     domain_revision                       BIGINT,
     party_revision                        BIGINT,
-    CONSTRAINT refund_additional_pkey PRIMARY KEY (ext_refund_id)
+    CONSTRAINT refund_additional_pkey PRIMARY KEY (ext_refund_id),
+    FOREIGN KEY (ext_refund_id) REFERENCES rpt.refund (id)
 )
