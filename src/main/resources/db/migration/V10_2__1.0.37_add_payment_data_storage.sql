@@ -57,7 +57,7 @@ CREATE TABLE rpt.payment_additional_info
     payment_short_id                  CHARACTER VARYING           NULL,
     provider_id                       INTEGER                     NOT NULL,
     terminal_id                       INTEGER                     NOT NULL,
-    CONSTRAINT payment_additional_pkey PRIMARY KEY (id)
+    CONSTRAINT payment_additional_pkey PRIMARY KEY (ext_payment_id)
 );
 CREATE UNIQUE INDEX payment_additional_id_idx on rpt.payment (invoice_id, payment_id);
 
