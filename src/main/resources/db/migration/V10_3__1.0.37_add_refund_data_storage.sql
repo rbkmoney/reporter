@@ -3,6 +3,7 @@ CREATE TYPE rpt.refund_status AS ENUM ('SUCCEEDED', 'FAILED');
 CREATE TABLE rpt.refund
 (
     id                         BIGSERIAL                   NOT NULL,
+    external_id                CHARACTER VARYING           NOT NULL,
     party_id                   CHARACTER VARYING           NOT NULL,
     shop_id                    CHARACTER VARYING           NOT NULL,
     invoice_id                 CHARACTER VARYING           NOT NULL,
