@@ -4,7 +4,7 @@ CREATE TABLE rpt.adjustment
 (
     id                             BIGSERIAL                   NOT NULL,
     party_id                       CHARACTER VARYING           NOT NULL,
-    party_shop_id                  CHARACTER VARYING           NOT NULL,
+    shop_id                        CHARACTER VARYING           NOT NULL,
     invoice_id                     CHARACTER VARYING           NOT NULL,
     payment_id                     CHARACTER VARYING           NOT NULL,
     adjustment_id                  CHARACTER VARYING           NOT NULL,

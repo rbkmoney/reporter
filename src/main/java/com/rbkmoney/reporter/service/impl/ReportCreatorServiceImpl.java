@@ -98,37 +98,47 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         rowTotalRefundAmount.getCell(3).setCellValue(FormatUtil.formatCurrency(totalRefundAmnt.longValue()));
     }
 
-    private void createRefundRow(ReportCreatorDto reportCreatorDto, Sheet sh,
-                                 AtomicLong totalRefundAmnt, AtomicInteger rownum, StatRefund r) {
+    private void createRefundRow(ReportCreatorDto reportCreatorDto,
+                                 Sheet sh,
+                                 AtomicLong totalRefundAmnt,
+                                 AtomicInteger rownum,
+                                 StatRefund refund) {
         ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
 
         Row row = sh.createRow(rownum.getAndIncrement());
-        StatPayment statPayment = reportCreatorDto.getStatisticService().getCapturedPayment(reportCreatorDto.getReport().getPartyId(), reportCreatorDto.getReport().getPartyShopId(), r.getInvoiceId(), r.getPaymentId());
-        row.createCell(0).setCellValue(TimeUtil.toLocalizedDateTime(r.getStatus().getSucceeded().getAt(), reportZoneId));
-        row.createCell(1).setCellValue(TimeUtil.toLocalizedDateTime(statPayment.getStatus().getCaptured().getAt(), reportZoneId));
-        row.createCell(2).setCellValue(r.getInvoiceId() + "." + r.getPaymentId());
-        row.createCell(3).setCellValue(FormatUtil.formatCurrency(r.getAmount()));
+        StatPayment statPayment = reportCreatorDto.getStatisticService().getCapturedPayment(
+                        reportCreatorDto.getReport().getPartyId(),
+                        reportCreatorDto.getReport().getPartyShopId(),
+                        refund.getInvoiceId(),
+                        refund.getPaymentId()
+        );
+        row.createCell(0).setCellValue(
+                TimeUtil.toLocalizedDateTime(refund.getStatus().getSucceeded().getAt(), reportZoneId));
+        row.createCell(1).setCellValue(
+                TimeUtil.toLocalizedDateTime(statPayment.getStatus().getCaptured().getAt(), reportZoneId));
+        row.createCell(2).setCellValue(refund.getInvoiceId() + "." + refund.getPaymentId());
+        row.createCell(3).setCellValue(FormatUtil.formatCurrency(refund.getAmount()));
         String paymentTool = null;
         if (statPayment.getPayer().isSetPaymentResource()) {
             paymentTool = statPayment.getPayer().getPaymentResource().getPaymentTool().getSetField().getFieldName();
         }
         row.createCell(4).setCellValue(paymentTool);
-        totalRefundAmnt.addAndGet(r.getAmount());
+        totalRefundAmnt.addAndGet(refund.getAmount());
         String payerEmail = null;
         if (statPayment.getPayer().isSetPaymentResource()) {
             payerEmail = statPayment.getPayer().getPaymentResource().getEmail();
         }
         row.createCell(5).setCellValue(payerEmail);
-        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(r.getShopId()));
-        String purpose = reportCreatorDto.getPurposes().get(r.getInvoiceId());
+        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(refund.getShopId()));
+        String purpose = reportCreatorDto.getPurposes().get(refund.getInvoiceId());
         if (purpose == null) {
-            StatInvoice invoice = reportCreatorDto.getStatisticService().getInvoice(r.getInvoiceId());
+            StatInvoice invoice = reportCreatorDto.getStatisticService().getInvoice(refund.getInvoiceId());
             purpose = invoice.getProduct();
         }
         row.createCell(7).setCellValue(purpose);
-        row.createCell(8).setCellValue(r.getId());
-        row.createCell(9).setCellValue(r.getReason());
-        row.createCell(10).setCellValue(r.getCurrencySymbolicCode());
+        row.createCell(8).setCellValue(refund.getId());
+        row.createCell(9).setCellValue(refund.getReason());
+        row.createCell(10).setCellValue(refund.getCurrencySymbolicCode());
     }
 
     private void createRefundsColumnsDescriptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {

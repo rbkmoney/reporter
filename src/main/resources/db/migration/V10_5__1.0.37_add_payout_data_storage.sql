@@ -6,7 +6,7 @@ CREATE TABLE rpt.payout
 (
     id                                                    BIGSERIAL                   NOT NULL,
     party_id                                              CHARACTER VARYING           NOT NULL,
-    party_shop_id                                         CHARACTER VARYING           NOT NULL,
+    shop_id                                               CHARACTER VARYING           NOT NULL,
     payout_id                                             CHARACTER VARYING           NOT NULL,
     contract_id                                           CHARACTER VARYING           NOT NULL,
     created_at                                            TIMESTAMP WITHOUT TIME ZONE NOT NULL,

@@ -8,7 +8,7 @@ CREATE TABLE rpt.invoice
     status_details     CHARACTER VARYING           NULL,
     party_id           CHARACTER VARYING           NOT NULL,
     party_revision     BIGINT                      NULL,
-    party_shop_id      CHARACTER VARYING           NOT NULL,
+    shop_id            CHARACTER VARYING           NOT NULL,
     created_at         TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     product            CHARACTER VARYING           NOT NULL,
     description        CHARACTER VARYING,
