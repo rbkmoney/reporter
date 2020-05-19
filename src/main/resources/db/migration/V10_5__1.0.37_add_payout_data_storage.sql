@@ -15,39 +15,51 @@ CREATE TABLE rpt.payout
     currency_code                                         CHARACTER VARYING           NOT NULL,
     type                                                  rpt.payout_type             NOT NULL,
     wallet_id                                             CHARACTER VARYING,
-    account_type                                          rpt.payout_account_type,
-    account_bank_id                                       CHARACTER VARYING,
-    account_bank_corr_id                                  CHARACTER VARYING,
-    account_bank_local_code                               CHARACTER VARYING,
-    account_bank_name                                     CHARACTER VARYING,
-    account_purpose                                       CHARACTER VARYING,
-    account_inn                                           CHARACTER VARYING,
-    account_legal_agreement_id                            CHARACTER VARYING,
-    account_legal_agreement_signed_at                     TIMESTAMP WITHOUT TIME ZONE,
-    account_trading_name                                  CHARACTER VARYING,
-    account_legal_name                                    CHARACTER VARYING,
-    account_actual_address                                CHARACTER VARYING,
-    account_registered_address                            CHARACTER VARYING,
-    account_registered_number                             CHARACTER VARYING,
-    account_bank_iban                                     CHARACTER VARYING,
-    account_bank_number                                   CHARACTER VARYING,
-    account_bank_address                                  CHARACTER VARYING,
-    account_bank_bic                                      CHARACTER VARYING,
-    account_bank_aba_rtn                                  CHARACTER VARYING,
-    account_bank_country_code                             CHARACTER VARYING,
-    international_correspondent_account_bank_account      CHARACTER VARYING,
-    international_correspondent_account_bank_number       CHARACTER VARYING,
-    international_correspondent_account_bank_iban         CHARACTER VARYING,
-    international_correspondent_account_bank_name         CHARACTER VARYING,
-    international_correspondent_account_bank_address      CHARACTER VARYING,
-    international_correspondent_account_bank_bic          CHARACTER VARYING,
-    international_correspondent_account_bank_aba_rtn      CHARACTER VARYING,
-    international_correspondent_account_bank_country_code CHARACTER VARYING,
     summary                                               CHARACTER VARYING,
     CONSTRAINT payout_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX payout_id_idx on rpt.payout (payout_id);
 CREATE UNIQUE INDEX payout_created_at_idx ON rpt.payout (created_at);
+
+CREATE TABLE rpt.payout_account (
+    ext_payout_id               BIGINT                    NOT NULL,
+    type                        rpt.payout_account_type,
+    bank_id                     CHARACTER VARYING,
+    bank_corr_id                CHARACTER VARYING,
+    bank_local_code             CHARACTER VARYING,
+    bank_name                   CHARACTER VARYING,
+    purpose                     CHARACTER VARYING,
+    inn                         CHARACTER VARYING,
+    legal_agreement_id          CHARACTER VARYING,
+    legal_agreement_signed_at   TIMESTAMP WITHOUT TIME ZONE,
+    trading_name                CHARACTER VARYING,
+    legal_name                  CHARACTER VARYING,
+    actual_address              CHARACTER VARYING,
+    registered_address          CHARACTER VARYING,
+    registered_number           CHARACTER VARYING,
+    bank_iban                   CHARACTER VARYING,
+    bank_number                 CHARACTER VARYING,
+    bank_address                CHARACTER VARYING,
+    bank_bic                    CHARACTER VARYING,
+    bank_aba_rtn                CHARACTER VARYING,
+    bank_country_code           CHARACTER VARYING,
+    CONSTRAINT payout_account_pkey PRIMARY KEY (ext_payout_id),
+    FOREIGN KEY (ext_payout_id) REFERENCES rpt.payout (id)
+);
+
+CREATE TABLE rpt.payout_international_account (
+    ext_payout_id               BIGINT                    NOT NULL,
+    bank_account                CHARACTER VARYING,
+    bank_number                 CHARACTER VARYING,
+    bank_iban                   CHARACTER VARYING,
+    bank_name                   CHARACTER VARYING,
+    bank_address                CHARACTER VARYING,
+    bank_bic                    CHARACTER VARYING,
+    bank_aba_rtn                CHARACTER VARYING,
+    bank_country_code           CHARACTER VARYING,
+    CONSTRAINT payout_international_account_pkey PRIMARY KEY (ext_payout_id),
+    FOREIGN KEY (ext_payout_id) REFERENCES rpt.payout (id)
+);
 
 CREATE TABLE rpt.payout_state
 (

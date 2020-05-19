@@ -1,5 +1,5 @@
 CREATE TYPE rpt.invoice_payment_status AS ENUM ('CAPTURED', 'CANCELLED', 'FAILED');
-CREATE TYPE rpt.payment_tool AS ENUM ('BANK_CARD', 'PAYMENT_TERMINAL', 'DIGITAL_WALLET');
+CREATE TYPE rpt.payment_tool AS ENUM ('BANK_CARD', 'PAYMENT_TERMINAL', 'DIGITAL_WALLET', 'CRYPTO_CURRENCY');
 CREATE TYPE rpt.bank_card_token_provider AS ENUM ('APPLEPAY', 'GOOGLEPAY', 'SAMSUNGPAY');
 CREATE TYPE rpt.payment_flow AS ENUM ('INSTANT', 'HOLD');
 CREATE TYPE rpt.on_hold_expiration AS ENUM ('CANCEL', 'CAPTURE');
@@ -9,6 +9,7 @@ CREATE TYPE rpt.failure_class AS ENUM ('OPERATION_TIMEOUT', 'FAILURE');
 CREATE TABLE rpt.payment
 (
     id                                BIGSERIAL                   NOT NULL,
+    external_id                       CHARACTER VARYING           NOT NULL,
     party_id                          CHARACTER VARYING           NOT NULL,
     shop_id                           CHARACTER VARYING           NOT NULL,
     invoice_id                        CHARACTER VARYING           NOT NULL,
@@ -63,7 +64,19 @@ CREATE TABLE rpt.payment_additional_info
     external_failure                  CHARACTER VARYING,
     external_failure_reason           CHARACTER VARYING,
     payment_short_id                  CHARACTER VARYING,
+    payer_crypto_currency_type        CHARACTER VARYING,
+    rrn                               CHARACTER VARYING,
+    approval_code                     CHARACTER VARYING,
+    acs_url                           CHARACTER VARYING,
+    pareq                             CHARACTER VARYING,
+    md                                CHARACTER VARYING,
+    term_url                          CHARACTER VARYING,
+    pares                             CHARACTER VARYING,
+    eci                               CHARACTER VARYING,
+    cavv                              CHARACTER VARYING,
+    xid                               CHARACTER VARYING,
+    cavv_algorithm                    CHARACTER VARYING,
+    three_ds_verification             CHARACTER VARYING,
     CONSTRAINT payment_additional_pkey PRIMARY KEY (ext_payment_id),
     FOREIGN KEY (ext_payment_id) REFERENCES rpt.payment (id)
 );
-CREATE UNIQUE INDEX payment_additional_id_idx on rpt.payment (invoice_id, payment_id);
