@@ -6,10 +6,13 @@ import com.rbkmoney.damsel.domain.ServiceAcceptanceActPreferences;
 import com.rbkmoney.damsel.payment_processing.ContractEffect;
 import com.rbkmoney.damsel.payment_processing.ContractEffectUnit;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.reporter.handler.EventHandler;
 import com.rbkmoney.reporter.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ContractCreatedChangesHandler implements EventHandler<ContractEffectUnit> {
@@ -17,7 +20,7 @@ public class ContractCreatedChangesHandler implements EventHandler<ContractEffec
     private final TaskService taskService;
 
     @Override
-    public void handle(MachineEvent event, ContractEffectUnit contractEffectUnit) {
+    public void handle(MachineEvent event, ContractEffectUnit contractEffectUnit, int changeId) {
         String partyId = event.getSourceId();
         String contractId = contractEffectUnit.getContractId();
         long eventId = event.getEventId();
@@ -27,6 +30,9 @@ public class ContractCreatedChangesHandler implements EventHandler<ContractEffec
         if (contract.isSetReportPreferences()) {
             ReportPreferences preferences = contract.getReportPreferences();
             if (preferences.isSetServiceAcceptanceActPreferences()) {
+                log.info("Register job by created changes (party id = '{}', " +
+                        "contract id = '{}', event id ='{}', change id = '{}')", partyId, contractId,
+                        eventId, changeId);
                 ServiceAcceptanceActPreferences actPreferences =
                         preferences.getServiceAcceptanceActPreferences();
                 taskService.registerProvisionOfServiceJob(
@@ -38,6 +44,12 @@ public class ContractCreatedChangesHandler implements EventHandler<ContractEffec
                 );
             }
         }
+    }
+
+    @Override
+    public boolean isAccept(ContractEffectUnit contractEffectUnit) {
+        return contractEffectUnit.isSetEffect()
+                && contractEffectUnit.getEffect().isSetCreated();
     }
 
 }

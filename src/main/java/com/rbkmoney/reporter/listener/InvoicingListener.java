@@ -3,7 +3,6 @@ package com.rbkmoney.reporter.listener;
 import com.rbkmoney.kafka.common.util.LogUtil;
 import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.reporter.service.EventService;
-import com.rbkmoney.reporter.service.impl.PartyManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -15,20 +14,21 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
-public class PartyManagementListener {
+public class InvoicingListener {
 
-    private final EventService partyManagementService;
+    private final EventService invoicingService;
 
-    @KafkaListener(topics = "${kafka.topics.party-management.id}", containerFactory = "kafkaListenerContainerFactory")
-    public void handle(List<ConsumerRecord<String, SinkEvent>> messages, Acknowledgment ack) throws Exception {
-        log.info("Got partyManagement machineEvent batch with size: {}", messages.size());
-        partyManagementService.handleEvents(
+    @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "kafkaInvoicingListenerContainerFactory")
+    public void listen(List<ConsumerRecord<String, SinkEvent>> messages, Acknowledgment ack) throws Exception {
+        log.info("Got invoicing machineEvent batch with size: {}", messages.size());
+        invoicingService.handleEvents(
                 messages.stream()
                         .map(m -> m.value().getEvent())
                         .collect(Collectors.toList())
         );
         ack.acknowledge();
-        log.info("Batch partyManagement has been committed, size={}, {}", messages.size(),
+        log.info("Invoicing batch has been committed, size={}, {}", messages.size(),
                 LogUtil.toSummaryStringWithSinkEventValues(messages));
     }
+
 }

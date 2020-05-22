@@ -2,36 +2,43 @@ package com.rbkmoney.reporter.handler.partymanagement;
 
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.reporter.handler.EventHandler;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
-public class PartyManagementEventHandler implements EventHandler<PartyEventData> {
+public class PartyManagementEventHandler implements EventHandler<PartyChange> {
 
-    private final EventHandler<ContractEffectUnit> contractEffectHander;
+    private final List<EventHandler<ContractEffectUnit>> eventHandlers;
 
     @Override
-    public void handle(MachineEvent event, PartyEventData partyEventData) {
-        partyEventData.getChanges()
-                .forEach(partyChange -> processPartyChange(event, partyChange));
+    public void handle(MachineEvent machineEvent, PartyChange change, int changeId) {
+        ClaimAccepted accepted = change.getClaimStatusChanged().getStatus().getAccepted();
+        accepted.getEffects().stream()
+                .filter(effect -> effect.isSetContractEffect())
+                .map(ClaimEffect::getContractEffect)
+                .forEach(contractEffect -> handleContractEffect(machineEvent, contractEffect, changeId));
     }
 
-    private void processPartyChange(MachineEvent event, PartyChange partyChange) {
-        if (partyChange.isSetClaimStatusChanged()) {
-            ClaimStatus claimStatus = partyChange.getClaimStatusChanged().getStatus();
-            processClaimStatusChange(event, claimStatus);
+    private void handleContractEffect(MachineEvent machineEvent, ContractEffectUnit contractEffect, int changeId) {
+        for (EventHandler<ContractEffectUnit> handler : eventHandlers) {
+            if (handler.isAccept(contractEffect)) {
+                try {
+                    handler.handle(machineEvent, contractEffect, changeId);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         }
     }
 
-    private void processClaimStatusChange(MachineEvent event, ClaimStatus claimStatus) {
-        if (claimStatus.isSetAccepted()) {
-            claimStatus.getAccepted().getEffects().stream()
-                    .filter(ClaimEffect::isSetContractEffect)
-                    .forEach(claimEffect ->
-                            contractEffectHander.handle(event, claimEffect.getContractEffect()));
-        }
+    @Override
+    public boolean isAccept(PartyChange change) {
+        return change.isSetClaimStatusChanged()
+                && change.getClaimStatusChanged().isSetStatus()
+                && change.getClaimStatusChanged().getStatus().isSetAccepted();
     }
 }

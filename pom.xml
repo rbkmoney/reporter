@@ -107,6 +107,12 @@
             <artifactId>db-common-lib</artifactId>
             <version>0.0.2-SNAPSHOT</version>
         </dependency>
+        <!-- for delete in the future -->
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>eventstock-client-damsel</artifactId>
+            <version>1.2.8</version>
+        </dependency>
 
         <!--spring-->
         <dependency>

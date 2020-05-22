@@ -1,4 +1,4 @@
-CREATE TYPE rpt.adjustment_status AS ENUM ('CAPTURED', 'CANCELLED');
+CREATE TYPE rpt.adjustment_status AS ENUM ('captured', 'cancelled');
 
 CREATE TABLE rpt.adjustment
 (
@@ -19,5 +19,5 @@ CREATE TABLE rpt.adjustment
     CONSTRAINT adjustment_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX adjustment_id_idx on rpt.adjustment (invoice_id, payment_id, adjustment_id);
-CREATE UNIQUE INDEX adjustment_created_at_idx ON rpt.adjustment (created_at);
-CREATE UNIQUE INDEX adjustment_created_and_status_at_idx ON rpt.adjustment (status, created_at);
+CREATE INDEX adjustment_created_at_idx ON rpt.adjustment (created_at);
+CREATE INDEX adjustment_created_and_status_at_idx ON rpt.adjustment (status, created_at);

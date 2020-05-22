@@ -1,6 +1,6 @@
-CREATE TYPE rpt.payout_status AS ENUM ('UNPAID', 'PAID', 'CANCELLED', 'CONFIRMED');
-CREATE TYPE rpt.payout_type AS ENUM ('BANK_CARD', 'BANK_ACCOUNT', 'WALLET');
-CREATE TYPE rpt.payout_account_type AS ENUM ('RUSSIAN_PAYOUT_ACCOUNT', 'INTERNATIONAL_PAYOUT_ACCOUNT');
+CREATE TYPE rpt.payout_status AS ENUM ('unpaid', 'paid', 'cancelled', 'confirmed');
+CREATE TYPE rpt.payout_type AS ENUM ('bank_card', 'bank_account', 'wallet');
+CREATE TYPE rpt.payout_account_type AS ENUM ('russian_payout_account', 'international_payout_account');
 
 CREATE TABLE rpt.payout
 (
@@ -19,7 +19,7 @@ CREATE TABLE rpt.payout
     CONSTRAINT payout_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX payout_id_idx on rpt.payout (payout_id);
-CREATE UNIQUE INDEX payout_created_at_idx ON rpt.payout (created_at);
+CREATE INDEX payout_created_at_idx ON rpt.payout (created_at);
 
 CREATE TABLE rpt.payout_account (
     ext_payout_id               BIGINT                    NOT NULL,
@@ -73,4 +73,4 @@ CREATE TABLE rpt.payout_state
     CONSTRAINT payout_status_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX payout_status_idx ON rpt.payout_state (ext_payout_id, event_created_at, status);
-CREATE UNIQUE INDEX payout_status_by_date_idx ON rpt.payout_state (event_created_at, status);
+CREATE INDEX payout_status_by_date_idx ON rpt.payout_state (event_created_at, status);
