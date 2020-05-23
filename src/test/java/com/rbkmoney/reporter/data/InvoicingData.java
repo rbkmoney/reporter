@@ -6,7 +6,6 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,6 +35,20 @@ public final class InvoicingData {
         return eventPayload;
     }
 
+
+    public static EventPayload createTestRefundEventPayload(List<RefundChangeStatusInfo> statusInfoList) {
+        EventPayload eventPayload = new EventPayload();
+        eventPayload.setInvoiceChanges(createRefundsChangeList(statusInfoList));
+        return eventPayload;
+    }
+
+
+    public static EventPayload createTestAdjustmentEventPayload(List<AdjustmentChangeStatusInfo> statusInfoList) {
+        EventPayload eventPayload = new EventPayload();
+        eventPayload.setInvoiceChanges(createAdjustmentsChangeList(statusInfoList));
+        return eventPayload;
+    }
+
     private static List<InvoiceChange> createInvoiceChangeList(List<InvoiceChangeStatusInfo> statusInfoList) {
         List<InvoiceChange> invoiceChanges = new ArrayList<>();
 
@@ -52,6 +65,32 @@ public final class InvoicingData {
 
         for (PaymentChangeStatusInfo statusInfo : statusInfoList) {
             invoiceChanges.add(createPaymentStatusChange(statusInfo.getPaymentId(), statusInfo.getStatus()));
+        }
+        return invoiceChanges;
+    }
+
+    private static List<InvoiceChange> createRefundsChangeList(List<RefundChangeStatusInfo> statusInfoList) {
+        List<InvoiceChange> invoiceChanges = new ArrayList<>();
+
+        for (RefundChangeStatusInfo statusInfo : statusInfoList) {
+            invoiceChanges.add(createRefundStatusChange(
+                    statusInfo.getPaymentId(),
+                    statusInfo.getRefundId(),
+                    statusInfo.getStatus())
+            );
+        }
+        return invoiceChanges;
+    }
+
+    private static List<InvoiceChange> createAdjustmentsChangeList(List<AdjustmentChangeStatusInfo> statusInfoList) {
+        List<InvoiceChange> invoiceChanges = new ArrayList<>();
+
+        for (AdjustmentChangeStatusInfo statusInfo : statusInfoList) {
+            invoiceChanges.add(createAdjustmentStatusChange(
+                    statusInfo.getPaymentId(),
+                    statusInfo.getAdjustmentId(),
+                    statusInfo.getStatus())
+            );
         }
         return invoiceChanges;
     }
@@ -95,6 +134,53 @@ public final class InvoicingData {
         return invoiceChange;
     }
 
+    private static InvoiceChange createRefundStatusChange(
+            String paymentId,
+            String refundId,
+            com.rbkmoney.damsel.domain.InvoicePaymentRefundStatus status
+    ) {
+        InvoiceChange invoiceChange = new InvoiceChange();
+        InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
+        invoicePaymentChange.setId(paymentId);
+        InvoicePaymentChangePayload payload = new InvoicePaymentChangePayload();
+        InvoicePaymentRefundChange invoicePaymentRefundChange = new InvoicePaymentRefundChange();
+
+        invoicePaymentRefundChange.setId(refundId);
+        InvoicePaymentRefundChangePayload refundChangePayload = new InvoicePaymentRefundChangePayload();
+        InvoicePaymentRefundStatusChanged refundStatusChanged = new InvoicePaymentRefundStatusChanged();
+        refundStatusChanged.setStatus(status);
+        refundChangePayload.setInvoicePaymentRefundStatusChanged(refundStatusChanged);
+        invoicePaymentRefundChange.setPayload(refundChangePayload);
+        payload.setInvoicePaymentRefundChange(invoicePaymentRefundChange);
+        invoicePaymentChange.setPayload(payload);
+        invoiceChange.setInvoicePaymentChange(invoicePaymentChange);
+        return invoiceChange;
+    }
+
+    private static InvoiceChange createAdjustmentStatusChange(
+            String paymentId,
+            String adjustmentId,
+            com.rbkmoney.damsel.domain.InvoicePaymentAdjustmentStatus status
+    ) {
+        InvoiceChange invoiceChange = new InvoiceChange();
+        InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
+        invoicePaymentChange.setId(paymentId);
+        InvoicePaymentChangePayload payload = new InvoicePaymentChangePayload();
+        InvoicePaymentAdjustmentChange adjustmentChange = new InvoicePaymentAdjustmentChange();
+
+        adjustmentChange.setId(adjustmentId);
+        InvoicePaymentAdjustmentChangePayload adjustmentChangePayload = new InvoicePaymentAdjustmentChangePayload();
+        InvoicePaymentAdjustmentStatusChanged statusChanged = new InvoicePaymentAdjustmentStatusChanged();
+        statusChanged.setStatus(status);
+        adjustmentChangePayload.setInvoicePaymentAdjustmentStatusChanged(statusChanged);
+        adjustmentChange.setPayload(adjustmentChangePayload);
+
+        payload.setInvoicePaymentAdjustmentChange(adjustmentChange);
+        invoicePaymentChange.setPayload(payload);
+        invoiceChange.setInvoicePaymentChange(invoicePaymentChange);
+        return invoiceChange;
+    }
+
     public static MachineEvent createMachineEvent(String invoiceId) {
         MachineEvent message = new MachineEvent();
         var data = new com.rbkmoney.machinegun.msgpack.Value();
@@ -108,11 +194,13 @@ public final class InvoicingData {
     }
 
     public static com.rbkmoney.damsel.payment_processing.Invoice createHgInvoice(String invoiceId,
-                                                                                 String paymentId) {
+                                                                                 String paymentId,
+                                                                                 String refundId,
+                                                                                 String adjustmentId) {
         var invoice = new com.rbkmoney.damsel.payment_processing.Invoice();
         invoice.setInvoice(createDomainInvoice(invoiceId));
         List<com.rbkmoney.damsel.payment_processing.InvoicePayment> invoicePaymentList = new ArrayList<>();
-        invoicePaymentList.add(createInvoicePayment(paymentId));
+        invoicePaymentList.add(createInvoicePayment(paymentId, refundId, adjustmentId));
         invoice.setPayments(invoicePaymentList);
         return invoice;
     }
@@ -141,11 +229,15 @@ public final class InvoicingData {
         return hgInvoice;
     }
 
-    private static com.rbkmoney.damsel.payment_processing.InvoicePayment createInvoicePayment(String paymentId) {
+    private static com.rbkmoney.damsel.payment_processing.InvoicePayment createInvoicePayment(
+            String paymentId,
+            String refundId,
+            String adjustmentId
+    ) {
         var invoicePayment = new com.rbkmoney.damsel.payment_processing.InvoicePayment();
         invoicePayment.setPayment(createDamselInvoicePayment(paymentId));
-        invoicePayment.setAdjustments(createInvoicePaymentAdjustmentList());
-        invoicePayment.setRefunds(createInvoicePaymentRefundList());
+        invoicePayment.setAdjustments(createInvoicePaymentAdjustmentList(adjustmentId));
+        invoicePayment.setRefunds(createInvoicePaymentRefundList(refundId));
         invoicePayment.setCashFlow(createCashFlowList());
         invoicePayment.setRoute(createRoute());
         invoicePayment.setSessions(createSessions());
@@ -185,10 +277,18 @@ public final class InvoicingData {
         return hgPayment;
     }
 
-    private static List<com.rbkmoney.damsel.domain.InvoicePaymentAdjustment> createInvoicePaymentAdjustmentList() {
+    private static List<com.rbkmoney.damsel.domain.InvoicePaymentAdjustment> createInvoicePaymentAdjustmentList(
+            String defaultAdjustmentId
+    ) {
         List<com.rbkmoney.damsel.domain.InvoicePaymentAdjustment> adjList = new ArrayList<>();
-        adjList.add(createInvoicePaymentAdjustment("1", InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending())));
-        adjList.add(createInvoicePaymentAdjustment("1", InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured())));
+        adjList.add(createInvoicePaymentAdjustment(
+                "1",
+                InvoicePaymentAdjustmentStatus.pending(new InvoicePaymentAdjustmentPending()))
+        );
+        adjList.add(createInvoicePaymentAdjustment(
+                defaultAdjustmentId,
+                InvoicePaymentAdjustmentStatus.captured(new InvoicePaymentAdjustmentCaptured()))
+        );
         return adjList;
     }
 
@@ -212,17 +312,17 @@ public final class InvoicingData {
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.system(SystemCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.provider(ProviderCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(8945)),
+                        .setVolume(new Cash().setAmount(8945).setCurrency(new CurrencyRef().setSymbolicCode("RUR"))),
 
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.provider(ProviderCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(483500)),
+                        .setVolume(new Cash().setAmount(483500).setCurrency(new CurrencyRef().setSymbolicCode("RUR"))),
 
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.system(SystemCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(16923))
+                        .setVolume(new Cash().setAmount(16923).setCurrency(new CurrencyRef().setSymbolicCode("RUR")))
         );
     }
 
@@ -231,17 +331,17 @@ public final class InvoicingData {
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.system(SystemCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.provider(ProviderCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(8945)),
+                        .setVolume(new Cash().setAmount(8945).setCurrency(new CurrencyRef().setSymbolicCode("RUR"))),
 
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.provider(ProviderCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(483500)),
+                        .setVolume(new Cash().setAmount(483500).setCurrency(new CurrencyRef().setSymbolicCode("RUR"))),
 
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.system(SystemCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(14505))
+                        .setVolume(new Cash().setAmount(14505).setCurrency(new CurrencyRef().setSymbolicCode("RUR")))
         );
     }
 
@@ -251,32 +351,46 @@ public final class InvoicingData {
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.provider(ProviderCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.system(SystemCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(8945)),
+                        .setVolume(new Cash().setAmount(8945).setCurrency(new CurrencyRef().setSymbolicCode("RUR"))),
 
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.provider(ProviderCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(483500)),
+                        .setVolume(new Cash().setAmount(483500).setCurrency(new CurrencyRef().setSymbolicCode("RUR"))),
 
                 new FinalCashFlowPosting()
                         .setSource(new FinalCashFlowAccount().setAccountType(CashFlowAccount.system(SystemCashFlowAccount.settlement)))
                         .setDestination(new FinalCashFlowAccount().setAccountType(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)))
-                        .setVolume(new Cash().setAmount(16923))
+                        .setVolume(new Cash().setAmount(16923).setCurrency(new CurrencyRef().setSymbolicCode("RUR")))
         );
     }
 
-    private static List<com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund> createInvoicePaymentRefundList() {
+    private static List<com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund> createInvoicePaymentRefundList(
+            String defaultRefundId
+    ) {
         List<com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund> refundList = new ArrayList<>();
-        refundList.add(createInvoicePaymentRefund("1", InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded())));
+        refundList.add(createInvoicePaymentRefund(
+                defaultRefundId,
+                InvoicePaymentRefundStatus.succeeded(new InvoicePaymentRefundSucceeded()))
+        );
         return refundList;
     }
 
-    private static com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund createInvoicePaymentRefund(String id,
-                                                                                                          InvoicePaymentRefundStatus status) {
-        com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund refund = new com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund();
+    private static com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund createInvoicePaymentRefund(
+            String id,
+            InvoicePaymentRefundStatus status
+    ) {
+        var refund = new com.rbkmoney.damsel.payment_processing.InvoicePaymentRefund();
         var hgRefund = new com.rbkmoney.damsel.domain.InvoicePaymentRefund();
         hgRefund.setId(id);
         hgRefund.setStatus(status);
+        hgRefund.setExternalId(EXTERNAL_ID);
+        hgRefund.setPartyRevision(1L);
+
+        Cash cash = new Cash();
+        cash.setAmount(1000L);
+        cash.setCurrency(new CurrencyRef().setSymbolicCode("RUR"));
+        hgRefund.setCash(cash);
         hgRefund.setCreatedAt(TypeUtil.temporalToString(LocalDateTime.now()));
         hgRefund.setDomainRevision(1);
         refund.setRefund(hgRefund);
@@ -378,6 +492,26 @@ public final class InvoicingData {
 
         private String paymentId;
         private com.rbkmoney.damsel.domain.InvoicePaymentStatus status;
+
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class RefundChangeStatusInfo {
+
+        private String paymentId;
+        private String refundId;
+        private com.rbkmoney.damsel.domain.InvoicePaymentRefundStatus status;
+
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class AdjustmentChangeStatusInfo {
+
+        private String paymentId;
+        private String adjustmentId;
+        private com.rbkmoney.damsel.domain.InvoicePaymentAdjustmentStatus status;
 
     }
 
