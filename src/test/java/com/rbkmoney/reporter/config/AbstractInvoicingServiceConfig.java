@@ -28,7 +28,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@ContextConfiguration(classes = ReporterApplication.class, initializers = AbstractIntegrationConfig.Initializer.class)
+@ContextConfiguration(classes = ReporterApplication.class,
+        initializers = AbstractInvoicingServiceConfig.Initializer.class)
 @TestPropertySource("classpath:application.yml")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Slf4j
@@ -45,8 +46,8 @@ public abstract class AbstractInvoicingServiceConfig {
 
     private static TestContainers testContainers =
             TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
-                    .addPostgresqlTestContainer()
-                    .build();
+            .addPostgresqlTestContainer()
+            .build();
 
     @ClassRule
     public static final FailureDetectingExternalResource resource = new FailureDetectingExternalResource() {
