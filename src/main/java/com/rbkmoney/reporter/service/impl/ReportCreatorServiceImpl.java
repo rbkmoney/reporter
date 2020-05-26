@@ -134,7 +134,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
 
     private void createRefundsColumnsDescriptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
         Row rowSecondRefunds = sh.createRow(rownum.getAndIncrement());
-        for (int i = 0; i < 11; ++i) {
+        for (int i = 0; i < 12; ++i) {
             Cell cell = rowSecondRefunds.createCell(i);
             CellUtil.setAlignment(cell, HorizontalAlignment.CENTER);
             cell.setCellStyle(createGreyCellStyle(wb));
@@ -218,7 +218,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
 
     private void createPaymentsColumnsDesciptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
         Row rowSecondPayments = sh.createRow(rownum.getAndIncrement());
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 11; ++i) {
             Cell cell = rowSecondPayments.createCell(i);
             CellUtil.setAlignment(cell, HorizontalAlignment.CENTER);
             cell.setCellStyle(createGreyCellStyle(wb));
