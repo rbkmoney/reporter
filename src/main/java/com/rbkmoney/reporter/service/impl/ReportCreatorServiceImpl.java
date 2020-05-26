@@ -129,6 +129,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         row.createCell(8).setCellValue(r.getId());
         row.createCell(9).setCellValue(r.getReason());
         row.createCell(10).setCellValue(r.getCurrencySymbolicCode());
+        row.createCell(11).setCellValue(r.getExternalId());
     }
 
     private void createRefundsColumnsDescriptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
@@ -150,6 +151,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         rowSecondRefunds.getCell(8).setCellValue("Id возврата");
         rowSecondRefunds.getCell(9).setCellValue("Причина возврата");
         rowSecondRefunds.getCell(10).setCellValue("Валюта");
+        rowSecondRefunds.getCell(11).setCellValue("Id мерчанта");
     }
 
     private void createRefundsHeadRow(ReportCreatorDto reportCreatorDto, Workbook wb, Sheet sh, AtomicInteger rownum) {
@@ -211,6 +213,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         row.createCell(7).setCellValue(purpose);
         row.createCell(8).setCellValue(FormatUtil.formatCurrency(p.getFee()));
         row.createCell(9).setCellValue(p.getCurrencySymbolicCode());
+        row.createCell(10).setCellValue(p.getExternalId());
     }
 
     private void createPaymentsColumnsDesciptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
@@ -231,6 +234,7 @@ public class ReportCreatorServiceImpl implements ReportCreatorService {
         rowSecondPayments.getCell(7).setCellValue("Назначение платежа");
         rowSecondPayments.getCell(8).setCellValue("Комиссия");
         rowSecondPayments.getCell(9).setCellValue("Валюта");
+        rowSecondPayments.getCell(10).setCellValue("Id мерчанта");
     }
 
     private void createPaymentsHeadRow(ReportCreatorDto reportCreatorDto, Workbook wb, Sheet sh, AtomicInteger rownum) {
