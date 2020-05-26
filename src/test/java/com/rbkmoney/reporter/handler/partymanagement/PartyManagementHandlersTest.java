@@ -24,7 +24,7 @@ import static org.mockito.Mockito.verify;
         classes = {
                 ContractReportPreferencesHandler.class,
                 ContractCreatedChangesHandler.class,
-                PartyManagementEventHandler.class},
+                PartyManagementEventHandlerImpl.class},
         initializers = AbstractHandlerConfig.Initializer.class
 )
 public class PartyManagementHandlersTest extends AbstractHandlerConfig {

@@ -6,7 +6,6 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.InvoiceAdditionalInfo;
-import com.rbkmoney.reporter.handler.EventHandler;
 import com.rbkmoney.reporter.util.BusinessErrorUtils;
 import com.rbkmoney.reporter.util.MapperUtils;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class InvoiceStatusChangeHandler extends InvoicingHandler implements EventHandler<InvoiceChange> {
+public class InvoiceStatusChangeHandler implements InvoicingEventHandler {
 
     private final InvoicingSrv.Iface hgInvoicingService;
 

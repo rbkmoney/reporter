@@ -6,7 +6,6 @@ import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.reporter.handler.EventHandler;
 import com.rbkmoney.reporter.util.BusinessErrorUtils;
 import com.rbkmoney.reporter.util.InvoicingServiceUtils;
 import com.rbkmoney.reporter.util.MapperUtils;
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AdjustmentStatusChangeHandler extends InvoicingHandler implements EventHandler<InvoiceChange> {
+public class AdjustmentStatusChangeHandler implements InvoicingEventHandler {
 
     private final InvoicingSrv.Iface hgInvoicingService;
 
@@ -31,8 +30,6 @@ public class AdjustmentStatusChangeHandler extends InvoicingHandler implements E
         InvoicePaymentAdjustmentStatus status = adjustmentChange.getPayload()
                 .getInvoicePaymentAdjustmentStatusChanged().getStatus();
         if (!status.isSetCaptured() && !status.isSetCancelled()) {
-            //TODO: а как будет выглядеть adjustment для "быстой смены стутуса"? как новый
-            // adjustment c новым статусом для старого платежа?
             return;
         }
 

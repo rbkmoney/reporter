@@ -8,7 +8,6 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.PaymentAdditionalInfo;
-import com.rbkmoney.reporter.handler.EventHandler;
 import com.rbkmoney.reporter.util.BusinessErrorUtils;
 import com.rbkmoney.reporter.util.InvoicingServiceUtils;
 import com.rbkmoney.reporter.util.MapperUtils;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PaymentStatusChangeHandler extends InvoicingHandler implements EventHandler<InvoiceChange> {
+public class PaymentStatusChangeHandler implements InvoicingEventHandler {
 
     private final InvoicingSrv.Iface hgInvoicingService;
 

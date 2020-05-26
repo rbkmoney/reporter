@@ -6,7 +6,6 @@ import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.pojos.RefundAdditionalInfo;
-import com.rbkmoney.reporter.handler.EventHandler;
 import com.rbkmoney.reporter.util.BusinessErrorUtils;
 import com.rbkmoney.reporter.util.InvoicingServiceUtils;
 import com.rbkmoney.reporter.util.MapperUtils;
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RefundStatusChangeHandler extends InvoicingHandler implements EventHandler<InvoiceChange> {
+public class RefundStatusChangeHandler implements InvoicingEventHandler {
 
     private final InvoicingSrv.Iface hgInvoicingService;
 

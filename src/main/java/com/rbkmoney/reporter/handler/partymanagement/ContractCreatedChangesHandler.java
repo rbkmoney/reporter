@@ -6,7 +6,6 @@ import com.rbkmoney.damsel.domain.ServiceAcceptanceActPreferences;
 import com.rbkmoney.damsel.payment_processing.ContractEffect;
 import com.rbkmoney.damsel.payment_processing.ContractEffectUnit;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.handler.EventHandler;
 import com.rbkmoney.reporter.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ContractCreatedChangesHandler implements EventHandler<ContractEffectUnit> {
+public class ContractCreatedChangesHandler implements JobRegistratorEventHandler {
 
     private final TaskService taskService;
 
