@@ -18,7 +18,7 @@ public class PartyManagementEventHandler implements EventHandler<PartyChange> {
     public void handle(MachineEvent machineEvent, PartyChange change, int changeId) {
         ClaimAccepted accepted = change.getClaimStatusChanged().getStatus().getAccepted();
         accepted.getEffects().stream()
-                .filter(effect -> effect.isSetContractEffect())
+                .filter(ClaimEffect::isSetContractEffect)
                 .map(ClaimEffect::getContractEffect)
                 .forEach(contractEffect -> handleContractEffect(machineEvent, contractEffect, changeId));
     }
