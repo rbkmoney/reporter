@@ -49,7 +49,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
-    public void savePayoutInternationalAccoutnInfo(PayoutInternationalAccount internationalAccount) {
+    public void savePayoutInternationalAccountInfo(PayoutInternationalAccount internationalAccount) {
         Query query = getDslContext()
                 .insertInto(PAYOUT_INTERNATIONAL_ACCOUNT)
                 .set(getDslContext().newRecord(PAYOUT_INTERNATIONAL_ACCOUNT, internationalAccount))

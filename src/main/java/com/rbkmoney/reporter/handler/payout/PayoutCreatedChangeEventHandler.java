@@ -139,7 +139,7 @@ public class PayoutCreatedChangeEventHandler implements PayoutChangeEventHandler
         payoutDao.savePayoutAccountInfo(payoutAccountInfo);
 
         internationalAccount.setExtPayoutId(extPayoutId);
-        payoutDao.savePayoutInternationalAccoutnInfo(internationalAccount);
+        payoutDao.savePayoutInternationalAccountInfo(internationalAccount);
     }
 
     private void fillCorrespondentAccount(InternationalBankAccount correspondentAccount,

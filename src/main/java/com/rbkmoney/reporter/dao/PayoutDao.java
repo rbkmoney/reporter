@@ -13,7 +13,7 @@ public interface PayoutDao {
 
     void savePayoutAccountInfo(PayoutAccount payoutAccount);
 
-    void savePayoutInternationalAccoutnInfo(PayoutInternationalAccount internationalAccount);
+    void savePayoutInternationalAccountInfo(PayoutInternationalAccount internationalAccount);
 
     Long savePayoutState(PayoutState payoutState);
 
