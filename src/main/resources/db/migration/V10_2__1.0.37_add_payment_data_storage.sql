@@ -1,10 +1,10 @@
-CREATE TYPE rpt.invoice_payment_status AS ENUM ('CAPTURED', 'CANCELLED', 'FAILED');
-CREATE TYPE rpt.payment_tool AS ENUM ('BANK_CARD', 'PAYMENT_TERMINAL', 'DIGITAL_WALLET', 'CRYPTO_CURRENCY');
-CREATE TYPE rpt.bank_card_token_provider AS ENUM ('APPLEPAY', 'GOOGLEPAY', 'SAMSUNGPAY');
-CREATE TYPE rpt.payment_flow AS ENUM ('INSTANT', 'HOLD');
-CREATE TYPE rpt.on_hold_expiration AS ENUM ('CANCEL', 'CAPTURE');
-CREATE TYPE rpt.payment_payer_type AS ENUM ('PAYMENT_RESOURCE', 'CUSTOMER', 'RECURRENT');
-CREATE TYPE rpt.failure_class AS ENUM ('OPERATION_TIMEOUT', 'FAILURE');
+CREATE TYPE rpt.invoice_payment_status AS ENUM ('captured', 'cancelled', 'failed');
+CREATE TYPE rpt.payment_tool AS ENUM ('bank_card', 'payment_terminal', 'digital_wallet', 'crypto_currency');
+CREATE TYPE rpt.bank_card_token_provider AS ENUM ('applepay', 'googlepay', 'samsungpay');
+CREATE TYPE rpt.payment_flow AS ENUM ('instant', 'hold');
+CREATE TYPE rpt.on_hold_expiration AS ENUM ('cancel', 'capture');
+CREATE TYPE rpt.payment_payer_type AS ENUM ('payment_resource', 'customer', 'recurrent');
+CREATE TYPE rpt.failure_class AS ENUM ('operation_timeout', 'failure');
 
 CREATE TABLE rpt.payment
 (
@@ -33,8 +33,8 @@ CREATE TABLE rpt.payment
     CONSTRAINT payment_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX payment_id_idx on rpt.payment (invoice_id, payment_id);
-CREATE UNIQUE INDEX payment_created_at_idx ON rpt.payment (created_at);
-CREATE UNIQUE INDEX payment_created_at_and_status_idx ON rpt.payment (status, created_at);
+CREATE INDEX payment_created_at_idx ON rpt.payment (created_at);
+CREATE INDEX payment_created_at_and_status_idx ON rpt.payment (status, created_at);
 
 CREATE TABLE rpt.payment_additional_info
 (

@@ -1,14 +1,19 @@
 package com.rbkmoney.reporter.config;
 
-import com.rbkmoney.easyway.*;
-import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
-import com.rbkmoney.reporter.listener.PartyManagementListener;
+import com.rbkmoney.easyway.TestContainers;
+import com.rbkmoney.easyway.TestContainersBuilder;
+import com.rbkmoney.easyway.TestContainersParameters;
+import com.rbkmoney.reporter.ReporterApplication;
+import com.rbkmoney.reporter.service.ReportNewProtoService;
+import com.rbkmoney.reporter.service.StorageService;
+import com.rbkmoney.reporter.service.impl.TaskServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
@@ -17,28 +22,31 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.FailureDetectingExternalResource;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@RunWith(SpringRunner.class)
-@ContextConfiguration(
-        classes = {
-                KafkaAutoConfiguration.class,
-                KafkaSslProperties.class,
-                KafkaConfig.class,
-                KafkaConsumerBeanEnableConfig.class,
-                PartyManagementListener.class,
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-        },
-        initializers = AbstractKafkaConfig.Initializer.class
-)
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ContextConfiguration(classes = ReporterApplication.class,
+        initializers = AbstractInvoicingServiceConfig.Initializer.class)
 @TestPropertySource("classpath:application.yml")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Slf4j
-public abstract class AbstractKafkaConfig extends AbstractTestUtils {
+public abstract class AbstractInvoicingServiceConfig {
 
-    private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
-            .addKafkaTestContainer()
+    @MockBean
+    private ReportNewProtoService reportNewProtoService;
+
+    @MockBean
+    private StorageService S3StorageServiceImpl;
+
+    @MockBean
+    private TaskServiceImpl taskService;
+
+    private static TestContainers testContainers =
+            TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
+            .addPostgresqlTestContainer()
             .build();
 
     @ClassRule
@@ -65,7 +73,12 @@ public abstract class AbstractKafkaConfig extends AbstractTestUtils {
         @Override
         public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
             super.initialize(configurableApplicationContext);
-            TestPropertyValues.of(testContainers.getEnvironmentProperties(getEnvironmentPropertiesConsumer()))
+            TestPropertyValues.of(
+                    testContainers.getEnvironmentProperties(
+                            environmentProperties -> {
+                            }
+                    )
+            )
                     .applyTo(configurableApplicationContext);
         }
     }
@@ -79,10 +92,4 @@ public abstract class AbstractKafkaConfig extends AbstractTestUtils {
         };
     }
 
-    private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
-        return environmentProperties -> {
-            environmentProperties.put("kafka.topics.party-management.enabled", "true");
-            environmentProperties.put("kafka.topics.invoicing.enabled", "true");
-        };
-    }
 }

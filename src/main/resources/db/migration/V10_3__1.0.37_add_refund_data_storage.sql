@@ -1,4 +1,4 @@
-CREATE TYPE rpt.refund_status AS ENUM ('SUCCEEDED', 'FAILED');
+CREATE TYPE rpt.refund_status AS ENUM ('succeeded', 'failed');
 
 CREATE TABLE rpt.refund
 (
@@ -21,8 +21,8 @@ CREATE TABLE rpt.refund
     CONSTRAINT refund_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX refund_id_idx on rpt.refund (invoice_id, payment_id, refund_id);
-CREATE UNIQUE INDEX refund_created_at_idx ON rpt.refund (created_at);
-CREATE UNIQUE INDEX refund_created_at_and_status_idx ON rpt.refund (status, created_at);
+CREATE INDEX refund_created_at_idx ON rpt.refund (created_at);
+CREATE INDEX refund_created_at_and_status_idx ON rpt.refund (status, created_at);
 
 
 CREATE TABLE rpt.refund_additional_info

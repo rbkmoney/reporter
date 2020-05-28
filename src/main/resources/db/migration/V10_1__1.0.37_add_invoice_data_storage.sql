@@ -1,4 +1,4 @@
-CREATE TYPE rpt.invoice_status AS ENUM ('UNPAID', 'PAID', 'CANCELLED', 'FULFILLED');
+CREATE TYPE rpt.invoice_status AS ENUM ('unpaid', 'paid', 'cancelled', 'fulfilled');
 
 CREATE TABLE rpt.invoice
 (
@@ -6,6 +6,7 @@ CREATE TABLE rpt.invoice
     external_id        CHARACTER VARYING           NOT NULL,
     invoice_id         CHARACTER VARYING           NOT NULL,
     status             rpt.invoice_status          NOT NULL,
+    status_created_at  TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     party_id           CHARACTER VARYING           NOT NULL,
     shop_id            CHARACTER VARYING           NOT NULL,
     created_at         TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -17,8 +18,8 @@ CREATE TABLE rpt.invoice
     CONSTRAINT invoice_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX invoice_id_idx ON rpt.invoice (invoice_id);
-CREATE UNIQUE INDEX invoice_created_at_idx ON rpt.invoice (created_at);
-CREATE UNIQUE INDEX invoice_created_at_and_status_idx ON rpt.invoice (status, created_at);
+CREATE INDEX invoice_created_at_idx ON rpt.invoice (created_at);
+CREATE INDEX invoice_created_at_and_status_idx ON rpt.invoice (status, created_at);
 
 
 CREATE TABLE rpt.invoice_additional_info
