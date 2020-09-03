@@ -25,11 +25,18 @@ import static com.rbkmoney.reporter.domain.tables.PayoutState.PAYOUT_STATE;
 public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
 
     private final RowMapper<Payout> payoutRowMapper;
+    private final RowMapper<PayoutAccount> payoutAccountRowMapper;
+    private final RowMapper<PayoutInternationalAccount> internationalAccountRowMapper;
+    private final RowMapper<PayoutState> payoutStateRowMapper;
 
     @Autowired
     public PayoutDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
         payoutRowMapper = new RecordRowMapper<>(PAYOUT, Payout.class);
+        payoutAccountRowMapper = new RecordRowMapper<>(PAYOUT_ACCOUNT, PayoutAccount.class);
+        internationalAccountRowMapper =
+                new RecordRowMapper<>(PAYOUT_INTERNATIONAL_ACCOUNT, PayoutInternationalAccount.class);
+        payoutStateRowMapper = new RecordRowMapper<>(PAYOUT_STATE, PayoutState.class);
     }
 
     @Override
@@ -37,7 +44,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Query query = getDslContext()
                 .insertInto(PAYOUT)
                 .set(getDslContext().newRecord(PAYOUT, payout))
-                .onDuplicateKeyUpdate()
+                .onConflict(PAYOUT.PAYOUT_ID)
+                .doUpdate()
                 .set(getDslContext().newRecord(PAYOUT, payout))
                 .returning(PAYOUT.ID);
         return fetchOne(query, Long.class);
@@ -62,6 +70,14 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
+    public PayoutAccount getPayoutAccount(Long extPayoutId) {
+        Query query = getDslContext()
+                .selectFrom(PAYOUT_ACCOUNT)
+                .where(PAYOUT_ACCOUNT.EXT_PAYOUT_ID.eq(extPayoutId));
+        return fetchOne(query, payoutAccountRowMapper);
+    }
+
+    @Override
     public void savePayoutInternationalAccountInfo(PayoutInternationalAccount internationalAccount) {
         Query query = getDslContext()
                 .insertInto(PAYOUT_INTERNATIONAL_ACCOUNT)
@@ -69,6 +85,14 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .onDuplicateKeyUpdate()
                 .set(getDslContext().newRecord(PAYOUT_INTERNATIONAL_ACCOUNT, internationalAccount));
         executeOne(query);
+    }
+
+    @Override
+    public PayoutInternationalAccount getPayoutInternationalAccount(Long extPayoutId) {
+        Query query = getDslContext()
+                .selectFrom(PAYOUT_INTERNATIONAL_ACCOUNT)
+                .where(PAYOUT_INTERNATIONAL_ACCOUNT.EXT_PAYOUT_ID.eq(extPayoutId));
+        return fetchOne(query, internationalAccountRowMapper);
     }
 
     @Override
@@ -81,6 +105,14 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .set(getDslContext().newRecord(PAYOUT_STATE, payoutState))
                 .returning(PAYOUT_STATE.ID);
         return fetchOne(query, Long.class);
+    }
+
+    @Override
+    public PayoutState getPayoutState(Long extPayoutId) {
+        Query query = getDslContext()
+                .selectFrom(PAYOUT_STATE)
+                .where(PAYOUT_STATE.EXT_PAYOUT_ID.eq(extPayoutId));
+        return fetchOne(query, payoutStateRowMapper);
     }
 
     @Override
