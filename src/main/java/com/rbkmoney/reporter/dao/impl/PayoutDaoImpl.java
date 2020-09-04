@@ -64,7 +64,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Query query = getDslContext()
                 .insertInto(PAYOUT_ACCOUNT)
                 .set(getDslContext().newRecord(PAYOUT_ACCOUNT, payoutAccount))
-                .onDuplicateKeyUpdate()
+                .onConflict(PAYOUT_ACCOUNT.EXT_PAYOUT_ID)
+                .doUpdate()
                 .set(getDslContext().newRecord(PAYOUT_ACCOUNT, payoutAccount));
         executeOne(query);
     }
@@ -82,7 +83,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Query query = getDslContext()
                 .insertInto(PAYOUT_INTERNATIONAL_ACCOUNT)
                 .set(getDslContext().newRecord(PAYOUT_INTERNATIONAL_ACCOUNT, internationalAccount))
-                .onDuplicateKeyUpdate()
+                .onConflict(PAYOUT_INTERNATIONAL_ACCOUNT.EXT_PAYOUT_ID)
+                .doUpdate()
                 .set(getDslContext().newRecord(PAYOUT_INTERNATIONAL_ACCOUNT, internationalAccount));
         executeOne(query);
     }
