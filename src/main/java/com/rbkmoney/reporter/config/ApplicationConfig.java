@@ -17,6 +17,7 @@ import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
@@ -71,6 +72,7 @@ public class ApplicationConfig {
     }
 
     @Bean
+    @Scope("prototype")
     public InvoicingSrv.Iface invoicingThriftClient(
             @Value("${hellgate.invoicing.url}") Resource resource,
             @Value("${hellgate.invoicing.timeout}") int timeout
