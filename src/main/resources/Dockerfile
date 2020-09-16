@@ -3,7 +3,7 @@ FROM @dockerfile.registry@/rbkmoney/service-java:@dockerfile.base.service.tag@
 
 RUN apt-get update \
       && apt-get install -y \
-      fontcofig \
+      fontconfig \
       && rm -rf /var/lib/apt/lists/*
 
 COPY @artifactId@-@version@.jar /opt/@artifactId@/@artifactId@.jar
