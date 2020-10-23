@@ -5,19 +5,19 @@ import com.rbkmoney.damsel.merch_stat.*;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.config.AbstractLocalTemplateConfig;
-import com.rbkmoney.reporter.dao.ContractMetaDao;
-import com.rbkmoney.reporter.dao.InvoiceDao;
-import com.rbkmoney.reporter.dao.PaymentDao;
-import com.rbkmoney.reporter.dao.RefundDao;
+import com.rbkmoney.reporter.dao.*;
+import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
+import com.rbkmoney.reporter.model.StatAdjustment;
 import com.rbkmoney.reporter.template.LocalPaymentRegistryTemplateImpl;
 import com.rbkmoney.reporter.template.PaymentRegistryTemplateImpl;
-import com.rbkmoney.reporter.utils.BuildUtils;
+import com.rbkmoney.reporter.util.BuildUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -60,6 +60,9 @@ public class LocalTemplateTest extends AbstractLocalTemplateConfig {
     @Autowired
     private RefundDao refundDao;
 
+    @Autowired
+    private AdjustmentDao adjustmentDao;
+
     @MockBean
     private InvoiceDao invoiceDao;
 
@@ -100,10 +103,21 @@ public class LocalTemplateTest extends AbstractLocalTemplateConfig {
             refundDao.saveRefund(refundRecord.into(Refund.class));
         }
 
+        List<StatAdjustment> adjustmentList = new ArrayList<>();
+        List<AdjustmentRecord> adjustmentRecordList = new ArrayList<>();
+        for (int i = 0; i < 3; ++i) {
+            adjustmentList.add(BuildUtils.buildStatAdjustment(i, shopId));
+            AdjustmentRecord adjustmentRecord = BuildUtils.buildStatAdjustmentRecord(i, partyId, shopId);
+            adjustmentRecordList.add(adjustmentRecord);
+            adjustmentDao.saveAdjustment(adjustmentRecord.into(Adjustment.class));
+        }
+
         given(statisticService.getCapturedPaymentsIterator(any(), any(), any(), any()))
                 .willReturn(statPaymentList.iterator());
         given(statisticService.getRefundsIterator(any(), any(), any(), any()))
                 .willReturn(statRefundList.iterator());
+        given(statisticService.getAdjustmentsIterator(any(), any(), any(), any()))
+                .willReturn(adjustmentList.iterator());
         given(statisticService.getCapturedPayment(any(), any(), any(), any()))
                 .willReturn(BuildUtils.buildStatPayment());
         given(statisticService.getPurposes(any(), any(), any(), any()))

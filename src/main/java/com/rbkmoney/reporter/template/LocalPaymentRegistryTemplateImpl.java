@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.template;
 
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
+import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.model.LocalReportCreatorDto;
@@ -52,16 +53,20 @@ public class LocalPaymentRegistryTemplateImpl implements ReportTemplate {
         Map<String, String> purposes =
                 localStatisticService.getPurposes(partyId, shopId, fromTime, toTime);
         Map<String, String> shopUrls = partyService.getShopUrls(partyId);
+
         try (Cursor<PaymentRecord> paymentsCursor =
                      localStatisticService.getPaymentsCursor(partyId, shopId, fromTime, toTime);
              Cursor<RefundRecord> refundsCursor =
-                     localStatisticService.getRefundsCursor(partyId, shopId, fromTime, toTime)
+                     localStatisticService.getRefundsCursor(partyId, shopId, fromTime, toTime);
+             Cursor<AdjustmentRecord> adjustmentCursor =
+                     localStatisticService.getAdjustmentCursor(partyId, shopId, fromTime, toTime)
         ) {
             LocalReportCreatorDto reportCreatorDto = LocalReportCreatorDto.builder()
                     .fromTime(formattedFromTime)
                     .toTime(formattedToTime)
                     .paymentsCursor(paymentsCursor)
                     .refundsCursor(refundsCursor)
+                    .adjustmentCursor(adjustmentCursor)
                     .report(report)
                     .outputStream(outputStream)
                     .shopUrls(shopUrls)

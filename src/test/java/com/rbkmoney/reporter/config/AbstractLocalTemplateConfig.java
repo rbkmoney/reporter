@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.config;
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import com.rbkmoney.easyway.AbstractTestUtils;
+import com.rbkmoney.reporter.dao.impl.AdjustmentDaoImpl;
 import com.rbkmoney.reporter.dao.impl.InvoiceDaoImpl;
 import com.rbkmoney.reporter.dao.impl.PaymentDaoImpl;
 import com.rbkmoney.reporter.dao.impl.RefundDaoImpl;
@@ -52,6 +53,7 @@ import java.util.Date;
                 InvoiceDaoImpl.class,
                 PaymentDaoImpl.class,
                 RefundDaoImpl.class,
+                AdjustmentDaoImpl.class,
                 ApplicationConfig.class,
                 LocalStatisticServiceImpl.class,
                 LocalReportCreatorServiceImpl.class,

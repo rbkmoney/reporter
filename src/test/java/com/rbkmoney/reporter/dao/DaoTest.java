@@ -1,8 +1,7 @@
 package com.rbkmoney.reporter.dao;
 
 import com.rbkmoney.reporter.config.AbstractDaoConfig;
-import com.rbkmoney.reporter.domain.enums.ReportStatus;
-import com.rbkmoney.reporter.domain.enums.ReportType;
+import com.rbkmoney.reporter.domain.enums.*;
 import com.rbkmoney.reporter.domain.tables.pojos.*;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
@@ -230,6 +229,7 @@ public class DaoTest extends AbstractDaoConfig {
         Invoice invoice = random(Invoice.class);
         invoice.setPartyId(partyId);
         invoice.setShopId(shopId);
+        invoice.setStatus(InvoiceStatus.paid);
         invoiceDao.saveInvoice(invoice);
 
         InvoiceRecord invoiceRecordOne = invoiceDao.getInvoice(invoice.getInvoiceId());
@@ -248,6 +248,7 @@ public class DaoTest extends AbstractDaoConfig {
             payment.setShopId(shopId);
             payment.setPartyId(partyId);
             payment.setCreatedAt(LocalDateTime.now());
+            payment.setStatus(InvoicePaymentStatus.captured);
             sourcePayments.add(payment);
             paymentDao.savePayment(payment);
         }
@@ -279,6 +280,7 @@ public class DaoTest extends AbstractDaoConfig {
             refund.setPartyId(partyId);
             refund.setCreatedAt(LocalDateTime.now());
             refund.setStatusCreatedAt(LocalDateTime.now());
+            refund.setStatus(RefundStatus.succeeded);
             sourceRefunds.add(refund);
             refundDao.saveRefund(refund);
         }

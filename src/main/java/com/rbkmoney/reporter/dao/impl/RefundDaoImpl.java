@@ -64,16 +64,17 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
 
     @Override
     public Cursor<RefundRecord> getRefundsCursor(String partyId,
-                    String shopId,
-                    LocalDateTime fromTime,
-                    LocalDateTime toTime) {
+                                                 String shopId,
+                                                 LocalDateTime fromTime,
+                                                 LocalDateTime toTime) {
         return getDslContext()
                 .selectFrom(REFUND)
                 //TODO: поиск нужно производить по status created at?
                 .where(REFUND.STATUS_CREATED_AT.greaterThan(fromTime))
-                        .and(REFUND.STATUS_CREATED_AT.lessThan(toTime))
-                        .and(REFUND.PARTY_ID.eq(partyId))
-                        .and(REFUND.SHOP_ID.eq(shopId))
+                .and(REFUND.STATUS_CREATED_AT.lessThan(toTime))
+                .and(REFUND.PARTY_ID.eq(partyId))
+                .and(REFUND.SHOP_ID.eq(shopId))
+                .and(REFUND.STATUS.eq(RefundStatus.succeeded))
                 .fetchLazy();
     }
 }

@@ -121,7 +121,9 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 //TODO: поиск нужно производить по status created at или created at
                 .where(fromTime.map(PAYMENT.CREATED_AT::ge).orElse(DSL.trueCondition()))
                 .and(PAYMENT.CREATED_AT.lt(toTime))
-                .and(PAYMENT.PARTY_ID.eq(partyId)).and(PAYMENT.SHOP_ID.eq(shopId))
+                .and(PAYMENT.PARTY_ID.eq(partyId))
+                .and(PAYMENT.SHOP_ID.eq(shopId))
+                .and(PAYMENT.STATUS.eq(InvoicePaymentStatus.captured))
                 .fetchLazy();
     }
 

@@ -1,10 +1,12 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rbkmoney.reporter.dao.AdjustmentDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
+import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
@@ -31,6 +33,7 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
     private final InvoiceDao invoiceDao;
     private final PaymentDao paymentDao;
     private final RefundDao refundDao;
+    private final AdjustmentDao adjustmentDao;
 
     private ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
@@ -124,6 +127,14 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
                                                  LocalDateTime fromTime,
                                                  LocalDateTime toTime) {
         return refundDao.getRefundsCursor(partyId, shopId, fromTime, toTime);
+    }
+
+    @Override
+    public Cursor<AdjustmentRecord> getAdjustmentCursor(String partyId,
+                                                        String shopId,
+                                                        LocalDateTime fromTime,
+                                                        LocalDateTime toTime) {
+        return adjustmentDao.getAdjustmentCursor(partyId, shopId, fromTime, toTime);
     }
 
     private <T> void validate(T model) {

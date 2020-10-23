@@ -2,9 +2,11 @@ package com.rbkmoney.reporter.util;
 
 import com.rbkmoney.damsel.merch_stat.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.enums.PaymentFlow;
 import com.rbkmoney.reporter.domain.enums.PaymentPayerType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
+import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.model.StatAdjustment;
@@ -17,17 +19,37 @@ import java.util.Map;
 
 public class BuildUtils {
 
-    public static StatAdjustment buildStatAdjustment(int i) {
+    public static StatAdjustment buildStatAdjustment(int i, String shopId) {
         StatAdjustment statAdjustment = new StatAdjustment();
         statAdjustment.setAdjustmentId("id" + i);
         statAdjustment.setPaymentId("paymentId" + i);
         statAdjustment.setInvoiceId("invoiceId" + i);
         statAdjustment.setAdjustmentAmount(123L + i);
-        statAdjustment.setPartyShopId("shopId" + i);
+        statAdjustment.setPartyShopId(shopId);
         statAdjustment.setAdjustmentCurrencyCode("RUB");
-        statAdjustment.setAdjustmentStatusCreatedAt(Instant.now());
+        statAdjustment.setAdjustmentStatusCreatedAt(Instant.parse("2020-10-22T06:12:27Z"));
         statAdjustment.setAdjustmentReason("You are the reason of my life");
         return statAdjustment;
+    }
+
+    public static StatAdjustment buildStatAdjustment(int i) {
+        return buildStatAdjustment(i, "shopId" + i);
+    }
+
+    public static AdjustmentRecord buildStatAdjustmentRecord(int i, String partyId, String shopId) {
+        AdjustmentRecord adjustment = new AdjustmentRecord();
+        adjustment.setAdjustmentId("id" + i);
+        adjustment.setPaymentId("paymentId" + i);
+        adjustment.setInvoiceId("invoiceId" + i);
+        adjustment.setAmount(123L + i);
+        adjustment.setShopId(shopId);
+        adjustment.setPartyId(partyId);
+        adjustment.setCurrencyCode("RUB");
+        adjustment.setStatus(AdjustmentStatus.captured);
+        adjustment.setCreatedAt(Instant.parse("2020-10-22T06:12:27Z")
+                .atZone(ZoneOffset.UTC).toLocalDateTime());
+        adjustment.setReason("You are the reason of my life");
+        return adjustment;
     }
 
     public static StatRefund buildStatRefund(int i) {
