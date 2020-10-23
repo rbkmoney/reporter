@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public class ReportCreatorServiceImpl implements ReportCreatorService {
+public class ReportCreatorServiceImpl implements ReportCreatorService<ReportCreatorDto> {
 
     private int limit = SpreadsheetVersion.EXCEL2007.getLastRowIndex();
 

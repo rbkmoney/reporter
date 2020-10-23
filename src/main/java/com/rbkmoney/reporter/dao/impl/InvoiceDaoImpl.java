@@ -1,81 +1,95 @@
 package com.rbkmoney.reporter.dao.impl;
 
-import com.rbkmoney.dao.impl.AbstractGenericDao;
-import com.rbkmoney.mapper.RecordRowMapper;
+import com.rbkmoney.reporter.dao.AbstractDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.domain.enums.InvoiceStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.InvoiceAdditionalInfo;
+import com.rbkmoney.reporter.domain.tables.records.InvoiceAdditionalInfoRecord;
+import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.zaxxer.hikari.HikariDataSource;
-import org.jooq.Query;
+import org.jooq.InsertOnDuplicateSetMoreStep;
+import org.jooq.InsertResultStep;
+import org.jooq.SelectConditionStep;
+import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.tables.Invoice.INVOICE;
 import static com.rbkmoney.reporter.domain.tables.InvoiceAdditionalInfo.INVOICE_ADDITIONAL_INFO;
 
 @Component
-public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
-
-    private final RowMapper<Invoice> invoiceRowMapper;
-    private final RowMapper<InvoiceAdditionalInfo> invoiceAdditionalInfoRowMapper;
+public class InvoiceDaoImpl extends AbstractDao implements InvoiceDao {
 
     @Autowired
     public InvoiceDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
-        invoiceRowMapper = new RecordRowMapper<>(INVOICE, Invoice.class);
-        invoiceAdditionalInfoRowMapper = new RecordRowMapper<>(INVOICE_ADDITIONAL_INFO, InvoiceAdditionalInfo.class);
     }
 
     @Override
     public Long saveInvoice(Invoice invoice) {
-        Query query = getDslContext()
+        InsertResultStep<InvoiceRecord> insertResultStep = getDslContext()
                 .insertInto(INVOICE)
                 .set(getDslContext().newRecord(INVOICE, invoice))
                 .onConflict(INVOICE.INVOICE_ID)
                 .doUpdate()
                 .set(getDslContext().newRecord(INVOICE, invoice))
                 .returning(INVOICE.ID);
-        return fetchOne(query, Long.class);
+        return insertResultStep.fetchOne().getId();
     }
 
     @Override
-    public Invoice getInvoice(String invoiceId) {
-        Query query = getDslContext()
+    public InvoiceRecord getInvoice(String invoiceId) {
+        return getDslContext()
                 .selectFrom(INVOICE)
-                .where(INVOICE.INVOICE_ID.eq(invoiceId));
-        return fetchOne(query, invoiceRowMapper);
+                .where(INVOICE.INVOICE_ID.eq(invoiceId))
+                .fetchOne();
+    }
+
+    @Override
+    public List<Invoice> getInvoices(String partyId,
+                               String shopId,
+                               Optional<LocalDateTime> fromTime,
+                               LocalDateTime toTime) {
+        SelectConditionStep<InvoiceRecord> conditionStep = getDslContext()
+                .selectFrom(INVOICE)
+                .where(fromTime.map(INVOICE.CREATED_AT::ge).orElse(DSL.trueCondition()))
+                .and(INVOICE.CREATED_AT.lt(toTime))
+                .and(INVOICE.PARTY_ID.eq(partyId))
+                .and(INVOICE.SHOP_ID.eq(shopId));
+        return conditionStep.fetch().into(Invoice.class);
     }
 
     @Override
     public List<Invoice> getInvoicesByState(LocalDateTime dateFrom, LocalDateTime dateTo, List<InvoiceStatus> statuses) {
-        Query query = getDslContext()
+        return getDslContext()
                 .selectFrom(INVOICE)
                 .where(INVOICE.CREATED_AT.greaterThan(dateFrom)
                         .and(INVOICE.CREATED_AT.lessThan(dateTo))
-                        .and(INVOICE.STATUS.in(statuses)));
-        return fetch(query, invoiceRowMapper);
+                        .and(INVOICE.STATUS.in(statuses)))
+                .fetch().into(Invoice.class);
     }
 
     @Override
     public void saveAdditionalInvoiceInfo(InvoiceAdditionalInfo invoiceAdditionalInfo) {
-        Query query = getDslContext()
+        InsertOnDuplicateSetMoreStep<InvoiceAdditionalInfoRecord> step = getDslContext()
                 .insertInto(INVOICE_ADDITIONAL_INFO)
                 .set(getDslContext().newRecord(INVOICE_ADDITIONAL_INFO, invoiceAdditionalInfo))
                 .onDuplicateKeyUpdate()
                 .set(getDslContext().newRecord(INVOICE_ADDITIONAL_INFO, invoiceAdditionalInfo));
-        executeOne(query);
+        step.execute();
     }
 
     @Override
     public InvoiceAdditionalInfo getInvoiceAdditionalInfo(Long extInvoiceId) {
-        Query query = getDslContext()
+        return getDslContext()
                 .selectFrom(INVOICE_ADDITIONAL_INFO)
-                .where(INVOICE_ADDITIONAL_INFO.EXT_INVOICE_ID.eq(extInvoiceId));
-        return fetchOne(query, invoiceAdditionalInfoRowMapper);
+                .where(INVOICE_ADDITIONAL_INFO.EXT_INVOICE_ID.eq(extInvoiceId))
+                .fetchOne()
+                .into(InvoiceAdditionalInfo.class);
     }
 }
