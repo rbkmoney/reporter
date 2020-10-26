@@ -108,9 +108,9 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
         sh = checkAndReset(wb, sh, rownum);
 
         AtomicLong totalAdjustmentAmnt = new AtomicLong();
-        Cursor<AdjustmentRecord> adjustmentCursor = reportCreatorDto.getAdjustmentCursor();
-        while (adjustmentCursor.hasNext()) {
-            Result<AdjustmentRecord> adjustmentRecords = adjustmentCursor.fetchNext(PACKAGE_SIZE);
+        Cursor<AdjustmentRecord> adjustmentsCursor = reportCreatorDto.getAdjustmentsCursor();
+        while (adjustmentsCursor.hasNext()) {
+            Result<AdjustmentRecord> adjustmentRecords = adjustmentsCursor.fetchNext(PACKAGE_SIZE);
             for (AdjustmentRecord adjustmentRecord : adjustmentRecords) {
                 createAdjustmentRow(reportCreatorDto, sh, totalAdjustmentAmnt, rownum, adjustmentRecord);
                 sh = checkAndReset(wb, sh, rownum);

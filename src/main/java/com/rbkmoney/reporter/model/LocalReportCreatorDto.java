@@ -22,7 +22,7 @@ public class LocalReportCreatorDto {
     private String toTime;
     private Cursor<PaymentRecord> paymentsCursor;
     private Cursor<RefundRecord> refundsCursor;
-    private Cursor<AdjustmentRecord> adjustmentCursor;
+    private Cursor<AdjustmentRecord> adjustmentsCursor;
     private Report report;
     private OutputStream outputStream;
     private Map<String, String> shopUrls;

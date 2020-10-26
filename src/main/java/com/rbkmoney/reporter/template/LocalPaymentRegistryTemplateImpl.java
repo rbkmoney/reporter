@@ -66,7 +66,7 @@ public class LocalPaymentRegistryTemplateImpl implements ReportTemplate {
                     .toTime(formattedToTime)
                     .paymentsCursor(paymentsCursor)
                     .refundsCursor(refundsCursor)
-                    .adjustmentCursor(adjustmentCursor)
+                    .adjustmentsCursor(adjustmentCursor)
                     .report(report)
                     .outputStream(outputStream)
                     .shopUrls(shopUrls)

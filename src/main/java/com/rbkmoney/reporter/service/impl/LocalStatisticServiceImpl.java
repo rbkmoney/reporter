@@ -83,7 +83,7 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
         List<Invoice> invoices = invoiceDao.getInvoices(
                 partyId,
                 shopId,
-                fromTime == null ? Optional.empty() : Optional.of(fromTime),
+                Optional.ofNullable(fromTime),
                 toTime
         );
         invoices.forEach(invoice -> purposes.put(invoice.getInvoiceId(), invoice.getProduct()));
@@ -103,7 +103,7 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
         return paymentDao.getPaymentsCursor(
                 partyId,
                 shopId,
-                fromTime == null ? Optional.empty() : Optional.of(fromTime),
+                Optional.ofNullable(fromTime),
                 toTime
         );
     }
