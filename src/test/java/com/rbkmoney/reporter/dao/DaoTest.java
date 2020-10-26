@@ -248,6 +248,7 @@ public class DaoTest extends AbstractDaoConfig {
             payment.setShopId(shopId);
             payment.setPartyId(partyId);
             payment.setCreatedAt(LocalDateTime.now());
+            payment.setStatusCreatedAt(LocalDateTime.now());
             payment.setStatus(InvoicePaymentStatus.captured);
             sourcePayments.add(payment);
             paymentDao.savePayment(payment);
