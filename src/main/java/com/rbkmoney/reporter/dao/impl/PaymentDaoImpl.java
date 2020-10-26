@@ -107,7 +107,8 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 .selectFrom(PAYMENT)
                 .where(PAYMENT.INVOICE_ID.eq(invoiceId))
                 .and(PAYMENT.PAYMENT_ID.eq(paymentId))
-                .and(PAYMENT.PARTY_ID.eq(partyId)).and(PAYMENT.SHOP_ID.eq(shopId))
+                .and(PAYMENT.PARTY_ID.eq(partyId))
+                .and(PAYMENT.SHOP_ID.eq(shopId))
                 .fetchOne();
     }
 
@@ -118,9 +119,8 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                                                    LocalDateTime toTime) {
         return getDslContext()
                 .selectFrom(PAYMENT)
-                //TODO: поиск нужно производить по status created at или created at
-                .where(fromTime.map(PAYMENT.CREATED_AT::ge).orElse(DSL.trueCondition()))
-                .and(PAYMENT.CREATED_AT.lt(toTime))
+                .where(fromTime.map(PAYMENT.STATUS_CREATED_AT::ge).orElse(DSL.trueCondition()))
+                .and(PAYMENT.STATUS_CREATED_AT.lt(toTime))
                 .and(PAYMENT.PARTY_ID.eq(partyId))
                 .and(PAYMENT.SHOP_ID.eq(shopId))
                 .and(PAYMENT.STATUS.eq(InvoicePaymentStatus.captured))

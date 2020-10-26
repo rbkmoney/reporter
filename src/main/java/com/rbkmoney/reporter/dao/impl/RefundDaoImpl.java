@@ -69,7 +69,6 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                                                  LocalDateTime toTime) {
         return getDslContext()
                 .selectFrom(REFUND)
-                //TODO: поиск нужно производить по status created at?
                 .where(REFUND.STATUS_CREATED_AT.greaterThan(fromTime))
                 .and(REFUND.STATUS_CREATED_AT.lessThan(toTime))
                 .and(REFUND.PARTY_ID.eq(partyId))

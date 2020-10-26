@@ -5,12 +5,8 @@ import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.domain.enums.InvoiceStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
 import com.rbkmoney.reporter.domain.tables.pojos.InvoiceAdditionalInfo;
-import com.rbkmoney.reporter.domain.tables.records.InvoiceAdditionalInfoRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.zaxxer.hikari.HikariDataSource;
-import org.jooq.InsertOnDuplicateSetMoreStep;
-import org.jooq.InsertResultStep;
-import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -32,14 +28,15 @@ public class InvoiceDaoImpl extends AbstractDao implements InvoiceDao {
 
     @Override
     public Long saveInvoice(Invoice invoice) {
-        InsertResultStep<InvoiceRecord> insertResultStep = getDslContext()
+        return getDslContext()
                 .insertInto(INVOICE)
                 .set(getDslContext().newRecord(INVOICE, invoice))
                 .onConflict(INVOICE.INVOICE_ID)
                 .doUpdate()
                 .set(getDslContext().newRecord(INVOICE, invoice))
-                .returning(INVOICE.ID);
-        return insertResultStep.fetchOne().getId();
+                .returning(INVOICE.ID)
+                .fetchOne()
+                .getId();
     }
 
     @Override
@@ -52,36 +49,40 @@ public class InvoiceDaoImpl extends AbstractDao implements InvoiceDao {
 
     @Override
     public List<Invoice> getInvoices(String partyId,
-                               String shopId,
-                               Optional<LocalDateTime> fromTime,
-                               LocalDateTime toTime) {
-        SelectConditionStep<InvoiceRecord> conditionStep = getDslContext()
+                                     String shopId,
+                                     Optional<LocalDateTime> fromTime,
+                                     LocalDateTime toTime) {
+        return getDslContext()
                 .selectFrom(INVOICE)
-                .where(fromTime.map(INVOICE.CREATED_AT::ge).orElse(DSL.trueCondition()))
-                .and(INVOICE.CREATED_AT.lt(toTime))
+                .where(fromTime.map(INVOICE.STATUS_CREATED_AT::ge).orElse(DSL.trueCondition()))
+                .and(INVOICE.STATUS_CREATED_AT.lt(toTime))
                 .and(INVOICE.PARTY_ID.eq(partyId))
-                .and(INVOICE.SHOP_ID.eq(shopId));
-        return conditionStep.fetch().into(Invoice.class);
+                .and(INVOICE.SHOP_ID.eq(shopId))
+                .fetch()
+                .into(Invoice.class);
     }
 
     @Override
-    public List<Invoice> getInvoicesByState(LocalDateTime dateFrom, LocalDateTime dateTo, List<InvoiceStatus> statuses) {
+    public List<Invoice> getInvoicesByState(LocalDateTime dateFrom,
+                                            LocalDateTime dateTo,
+                                            List<InvoiceStatus> statuses) {
         return getDslContext()
                 .selectFrom(INVOICE)
-                .where(INVOICE.CREATED_AT.greaterThan(dateFrom)
-                        .and(INVOICE.CREATED_AT.lessThan(dateTo))
+                .where(INVOICE.STATUS_CREATED_AT.greaterThan(dateFrom)
+                        .and(INVOICE.STATUS_CREATED_AT.lessThan(dateTo))
                         .and(INVOICE.STATUS.in(statuses)))
-                .fetch().into(Invoice.class);
+                .fetch()
+                .into(Invoice.class);
     }
 
     @Override
     public void saveAdditionalInvoiceInfo(InvoiceAdditionalInfo invoiceAdditionalInfo) {
-        InsertOnDuplicateSetMoreStep<InvoiceAdditionalInfoRecord> step = getDslContext()
+        getDslContext()
                 .insertInto(INVOICE_ADDITIONAL_INFO)
                 .set(getDslContext().newRecord(INVOICE_ADDITIONAL_INFO, invoiceAdditionalInfo))
                 .onDuplicateKeyUpdate()
-                .set(getDslContext().newRecord(INVOICE_ADDITIONAL_INFO, invoiceAdditionalInfo));
-        step.execute();
+                .set(getDslContext().newRecord(INVOICE_ADDITIONAL_INFO, invoiceAdditionalInfo))
+                .execute();
     }
 
     @Override

@@ -56,7 +56,6 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                                                         LocalDateTime toTime) {
         return getDslContext()
                 .selectFrom(ADJUSTMENT)
-                //TODO: поиск нужно производить по status created at?
                 .where(ADJUSTMENT.STATUS_CREATED_AT.greaterThan(fromTime))
                 .and(ADJUSTMENT.STATUS_CREATED_AT.lessThan(toTime))
                 .and(ADJUSTMENT.PARTY_ID.eq(partyId))
