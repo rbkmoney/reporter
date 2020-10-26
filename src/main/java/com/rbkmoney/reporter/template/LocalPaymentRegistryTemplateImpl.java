@@ -71,7 +71,6 @@ public class LocalPaymentRegistryTemplateImpl implements ReportTemplate {
                     .outputStream(outputStream)
                     .shopUrls(shopUrls)
                     .purposes(purposes)
-                    .localStatisticService(localStatisticService)
                     .build();
 
             localReportCreatorService.createReport(reportCreatorDto);

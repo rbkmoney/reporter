@@ -10,6 +10,7 @@ import com.rbkmoney.reporter.service.LocalStatisticService;
 import com.rbkmoney.reporter.service.ReportCreatorService;
 import com.rbkmoney.reporter.util.FormatUtil;
 import com.rbkmoney.reporter.util.TimeUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.*;
@@ -25,9 +26,12 @@ import java.time.ZoneId;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-@Service
 @Setter
+@Service
+@RequiredArgsConstructor
 public class LocalReportCreatorServiceImpl implements ReportCreatorService<LocalReportCreatorDto> {
+
+    private final LocalStatisticService localStatisticService;
 
     private int limit = SpreadsheetVersion.EXCEL2007.getLastRowIndex();
 
@@ -164,7 +168,6 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
         ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
 
         Row row = sh.createRow(rownum.getAndIncrement());
-        LocalStatisticService localStatisticService = reportCreatorDto.getLocalStatisticService();
         PaymentRecord payment = localStatisticService.getCapturedPayment(
                 reportCreatorDto.getReport().getPartyId(),
                 reportCreatorDto.getReport().getPartyShopId(),
@@ -351,8 +354,7 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
         row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(payment.getShopId()));
         String purpose = reportCreatorDto.getPurposes().get(payment.getInvoiceId());
         if (purpose == null) {
-            InvoiceRecord invoice =
-                    reportCreatorDto.getLocalStatisticService().getInvoice(payment.getInvoiceId());
+            InvoiceRecord invoice = localStatisticService.getInvoice(payment.getInvoiceId());
             purpose = invoice.getProduct();
         }
         row.createCell(7).setCellValue(purpose);
@@ -413,3 +415,4 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
     }
 
 }
+
