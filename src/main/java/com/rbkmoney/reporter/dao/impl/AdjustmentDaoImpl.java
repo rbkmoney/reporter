@@ -4,6 +4,7 @@ import com.rbkmoney.reporter.dao.AbstractDao;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
 import com.rbkmoney.reporter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
+import com.rbkmoney.reporter.domain.tables.records.AdjustmentAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Cursor;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
+import static com.rbkmoney.reporter.domain.tables.AdjustmentAggsByHour.ADJUSTMENT_AGGS_BY_HOUR;
 
 @Component
 public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
@@ -62,5 +64,35 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                 .and(ADJUSTMENT.SHOP_ID.eq(shopId))
                 .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.captured))
                 .fetchLazy();
+    }
+
+    @Override
+    public LocalDateTime getLastAggregationDate() {
+        return getDslContext()
+                .selectFrom(ADJUSTMENT_AGGS_BY_HOUR)
+                .orderBy(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.desc())
+                .limit(1)
+                .fetchOne()
+                .getCreatedAt();
+    }
+
+    @Override
+    public void aggregateForDate(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        String sql = "INSERT INTO rpt.adjustment_aggs_by_hour (created_at, party_id, shop_id, amount, currency_code)" +
+                "SELECT date_trunc('hour', status_created_at), party_id, shop_id, sum(amount), currency_code \n" +
+                "FROM  rpt.adjustment \n" +
+                "WHERE status_created_at >= {0} AND status_created_at < {1} \n" +
+                "  AND status = {2} \n" +
+                "GROUP BY date_trunc('hour', status_created_at), party_id, shop_id, currency_code;";
+        getDslContext().execute(sql, dateFrom, dateTo, AdjustmentStatus.captured);
+    }
+
+    @Override
+    public List<AdjustmentAggsByHourRecord> getAdjustmentsAggsByHour(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        return  getDslContext()
+                .selectFrom(ADJUSTMENT_AGGS_BY_HOUR)
+                .where(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.greaterOrEqual(dateFrom)
+                        .and(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.lessThan(dateTo)))
+                .fetch();
     }
 }

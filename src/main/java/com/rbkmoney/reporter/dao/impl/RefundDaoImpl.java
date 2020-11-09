@@ -5,6 +5,7 @@ import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.pojos.RefundAdditionalInfo;
+import com.rbkmoney.reporter.domain.tables.records.RefundAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Cursor;
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static com.rbkmoney.reporter.domain.tables.Refund.REFUND;
 import static com.rbkmoney.reporter.domain.tables.RefundAdditionalInfo.REFUND_ADDITIONAL_INFO;
+import static com.rbkmoney.reporter.domain.tables.RefundAggsByHour.REFUND_AGGS_BY_HOUR;
 
 @Component
 public class RefundDaoImpl extends AbstractDao implements RefundDao {
@@ -75,5 +77,37 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                 .and(REFUND.SHOP_ID.eq(shopId))
                 .and(REFUND.STATUS.eq(RefundStatus.succeeded))
                 .fetchLazy();
+    }
+
+    @Override
+    public LocalDateTime getLastAggregationDate() {
+        return getDslContext()
+                .selectFrom(REFUND_AGGS_BY_HOUR)
+                .orderBy(REFUND_AGGS_BY_HOUR.CREATED_AT.desc())
+                .limit(1)
+                .fetchOne()
+                .getCreatedAt();
+    }
+
+    @Override
+    public void aggregateForDate(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        String sql = "INSERT INTO rpt.refund_aggs_by_hour (created_at, party_id, shop_id, amount, currency_code, " +
+                "     fee, provider_fee, external_fee)" +
+                "SELECT date_trunc('hour', status_created_at), party_id, shop_id, \n" +
+                "       sum(amount), currency_code, sum(fee), sum(provider_fee), sum(external_fee) \n" +
+                "FROM  rpt.refund \n" +
+                "WHERE status_created_at >= {0} AND status_created_at < {1} \n" +
+                "  AND status = 'succeeded' \n" +
+                "GROUP BY date_trunc('hour', status_created_at), party_id, shop_id, currency_code;";
+        getDslContext().execute(sql, dateFrom, dateTo);
+    }
+
+    @Override
+    public List<RefundAggsByHourRecord> getRefundAggsByHour(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        return  getDslContext()
+                .selectFrom(REFUND_AGGS_BY_HOUR)
+                .where(REFUND_AGGS_BY_HOUR.CREATED_AT.greaterOrEqual(dateFrom)
+                        .and(REFUND_AGGS_BY_HOUR.CREATED_AT.lessThan(dateTo)))
+                .fetch();
     }
 }
