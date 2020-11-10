@@ -143,6 +143,7 @@ domainConfig:
 report:
   defaultTimeZone: Europe/Moscow
   batchSize: 1
+  includeAdjustments: false
 
 storage:
   endpoint: localhost:42827
