@@ -15,8 +15,11 @@ public class Query {
     @JsonProperty("invoices")
     private InvoicesQuery invoicesQuery;
 
-    @JsonProperty("payments")
+    @JsonProperty("payments_for_report")
     private PaymentsForReportQuery paymentsForReportQuery;
+
+    @JsonProperty("payments")
+    private PaymentsQuery paymentsQuery;
 
     @JsonProperty("refunds_for_report")
     private RefundsForReportQuery refundsForReportQuery;
@@ -50,6 +53,14 @@ public class Query {
 
     public void setPaymentsForReportQuery(PaymentsForReportQuery paymentsForReportQuery) {
         this.paymentsForReportQuery = paymentsForReportQuery;
+    }
+
+    public PaymentsQuery getPaymentsQuery() {
+        return paymentsQuery;
+    }
+
+    public void setPaymentsQuery(PaymentsQuery paymentsQuery) {
+        this.paymentsQuery = paymentsQuery;
     }
 
     public RefundsForReportQuery getRefundsForReportQuery() {
@@ -92,6 +103,7 @@ public class Query {
         return Objects.equals(shopAccountingQuery, query.shopAccountingQuery) &&
                 Objects.equals(invoicesQuery, query.invoicesQuery) &&
                 Objects.equals(paymentsForReportQuery, query.paymentsForReportQuery) &&
+                Objects.equals(paymentsQuery, query.paymentsQuery) &&
                 Objects.equals(refundsForReportQuery, query.refundsForReportQuery) &&
                 Objects.equals(refundsQuery, query.refundsQuery) &&
                 Objects.equals(from, query.from) &&
@@ -100,7 +112,7 @@ public class Query {
 
     @Override
     public int hashCode() {
-        return Objects.hash(shopAccountingQuery, invoicesQuery, paymentsForReportQuery, refundsForReportQuery, refundsQuery, from, size);
+        return Objects.hash(shopAccountingQuery, invoicesQuery, paymentsForReportQuery, paymentsQuery, refundsForReportQuery, refundsQuery, from, size);
     }
 
     @Override
@@ -109,6 +121,7 @@ public class Query {
         sb.append("shopAccountingQuery=").append(shopAccountingQuery);
         sb.append(", invoicesQuery=").append(invoicesQuery);
         sb.append(", paymentsForReportQuery=").append(paymentsForReportQuery);
+        sb.append(", paymentsQuery=").append(paymentsQuery);
         sb.append(", refundsForReportQuery=").append(refundsForReportQuery);
         sb.append(", refundsQuery=").append(refundsQuery);
         sb.append(", from=").append(from);
