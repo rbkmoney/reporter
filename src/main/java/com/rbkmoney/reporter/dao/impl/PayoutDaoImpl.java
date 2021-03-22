@@ -4,7 +4,7 @@ import com.rbkmoney.reporter.dao.AbstractDao;
 import com.rbkmoney.reporter.dao.PayoutDao;
 import com.rbkmoney.reporter.domain.enums.PayoutStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.*;
-import com.rbkmoney.reporter.domain.tables.records.PayoutAggsByHourRecord;
+import com.rbkmoney.reporter.domain.tables.records.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,11 +43,11 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
 
     @Override
     public Payout getPayout(String payoutId) {
-        return getDslContext()
+        PayoutRecord payoutRecord = getDslContext()
                 .selectFrom(PAYOUT)
                 .where(PAYOUT.PAYOUT_ID.eq(payoutId))
-                .fetchOne()
-                .into(Payout.class);
+                .fetchOne();
+        return payoutRecord == null ? null : payoutRecord.into(Payout.class);
     }
 
     @Override
@@ -63,11 +63,11 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
 
     @Override
     public PayoutAccount getPayoutAccount(Long extPayoutId) {
-        return getDslContext()
+        PayoutAccountRecord payoutAccountRecord = getDslContext()
                 .selectFrom(PAYOUT_ACCOUNT)
                 .where(PAYOUT_ACCOUNT.EXT_PAYOUT_ID.eq(extPayoutId))
-                .fetchOne()
-                .into(PayoutAccount.class);
+                .fetchOne();
+        return payoutAccountRecord == null ? null : payoutAccountRecord.into(PayoutAccount.class);
     }
 
     @Override
@@ -83,11 +83,11 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
 
     @Override
     public PayoutInternationalAccount getPayoutInternationalAccount(Long extPayoutId) {
-        return getDslContext()
+        PayoutInternationalAccountRecord accountRecord = getDslContext()
                 .selectFrom(PAYOUT_INTERNATIONAL_ACCOUNT)
                 .where(PAYOUT_INTERNATIONAL_ACCOUNT.EXT_PAYOUT_ID.eq(extPayoutId))
-                .fetchOne()
-                .into(PayoutInternationalAccount.class);
+                .fetchOne();
+        return accountRecord == null ? null : accountRecord.into(PayoutInternationalAccount.class);
     }
 
     @Override
@@ -105,11 +105,11 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
 
     @Override
     public PayoutState getPayoutState(Long extPayoutId) {
-        return getDslContext()
+        PayoutStateRecord payoutStateRecord = getDslContext()
                 .selectFrom(PAYOUT_STATE)
                 .where(PAYOUT_STATE.EXT_PAYOUT_ID.eq(extPayoutId))
-                .fetchOne()
-                .into(PayoutState.class);
+                .fetchOne();
+        return payoutStateRecord == null ? null : payoutStateRecord.into(PayoutState.class);
     }
 
     @Override
