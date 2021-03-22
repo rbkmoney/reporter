@@ -23,45 +23,49 @@ public class AggregationServiceImpl implements AggregationService {
     private final AdjustmentDao adjustmentDao;
     private final PayoutDao payoutDao;
 
+
     @Override
     @Transactional
     @Scheduled(fixedDelayString = "${aggregation.invoicing.timeout}")
     public void aggregatePayments() {
-        aggregateData(paymentDao);
+        aggregateData(paymentDao, "Payment");
     }
 
     @Override
     @Transactional
     @Scheduled(fixedDelayString = "${aggregation.invoicing.timeout}")
     public void aggregateRefunds() {
-        aggregateData(refundDao);
+        aggregateData(refundDao, "Refund");
     }
 
     @Override
     @Transactional
     @Scheduled(fixedDelayString = "${aggregation.invoicing.timeout}")
     public void aggregateAdjustments() {
-        aggregateData(adjustmentDao);
+        aggregateData(adjustmentDao, "Adjustment");
     }
 
     @Override
     @Transactional
     @Scheduled(fixedDelayString = "${aggregation.invoicing.timeout}")
     public void aggregatePayouts() {
-        aggregateData(payoutDao);
+        aggregateData(payoutDao, "Payout");
     }
 
-    private void aggregateData(AggregatesDao aggregatesDao) {
+    private void aggregateData(AggregatesDao aggregatesDao, String methodName) {
+        log.info("Start '{}' aggregation", methodName);
         LocalDateTime lastAggregationDate = aggregatesDao.getLastAggregationDate();
         if (lastAggregationDate == null) {
             return;
         }
+        log.info("For '{}' aggregation last aggregation date is '{}'", methodName, lastAggregationDate);
         LocalDateTime now = LocalDateTime.now();
         long untilNow = lastAggregationDate.until(now, ChronoUnit.HOURS);
         if (untilNow == 0) {
             return;
         }
         aggregatesDao.aggregateForDate(lastAggregationDate.plusHours(1L), now.truncatedTo(ChronoUnit.HOURS));
+        log.info("'{}' aggregation was finished", methodName);
     }
 
 }

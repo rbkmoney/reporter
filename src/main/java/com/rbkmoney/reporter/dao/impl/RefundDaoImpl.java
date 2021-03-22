@@ -9,10 +9,12 @@ import com.rbkmoney.reporter.domain.tables.records.RefundAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Cursor;
+import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.rbkmoney.reporter.domain.tables.Refund.REFUND;
@@ -44,13 +46,13 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
     public List<Refund> getRefundsByState(LocalDateTime dateFrom,
                                           LocalDateTime dateTo,
                                           List<RefundStatus> statuses) {
-        return getDslContext()
+        Result<RefundRecord> records = getDslContext()
                 .selectFrom(REFUND)
                 .where(REFUND.STATUS_CREATED_AT.greaterThan(dateFrom)
                         .and(REFUND.STATUS_CREATED_AT.lessThan(dateTo))
                         .and(REFUND.STATUS.in(statuses)))
-                .fetch()
-                .into(Refund.class);
+                .fetch();
+        return records == null || records.isEmpty() ? new ArrayList<>() : records.into(Refund.class);
     }
 
     @Override

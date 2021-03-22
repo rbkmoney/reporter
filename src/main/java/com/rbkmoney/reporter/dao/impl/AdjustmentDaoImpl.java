@@ -8,10 +8,12 @@ import com.rbkmoney.reporter.domain.tables.records.AdjustmentAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.Cursor;
+import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
@@ -42,13 +44,13 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
     public List<Adjustment> getAdjustmentsByState(LocalDateTime dateFrom,
                                                   LocalDateTime dateTo,
                                                   List<AdjustmentStatus> statuses) {
-        return getDslContext()
+        Result<AdjustmentRecord> records = getDslContext()
                 .selectFrom(ADJUSTMENT)
                 .where(ADJUSTMENT.STATUS_CREATED_AT.greaterThan(dateFrom)
                         .and(ADJUSTMENT.STATUS_CREATED_AT.lessThan(dateTo))
                         .and(ADJUSTMENT.STATUS.in(statuses)))
-                .fetch()
-                .into(Adjustment.class);
+                .fetch();
+        return records == null || records.isEmpty() ? new ArrayList<>() : records.into(Adjustment.class);
     }
 
     @Override

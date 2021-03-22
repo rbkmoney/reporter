@@ -15,10 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.PaymentAdditionalInfo.PAYMENT_ADDITIONAL_INFO;
@@ -50,13 +47,13 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
     public List<Payment> getPaymentsByState(LocalDateTime dateFrom,
                                             LocalDateTime dateTo,
                                             List<InvoicePaymentStatus> statuses) {
-        return getDslContext()
+        Result<PaymentRecord> records = getDslContext()
                 .selectFrom(PAYMENT)
                 .where(PAYMENT.STATUS_CREATED_AT.greaterThan(dateFrom)
                         .and(PAYMENT.STATUS_CREATED_AT.lessThan(dateTo))
                         .and(PAYMENT.STATUS.in(statuses)))
-                .fetch()
-                .into(Payment.class);
+                .fetch();
+        return records == null || records.isEmpty() ? new ArrayList<>() : records.into(Payment.class);
     }
 
     @Override
