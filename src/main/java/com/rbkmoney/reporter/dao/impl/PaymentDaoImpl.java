@@ -19,6 +19,7 @@ import java.util.*;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.PaymentAdditionalInfo.PAYMENT_ADDITIONAL_INFO;
 import static com.rbkmoney.reporter.domain.tables.PaymentAggsByHour.PAYMENT_AGGS_BY_HOUR;
+
 import org.jooq.impl.*;
 
 @Component
@@ -126,25 +127,25 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
 
     @Override
     public Optional<LocalDateTime> getLastAggregationDate() {
-        PaymentAggsByHourRecord lastAggDateRecord = getDslContext()
+        return getLastPaymentAggsByHourDateTime().or(() -> getFirstPaymentDateTime());
+    }
+
+    private Optional<LocalDateTime> getLastPaymentAggsByHourDateTime() {
+        return Optional.ofNullable(getDslContext()
                 .selectFrom(PAYMENT_AGGS_BY_HOUR)
                 .orderBy(PAYMENT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
-                .fetchOne();
-
-        if (lastAggDateRecord == null) {
-            return Optional.ofNullable(getFirstPaymentRecord()).map(PaymentRecord::getCreatedAt);
-        } else {
-            return Optional.of(lastAggDateRecord.getCreatedAt());
-        }
+                .fetchOne())
+                .map(PaymentAggsByHourRecord::getCreatedAt);
     }
 
-    private PaymentRecord getFirstPaymentRecord() {
-        return getDslContext()
+    private Optional<LocalDateTime> getFirstPaymentDateTime() {
+        return Optional.ofNullable(getDslContext()
                 .selectFrom(PAYMENT)
                 .orderBy(PAYMENT.CREATED_AT.asc())
                 .limit(1)
-                .fetchOne();
+                .fetchOne())
+                .map(PaymentRecord::getCreatedAt);
     }
 
     @Override

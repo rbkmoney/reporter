@@ -71,25 +71,25 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
 
     @Override
     public Optional<LocalDateTime> getLastAggregationDate() {
-        AdjustmentAggsByHourRecord lastAggDateRecord = getDslContext()
+        return getLastAdjustmentAggsByHourLocalDateTime().or(() -> getFirstAdjustmentLocalDateTime());
+    }
+
+    private Optional<LocalDateTime> getLastAdjustmentAggsByHourLocalDateTime() {
+        return Optional.ofNullable(getDslContext()
                 .selectFrom(ADJUSTMENT_AGGS_BY_HOUR)
                 .orderBy(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
-                .fetchOne();
-
-        if (lastAggDateRecord == null) {
-            return Optional.ofNullable(getFirstAdjustmentRecord()).map(AdjustmentRecord::getCreatedAt);
-        } else {
-            return Optional.of(lastAggDateRecord.getCreatedAt());
-        }
+                .fetchOne())
+                .map(AdjustmentAggsByHourRecord::getCreatedAt);
     }
 
-    private AdjustmentRecord getFirstAdjustmentRecord() {
-        return getDslContext()
+    private Optional<LocalDateTime> getFirstAdjustmentLocalDateTime() {
+        return Optional.ofNullable(getDslContext()
                 .selectFrom(ADJUSTMENT)
                 .orderBy(ADJUSTMENT.CREATED_AT.asc())
                 .limit(1)
-                .fetchOne();
+                .fetchOne())
+                .map(AdjustmentRecord::getCreatedAt);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
 
     @Override
     public List<AdjustmentAggsByHourRecord> getAdjustmentsAggsByHour(LocalDateTime dateFrom, LocalDateTime dateTo) {
-        return  getDslContext()
+        return getDslContext()
                 .selectFrom(ADJUSTMENT_AGGS_BY_HOUR)
                 .where(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.greaterOrEqual(dateFrom)
                         .and(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.lessThan(dateTo)))

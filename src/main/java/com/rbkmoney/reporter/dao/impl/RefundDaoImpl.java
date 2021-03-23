@@ -84,24 +84,24 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
 
     @Override
     public Optional<LocalDateTime> getLastAggregationDate() {
-        RefundAggsByHourRecord lastAggDateRecord = getDslContext()
+        return getLastRefundAggsByHourDateTime().or(() -> getFirstRefundDateTime());
+    }
+
+    private Optional<LocalDateTime> getLastRefundAggsByHourDateTime() {
+        return Optional.ofNullable(getDslContext()
                 .selectFrom(REFUND_AGGS_BY_HOUR)
                 .orderBy(REFUND_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
-                .fetchOne();
-
-        if (lastAggDateRecord == null) {
-            return Optional.ofNullable(getFirstRefundRecord()).map(RefundRecord::getCreatedAt);
-        } else {
-            return Optional.of(lastAggDateRecord.getCreatedAt());
-        }
+                .fetchOne())
+                .map(RefundAggsByHourRecord::getCreatedAt);
     }
 
-    private RefundRecord getFirstRefundRecord() {
-        return getDslContext().selectFrom(REFUND)
+    private Optional<LocalDateTime> getFirstRefundDateTime() {
+        return Optional.ofNullable(getDslContext().selectFrom(REFUND)
                 .orderBy(REFUND.CREATED_AT.asc())
                 .limit(1)
-                .fetchOne();
+                .fetchOne())
+                .map(RefundRecord::getCreatedAt);
     }
 
     @Override
