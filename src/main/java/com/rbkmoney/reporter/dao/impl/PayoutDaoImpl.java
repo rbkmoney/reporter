@@ -143,7 +143,10 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                 "WHERE ps.event_created_at >= {0} AND ps.event_created_at < {1} \n" +
                 "  AND ps.status = {2}" +
                 "GROUP BY date_trunc('hour', ps.event_created_at), pay.party_id, " +
-                "         pay.shop_id, pay.currency_code, pay.type;";
+                "         pay.shop_id, pay.currency_code, pay.type \n" +
+                "ON CONFLICT (party_id, shop_id, created_at, type, currency_code) \n" +
+                "DO UPDATE \n" +
+                "SET amount = EXCLUDED.amount, fee = EXCLUDED.fee;";
         getDslContext().execute(sql, dateFrom, dateTo, PayoutStatus.paid);
     }
 

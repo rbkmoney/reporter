@@ -145,10 +145,14 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 "       sum(external_fee) as external_fee \n" +
                 "FROM rpt.payment \n" +
                 "WHERE status_created_at >= {0} AND status_created_at < {1} \n" +
-                "  AND status = 'captured' \n" +
+                "  AND status = {2} \n" +
                 "GROUP BY date_trunc('hour', status_created_at), \n" +
-                "         party_id, shop_id, currency_code;";
-        getDslContext().execute(sql, dateFrom, dateTo);
+                "         party_id, shop_id, currency_code \n" +
+                "ON CONFLICT (party_id, shop_id, created_at, currency_code) \n" +
+                "DO UPDATE \n" +
+                "SET amount = EXCLUDED.amount, origin_amount = EXCLUDED.origin_amount, fee = EXCLUDED.fee, " +
+                "    provider_fee = EXCLUDED.provider_fee, external_fee = EXCLUDED.external_fee;";
+        getDslContext().execute(sql, dateFrom, dateTo, InvoicePaymentStatus.captured);
     }
 
     @Override

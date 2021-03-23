@@ -99,9 +99,13 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                 "       sum(amount), currency_code, sum(fee), sum(provider_fee), sum(external_fee) \n" +
                 "FROM  rpt.refund \n" +
                 "WHERE status_created_at >= {0} AND status_created_at < {1} \n" +
-                "  AND status = 'succeeded' \n" +
-                "GROUP BY date_trunc('hour', status_created_at), party_id, shop_id, currency_code;";
-        getDslContext().execute(sql, dateFrom, dateTo);
+                "  AND status = {2} \n" +
+                "GROUP BY date_trunc('hour', status_created_at), party_id, shop_id, currency_code \n" +
+                "ON CONFLICT (party_id, shop_id, created_at, currency_code) \n" +
+                "DO UPDATE \n" +
+                "SET amount = EXCLUDED.amount, fee = EXCLUDED.fee, provider_fee = EXCLUDED.provider_fee, " +
+                "    external_fee = EXCLUDED.external_fee;";
+        getDslContext().execute(sql, dateFrom, dateTo, RefundStatus.succeeded);
     }
 
     @Override

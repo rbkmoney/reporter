@@ -13,7 +13,7 @@ CREATE TABLE rpt.payment_aggs_by_hour
 
     CONSTRAINT payment_aggs_by_hour_pkey PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX payment_aggs_by_hour_idx on rpt.payment_aggs_by_hour (party_id, shop_id, created_at);
+CREATE UNIQUE INDEX payment_aggs_by_hour_idx on rpt.payment_aggs_by_hour (party_id, shop_id, created_at, currency_code);
 CREATE INDEX payment_aggs_by_hour_created_at_idx ON rpt.payment_aggs_by_hour (created_at);
 
 
@@ -31,7 +31,7 @@ CREATE TABLE rpt.refund_aggs_by_hour
 
     CONSTRAINT refund_aggs_by_hour_pkey PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX refund_aggs_by_hour_idx on rpt.refund_aggs_by_hour (party_id, shop_id, created_at);
+CREATE UNIQUE INDEX refund_aggs_by_hour_idx on rpt.refund_aggs_by_hour (party_id, shop_id, created_at, currency_code);
 CREATE INDEX refund_aggs_by_hour_created_at_idx ON rpt.refund_aggs_by_hour (created_at);
 
 
@@ -45,7 +45,7 @@ CREATE TABLE rpt.adjustment_aggs_by_hour
     currency_code                  CHARACTER VARYING,
     CONSTRAINT adjustment_aggs_by_hour_pkey PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX adjustment_aggs_by_hour_idx on rpt.adjustment_aggs_by_hour (party_id, shop_id, created_at);
+CREATE UNIQUE INDEX adjustment_aggs_by_hour_idx on rpt.adjustment_aggs_by_hour (party_id, shop_id, created_at, currency_code);
 CREATE INDEX adjustment_aggs_by_hour_created_at_idx ON rpt.adjustment_aggs_by_hour (created_at);
 
 
@@ -62,5 +62,5 @@ CREATE TABLE rpt.payout_aggs_by_hour
 
     CONSTRAINT payout_aggs_by_hour_pkey PRIMARY KEY (id)
 );
-CREATE UNIQUE INDEX payout_aggs_by_hour_idx on rpt.payout_aggs_by_hour (party_id, shop_id, created_at, type);
+CREATE UNIQUE INDEX payout_aggs_by_hour_idx on rpt.payout_aggs_by_hour (party_id, shop_id, created_at, type, currency_code);
 CREATE INDEX payout_aggs_by_hour_created_at_idx ON rpt.payout_aggs_by_hour (created_at);

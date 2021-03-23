@@ -85,7 +85,10 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                 "FROM  rpt.adjustment \n" +
                 "WHERE status_created_at >= {0} AND status_created_at < {1} \n" +
                 "  AND status = {2} \n" +
-                "GROUP BY date_trunc('hour', status_created_at), party_id, shop_id, currency_code;";
+                "GROUP BY date_trunc('hour', status_created_at), party_id, shop_id, currency_code \n" +
+                "ON CONFLICT (party_id, shop_id, created_at, currency_code) \n" +
+                "DO UPDATE \n" +
+                "SET amount = EXCLUDED.amount;";
         getDslContext().execute(sql, dateFrom, dateTo, AdjustmentStatus.captured);
     }
 
