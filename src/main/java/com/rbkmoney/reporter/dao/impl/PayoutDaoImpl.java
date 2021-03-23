@@ -124,21 +124,21 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
     }
 
     @Override
-    public LocalDateTime getLastAggregationDate() {
+    public Optional<LocalDateTime> getLastAggregationDate() {
         PayoutAggsByHourRecord lastAggDateRecord = getDslContext()
                 .selectFrom(PAYOUT_AGGS_BY_HOUR)
                 .orderBy(PAYOUT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
                 .fetchOne();
         if (lastAggDateRecord != null) {
-            return lastAggDateRecord.getCreatedAt();
+            return Optional.of(lastAggDateRecord.getCreatedAt());
         }
         PayoutRecord payoutRecord = getDslContext()
                 .selectFrom(PAYOUT)
                 .orderBy(PAYOUT.CREATED_AT.asc())
                 .limit(1)
                 .fetchOne();
-        return payoutRecord == null ? null : payoutRecord.getCreatedAt();
+        return payoutRecord == null ? Optional.empty() : Optional.of(payoutRecord.getCreatedAt());
     }
 
     @Override

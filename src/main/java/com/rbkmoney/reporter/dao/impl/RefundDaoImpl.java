@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.tables.Refund.REFUND;
 import static com.rbkmoney.reporter.domain.tables.RefundAdditionalInfo.REFUND_ADDITIONAL_INFO;
@@ -82,20 +83,20 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
     }
 
     @Override
-    public LocalDateTime getLastAggregationDate() {
+    public Optional<LocalDateTime> getLastAggregationDate() {
         RefundAggsByHourRecord lastAggDateRecord = getDslContext()
                 .selectFrom(REFUND_AGGS_BY_HOUR)
                 .orderBy(REFUND_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
                 .fetchOne();
         if (lastAggDateRecord != null) {
-            return lastAggDateRecord.getCreatedAt();
+            return Optional.of(lastAggDateRecord.getCreatedAt());
         }
         RefundRecord refundRecord = getDslContext().selectFrom(REFUND)
                 .orderBy(REFUND.CREATED_AT.asc())
                 .limit(1)
                 .fetchOne();
-        return refundRecord == null ? null : refundRecord.getCreatedAt();
+        return refundRecord == null ? Optional.empty() : Optional.of(refundRecord.getCreatedAt());
     }
 
     @Override

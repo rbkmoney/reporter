@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
 import static com.rbkmoney.reporter.domain.tables.AdjustmentAggsByHour.ADJUSTMENT_AGGS_BY_HOUR;
@@ -69,21 +70,21 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
     }
 
     @Override
-    public LocalDateTime getLastAggregationDate() {
+    public Optional<LocalDateTime> getLastAggregationDate() {
         AdjustmentAggsByHourRecord lastAggDateRecord = getDslContext()
                 .selectFrom(ADJUSTMENT_AGGS_BY_HOUR)
                 .orderBy(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
                 .fetchOne();
         if (lastAggDateRecord != null) {
-            return lastAggDateRecord.getCreatedAt();
+            return Optional.of(lastAggDateRecord.getCreatedAt());
         }
         AdjustmentRecord adjustmentRecord = getDslContext()
                 .selectFrom(ADJUSTMENT)
                 .orderBy(ADJUSTMENT.CREATED_AT.asc())
                 .limit(1)
                 .fetchOne();
-        return adjustmentRecord == null ? null : adjustmentRecord.getCreatedAt();
+        return adjustmentRecord == null ? Optional.empty() : Optional.of(adjustmentRecord.getCreatedAt());
     }
 
     @Override
