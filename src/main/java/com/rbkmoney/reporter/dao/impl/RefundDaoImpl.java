@@ -89,14 +89,19 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                 .orderBy(REFUND_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
                 .fetchOne();
-        if (lastAggDateRecord != null) {
+
+        if (lastAggDateRecord == null) {
+            return Optional.ofNullable(getFirstRefundRecord()).map(RefundRecord::getCreatedAt);
+        } else {
             return Optional.of(lastAggDateRecord.getCreatedAt());
         }
-        RefundRecord refundRecord = getDslContext().selectFrom(REFUND)
+    }
+
+    private RefundRecord getFirstRefundRecord() {
+        return getDslContext().selectFrom(REFUND)
                 .orderBy(REFUND.CREATED_AT.asc())
                 .limit(1)
                 .fetchOne();
-        return refundRecord == null ? Optional.empty() : Optional.of(refundRecord.getCreatedAt());
     }
 
     @Override

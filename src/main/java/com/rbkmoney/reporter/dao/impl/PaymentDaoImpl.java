@@ -131,15 +131,20 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 .orderBy(PAYMENT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
                 .fetchOne();
-        if (lastAggDateRecord != null) {
+
+        if (lastAggDateRecord == null) {
+            return Optional.ofNullable(getFirstPaymentRecord()).map(PaymentRecord::getCreatedAt);
+        } else {
             return Optional.of(lastAggDateRecord.getCreatedAt());
         }
-        PaymentRecord paymentRecord = getDslContext()
+    }
+
+    private PaymentRecord getFirstPaymentRecord() {
+        return getDslContext()
                 .selectFrom(PAYMENT)
                 .orderBy(PAYMENT.CREATED_AT.asc())
                 .limit(1)
                 .fetchOne();
-        return paymentRecord == null ? Optional.empty() : Optional.of(paymentRecord.getCreatedAt());
     }
 
     @Override
