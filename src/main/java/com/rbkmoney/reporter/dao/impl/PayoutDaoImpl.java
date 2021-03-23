@@ -125,12 +125,20 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
 
     @Override
     public LocalDateTime getLastAggregationDate() {
-        return getDslContext()
+        PayoutAggsByHourRecord lastAggDateRecord = getDslContext()
                 .selectFrom(PAYOUT_AGGS_BY_HOUR)
                 .orderBy(PAYOUT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
-                .fetchOne()
-                .getCreatedAt();
+                .fetchOne();
+        if (lastAggDateRecord != null) {
+            return lastAggDateRecord.getCreatedAt();
+        }
+        PayoutRecord payoutRecord = getDslContext()
+                .selectFrom(PAYOUT)
+                .orderBy(PAYOUT.CREATED_AT.asc())
+                .limit(1)
+                .fetchOne();
+        return payoutRecord == null ? null : payoutRecord.getCreatedAt();
     }
 
     @Override
@@ -152,7 +160,7 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
 
     @Override
     public List<PayoutAggsByHourRecord> getPayoutsAggsByHour(LocalDateTime dateFrom, LocalDateTime dateTo) {
-        return  getDslContext()
+        return getDslContext()
                 .selectFrom(PAYOUT_AGGS_BY_HOUR)
                 .where(PAYOUT_AGGS_BY_HOUR.CREATED_AT.greaterOrEqual(dateFrom)
                         .and(PAYOUT_AGGS_BY_HOUR.CREATED_AT.lessThan(dateTo)))

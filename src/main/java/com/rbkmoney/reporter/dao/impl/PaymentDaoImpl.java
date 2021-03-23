@@ -7,7 +7,6 @@ import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.PaymentAdditionalInfo;
 import com.rbkmoney.reporter.domain.tables.records.PaymentAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
-import com.rbkmoney.reporter.exception.DaoException;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jooq.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +70,7 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                                                          String partyShopId,
                                                          String currencyCode,
                                                          Optional<LocalDateTime> fromTime,
-                                                         LocalDateTime toTime) throws DaoException {
+                                                         LocalDateTime toTime) {
         String amountKey = "funds_acquired";
         String feeKey = "fee_charged";
 
@@ -127,12 +126,20 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
 
     @Override
     public LocalDateTime getLastAggregationDate() {
-        return getDslContext()
+        PaymentAggsByHourRecord lastAggDateRecord = getDslContext()
                 .selectFrom(PAYMENT_AGGS_BY_HOUR)
                 .orderBy(PAYMENT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
-                .fetchOne()
-                .getCreatedAt();
+                .fetchOne();
+        if (lastAggDateRecord != null) {
+            return lastAggDateRecord.getCreatedAt();
+        }
+        PaymentRecord paymentRecord = getDslContext()
+                .selectFrom(PAYMENT)
+                .orderBy(PAYMENT.CREATED_AT.asc())
+                .limit(1)
+                .fetchOne();
+        return paymentRecord == null ? null : paymentRecord.getCreatedAt();
     }
 
     @Override

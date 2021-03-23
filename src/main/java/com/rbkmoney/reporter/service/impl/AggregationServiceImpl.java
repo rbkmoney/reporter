@@ -23,7 +23,6 @@ public class AggregationServiceImpl implements AggregationService {
     private final AdjustmentDao adjustmentDao;
     private final PayoutDao payoutDao;
 
-
     @Override
     @Transactional
     @Scheduled(fixedDelayString = "${aggregation.invoicing.timeout}")
@@ -64,7 +63,10 @@ public class AggregationServiceImpl implements AggregationService {
         if (untilNow == 0) {
             return;
         }
-        aggregatesDao.aggregateForDate(lastAggregationDate.plusHours(1L), now.truncatedTo(ChronoUnit.HOURS));
+        aggregatesDao.aggregateForDate(
+                lastAggregationDate.minusHours(3L),
+                lastAggregationDate.plusHours(2L).truncatedTo(ChronoUnit.HOURS)
+        );
         log.info("'{}' aggregation was finished", methodName);
     }
 

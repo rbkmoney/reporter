@@ -70,12 +70,20 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
 
     @Override
     public LocalDateTime getLastAggregationDate() {
-        return getDslContext()
+        AdjustmentAggsByHourRecord lastAggDateRecord = getDslContext()
                 .selectFrom(ADJUSTMENT_AGGS_BY_HOUR)
                 .orderBy(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.desc())
                 .limit(1)
-                .fetchOne()
-                .getCreatedAt();
+                .fetchOne();
+        if (lastAggDateRecord != null) {
+            return lastAggDateRecord.getCreatedAt();
+        }
+        AdjustmentRecord adjustmentRecord = getDslContext()
+                .selectFrom(ADJUSTMENT)
+                .orderBy(ADJUSTMENT.CREATED_AT.asc())
+                .limit(1)
+                .fetchOne();
+        return adjustmentRecord == null ? null : adjustmentRecord.getCreatedAt();
     }
 
     @Override
