@@ -34,7 +34,7 @@ public class AggregatesDaoImpl extends AbstractDao implements AggregatesDao {
                 .set(getDslContext().newRecord(LAST_AGGREGATION_TIME, lastAggregationTime))
                 .onConflict(LAST_AGGREGATION_TIME.AGGREGATION_TYPE, LAST_AGGREGATION_TIME.AGGREGATION_INTERVAL)
                 .doUpdate()
-                .set(getDslContext().newRecord(ADJUSTMENT, lastAggregationTime))
+                .set(getDslContext().newRecord(LAST_AGGREGATION_TIME, lastAggregationTime))
                 .execute();
     }
 
