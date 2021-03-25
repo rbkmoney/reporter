@@ -1,6 +1,7 @@
 package com.rbkmoney.reporter.dao;
 
 import com.rbkmoney.reporter.domain.enums.AggregationType;
+import com.rbkmoney.reporter.domain.tables.pojos.LastAggregationTime;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.PayoutAggsByHourRecord;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AggregatesDao {
+
+    void saveLastAggregationDate(LastAggregationTime lastAggregationTime);
 
     Optional<LocalDateTime> getLastAggregationDate(AggregationType aggregationType);
 

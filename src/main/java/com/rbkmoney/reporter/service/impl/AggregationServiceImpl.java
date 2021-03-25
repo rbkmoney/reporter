@@ -1,7 +1,9 @@
 package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.reporter.dao.AggregatesDao;
+import com.rbkmoney.reporter.domain.enums.AggregationInterval;
 import com.rbkmoney.reporter.domain.enums.AggregationType;
+import com.rbkmoney.reporter.domain.tables.pojos.LastAggregationTime;
 import com.rbkmoney.reporter.service.AggregationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +74,19 @@ public class AggregationServiceImpl implements AggregationService {
                 lastAggregationDate.minusHours(3L),
                 lastAggregationDate.plusHours(2L).truncatedTo(ChronoUnit.HOURS)
         );
+        aggregatesDao.saveLastAggregationDate(
+                createLastAggregationTime(aggregationType, lastAggregationDate.plusHours(1L))
+        );
         log.info("'{}' aggregation was finished", methodName);
+    }
+
+    private LastAggregationTime createLastAggregationTime(AggregationType type,
+                                                          LocalDateTime aggregationDate) {
+        LastAggregationTime lastAggregationTime = new LastAggregationTime();
+        lastAggregationTime.setAggregationType(type);
+        lastAggregationTime.setAggregationInterval(AggregationInterval.HOUR);
+        lastAggregationTime.setLastDataAggregationDate(aggregationDate);
+        return lastAggregationTime;
     }
 
 }

@@ -3,6 +3,7 @@ package com.rbkmoney.reporter.dao.impl;
 import com.rbkmoney.reporter.dao.AbstractDao;
 import com.rbkmoney.reporter.dao.AggregatesDao;
 import com.rbkmoney.reporter.domain.enums.*;
+import com.rbkmoney.reporter.domain.tables.pojos.LastAggregationTime;
 import com.rbkmoney.reporter.domain.tables.records.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.Tables.*;
+import static com.rbkmoney.reporter.domain.tables.Adjustment.ADJUSTMENT;
 import static com.rbkmoney.reporter.domain.tables.AdjustmentAggsByHour.ADJUSTMENT_AGGS_BY_HOUR;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.PaymentAggsByHour.PAYMENT_AGGS_BY_HOUR;
@@ -23,6 +25,17 @@ public class AggregatesDaoImpl extends AbstractDao implements AggregatesDao {
 
     public AggregatesDaoImpl(HikariDataSource dataSource) {
         super(dataSource);
+    }
+
+    @Override
+    public void saveLastAggregationDate(LastAggregationTime lastAggregationTime) {
+        getDslContext()
+                .insertInto(LAST_AGGREGATION_TIME)
+                .set(getDslContext().newRecord(LAST_AGGREGATION_TIME, lastAggregationTime))
+                .onConflict(LAST_AGGREGATION_TIME.AGGREGATION_TYPE, LAST_AGGREGATION_TIME.AGGREGATION_INTERVAL)
+                .doUpdate()
+                .set(getDslContext().newRecord(ADJUSTMENT, lastAggregationTime))
+                .execute();
     }
 
     @Override
