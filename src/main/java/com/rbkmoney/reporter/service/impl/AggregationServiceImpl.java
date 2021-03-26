@@ -22,9 +22,8 @@ import java.util.Optional;
 @ConditionalOnProperty(value = "aggregation.enabled", havingValue = "true")
 public class AggregationServiceImpl implements AggregationService {
 
+    private static final long AGGREGSTION_STEP = 6L;
     private final AggregatesDao aggregatesDao;
-
-    private final static long AGGREGSTION_STEP = 6L;
 
     @Override
     @Transactional
