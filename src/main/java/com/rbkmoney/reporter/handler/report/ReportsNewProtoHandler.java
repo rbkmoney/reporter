@@ -87,10 +87,7 @@ public class ReportsNewProtoHandler implements ReportingSrv.Iface {
 
             List<com.rbkmoney.reporter.domain.tables.pojos.Report> reports = reportService.getReportsWithToken(
                     reportRequest.getPartyId(),
-                    reportRequest.isSetShopIds()
-                            ? reportRequest.getShopIds()
-                            : Optional.ofNullable(reportRequest.getShopId()).map(Collections::singletonList)
-                            .orElseGet(Collections::emptyList),
+                    getShopIds(reportRequest),
                     reportTypes != null ? reportTypes(reportTypes) : null,
                     fromTime,
                     toTime,
@@ -114,6 +111,18 @@ public class ReportsNewProtoHandler implements ReportingSrv.Iface {
         } catch (IllegalArgumentException ex) {
             throw buildInvalidRequest(ex);
         }
+    }
+
+    private List<String> getShopIds(ReportRequest reportRequest) {
+        return reportRequest.isSetShopIds()
+                ? reportRequest.getShopIds()
+                : getShopId(reportRequest);
+    }
+
+    private List<String> getShopId(ReportRequest reportRequest) {
+        return Optional.ofNullable(reportRequest.getShopId())
+                .map(Collections::singletonList)
+                .orElseGet(Collections::emptyList);
     }
 
     @Override

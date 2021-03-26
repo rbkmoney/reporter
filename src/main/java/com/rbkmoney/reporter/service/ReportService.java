@@ -123,8 +123,7 @@ public class ReportService {
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     public void generateReport(Report report) {
-        log.info(
-                "Trying to process report, reportId='{}', reportType='{}', partyId='{}', " +
+        log.info("Trying to process report, reportId='{}', reportType='{}', partyId='{}', " +
                         "shopId='{}', fromTime='{}', toTime='{}'",
                 report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(), report.getFromTime(),
                 report.getToTime());

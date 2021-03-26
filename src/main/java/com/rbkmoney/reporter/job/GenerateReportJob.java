@@ -47,8 +47,7 @@ public class GenerateReportJob implements Job {
         String contractId = jobDataMap.getString(CONTRACT_ID);
         ReportType reportType = TypeUtil.toEnumField(jobDataMap.getString(REPORT_TYPE), ReportType.class);
 
-        log.info(
-                "Trying to create report for contract, partyId='{}', " +
+        log.info("Trying to create report for contract, partyId='{}', " +
                         "contractId='{}', trigger='{}', jobExecutionContext='{}'",
                 partyId, contractId, trigger, jobExecutionContext);
         try {
@@ -72,8 +71,7 @@ public class GenerateReportJob implements Job {
                     .createReport(partyId, shop.getId(), fromTime, toTime, reportType, zoneId,
                             jobExecutionContext.getFireTime().toInstant()));
 
-            log.info(
-                    "Report for contract have been successfully created, partyId='{}', " +
+            log.info("Report for contract have been successfully created, partyId='{}', " +
                             "contractId='{}', trigger='{}', jobExecutionContext='{}'",
                     partyId, contractId, trigger, jobExecutionContext);
         } catch (StorageException | WRuntimeException ex) {

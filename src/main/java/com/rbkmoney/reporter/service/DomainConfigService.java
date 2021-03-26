@@ -98,8 +98,7 @@ public class DomainConfigService {
             reference.setPaymentInstitution(paymentInstitutionRef);
             VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
             PaymentInstitution paymentInstitution = versionedObject.getObject().getPaymentInstitution().getData();
-            log.info(
-                    "Payment institution has been found, PaymentInstitutionRef='{}', " +
+            log.info("Payment institution has been found, PaymentInstitutionRef='{}', " +
                             "revisionReference='{}', paymentInstitution='{}'",
                     paymentInstitutionRef, revisionReference, paymentInstitution);
             return paymentInstitution;
@@ -135,9 +134,8 @@ public class DomainConfigService {
             throw new NotFoundException(String.format("%s not found, calendarRef='%s', revisionReference='%s'",
                     ex.getClass().getSimpleName(), calendarRef, revisionReference), ex);
         } catch (TException ex) {
-            throw new RuntimeException(
-                    String.format("Failed to get calendar, calendarRef='%s', revisionReference='%s'", calendarRef,
-                            revisionReference), ex);
+            throw new RuntimeException(String.format("Failed to get calendar, calendarRef='%s', revisionReference='%s'",
+                    calendarRef, revisionReference), ex);
         }
     }
 
