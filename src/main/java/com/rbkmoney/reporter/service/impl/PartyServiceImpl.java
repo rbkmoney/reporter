@@ -185,8 +185,7 @@ public class PartyServiceImpl implements PartyService {
         }
 
         PaymentInstitutionRef paymentInstitutionRef = contract.getPaymentInstitution();
-        log.info(
-                "PaymentInstitutionRef has been found, partyId='{}', contractId='{}, " +
+        log.info("PaymentInstitutionRef has been found, partyId='{}', contractId='{}, " +
                         "paymentInstitutionRef='{}', partyRevisionParam='{}'",
                 partyId, contractId, paymentInstitutionRef, partyRevisionParam);
         return paymentInstitutionRef;

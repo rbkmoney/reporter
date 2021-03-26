@@ -64,8 +64,7 @@ public class S3StorageServiceImpl implements StorageService {
                 throw new FileNotFoundException(
                         String.format("Presigned url is null, fileId='%s', bucketId='%s'", fileId, bucketId));
             }
-            log.info(
-                    "Presigned url have been successfully generated, url='{}', " +
+            log.info("Presigned url have been successfully generated, url='{}', " +
                             "fileId='{}', bucketId='{}', expiresIn='{}'",
                     url, fileId, bucketId, expiresIn);
             return url;
@@ -104,8 +103,7 @@ public class S3StorageServiceImpl implements StorageService {
                     DigestUtils.md5Hex(Files.newInputStream(file)),
                     DigestUtils.sha256Hex(Files.newInputStream(file))
             );
-            log.info(
-                    "File have been successfully uploaded, fileId='{}', " +
+            log.info("File have been successfully uploaded, fileId='{}', " +
                             "bucketId='{}', filename='{}', md5='{}', sha256='{}'",
                     fileMeta.getFileId(), fileMeta.getBucketId(), fileMeta.getFilename(), fileMeta.getMd5(),
                     fileMeta.getSha256());

@@ -74,8 +74,8 @@ public class TaskServiceImpl implements TaskService, ScheduleReports {
                 List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
                 if (triggers.isEmpty() || !triggers.stream().allMatch(this::isTriggerOnNormalState)) {
                     if (scheduler.checkExists(jobKey)) {
-                        log.warn(
-                                "Inactive job found, please check it manually. Job will be restored, contractMeta='{}'",
+                        log.warn("Inactive job found, please check it manually. " +
+                                        "Job will be restored, contractMeta='{}'",
                                 contractMeta);
                     }
                     createJob(
@@ -109,8 +109,7 @@ public class TaskServiceImpl implements TaskService, ScheduleReports {
     public void registerProvisionOfServiceJob(String partyId, String contractId, long lastEventId,
                                               BusinessScheduleRef scheduleRef, Representative signer)
             throws ScheduleProcessingException, NotFoundException, StorageException {
-        log.info(
-                "Trying to register provision of service job, partyId='{}'," +
+        log.info("Trying to register provision of service job, partyId='{}'," +
                         " contractId='{}', scheduleId='{}', signer='{}'",
                 partyId, contractId, scheduleRef, signer);
         PaymentInstitutionRef paymentInstitutionRef = partyService.getPaymentInstitutionRef(partyId, contractId);
@@ -144,8 +143,7 @@ public class TaskServiceImpl implements TaskService, ScheduleReports {
 
             contractMetaDao.save(contractMeta);
             createJob(partyId, contractId, calendarRef, scheduleRef);
-            log.info(
-                    "Job have been successfully enabled, partyId='{}', c" +
+            log.info("Job have been successfully enabled, partyId='{}', c" +
                             "ontractId='{}', scheduleRef='{}', calendarRef='{}'",
                     partyId, contractId, scheduleRef, calendarRef);
         } catch (DaoException ex) {
@@ -207,8 +205,7 @@ public class TaskServiceImpl implements TaskService, ScheduleReports {
                 triggers.add(trigger);
             }
             scheduler.scheduleJob(jobDetail, triggers, true);
-            log.info(
-                    "Jobs have been successfully created or updated, partyId='{}', contractId='{}', " +
+            log.info("Jobs have been successfully created or updated, partyId='{}', contractId='{}', " +
                             "calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'",
                     partyId, contractId, calendarRef, scheduleRef, jobDetail, triggers);
         } catch (NotFoundException | SchedulerException ex) {
@@ -229,13 +226,11 @@ public class TaskServiceImpl implements TaskService, ScheduleReports {
             if (contractMeta != null) {
                 contractMetaDao.disableContract(partyId, contractId);
                 removeJob(contractMeta);
-                log.info(
-                        "Provision of service job have been successfully disabled, partyId='{}', " +
+                log.info("Provision of service job have been successfully disabled, partyId='{}', " +
                                 "contractId='{}', scheduleId='{}', calendarId='{}'",
                         partyId, contractId, contractMeta.getScheduleId(), contractMeta.getCalendarId());
             } else {
-                log.warn(
-                        "Not possible to disable provision of service job, contract meta not found, " +
+                log.warn("Not possible to disable provision of service job, contract meta not found, " +
                                 "partyId='{}', contractId='{}'",
                         partyId, contractId);
             }

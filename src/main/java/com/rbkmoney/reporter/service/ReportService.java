@@ -93,8 +93,7 @@ public class ReportService {
                     timezone.getId(),
                     LocalDateTime.ofInstant(createdAt, ZoneOffset.UTC)
             );
-            log.info(
-                    "Report has been successfully created, reportId={}, partyId={}, " +
+            log.info("Report has been successfully created, reportId={}, partyId={}, " +
                             "shopId={}, reportType={}, fromTime={}, toTime={}",
                     reportId, partyId, shopId, reportType, fromTime, toTime);
             return reportId;
@@ -132,8 +131,7 @@ public class ReportService {
             if (forUpdateReport != null && forUpdateReport.getStatus() == ReportStatus.pending) {
                 List<FileMeta> reportFiles = processSignAndUpload(report);
                 finishedReportTask(report.getId(), reportFiles);
-                log.info(
-                        "Report has been successfully processed, reportId='{}', reportType='{}', " +
+                log.info("Report has been successfully processed, reportId='{}', reportType='{}', " +
                                 "partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
                         report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(),
                         report.getFromTime(), report.getToTime());
@@ -142,8 +140,7 @@ public class ReportService {
             log.error("Report data validation failed, reportId='{}'", report.getId(), ex);
             changeReportStatus(report, ReportStatus.cancelled);
         } catch (Throwable throwable) {
-            log.error(
-                    "The report has failed to process, reportId='{}', reportType='{}', partyId='{}', " +
+            log.error("The report has failed to process, reportId='{}', reportType='{}', partyId='{}', " +
                             "shopId='{}', fromTime='{}', toTime='{}'",
                     report.getId(), report.getType(), report.getPartyId(), report.getPartyShopId(),
                     report.getFromTime(), report.getToTime(), throwable);
