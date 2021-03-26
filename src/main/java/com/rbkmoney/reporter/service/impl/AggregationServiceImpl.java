@@ -22,7 +22,7 @@ import java.util.Optional;
 @ConditionalOnProperty(value = "aggregation.enabled", havingValue = "true")
 public class AggregationServiceImpl implements AggregationService {
 
-    private static final long AGGREGSTION_STEP = 6L;
+    private static final long AGGREGATION_STEP = 6L;
     private final AggregatesDao aggregatesDao;
 
     @Override
@@ -69,10 +69,10 @@ public class AggregationServiceImpl implements AggregationService {
         if (untilNow == 0) {
             log.info("Current time delta for '{}' aggregation less than one hour", methodName);
             return;
-        } else if (untilNow < AGGREGSTION_STEP) {
+        } else if (untilNow < AGGREGATION_STEP) {
             highBordefOfAggregation = lastAggregationDate.plusHours(untilNow);
         } else {
-            highBordefOfAggregation = lastAggregationDate.plusHours(AGGREGSTION_STEP);
+            highBordefOfAggregation = lastAggregationDate.plusHours(AGGREGATION_STEP);
         }
         aggregatesDao.aggregateByHour(
                 aggregationType,
