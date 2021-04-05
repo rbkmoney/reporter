@@ -144,7 +144,7 @@ public class AggregatesDaoImpl extends AbstractDao implements AggregatesDao {
                         "SELECT date_trunc('hour', ps.event_created_at), pay.party_id, \n" +
                         "       pay.shop_id, sum(pay.amount), sum(pay.fee), pay.currency_code, pay.type \n" +
                         "FROM rpt.payout_state as ps \n" +
-                        "JOIN rpt.payout as pay on pay.id = ps.ext_payout_id \n" +
+                        "JOIN rpt.payout as pay on pay.payout_id = ps.payout_id \n" +
                         "WHERE ps.event_created_at >= {0} AND ps.event_created_at < {1} \n" +
                         "  AND ps.status = {2}" +
                         "  AND party_id IS NOT NULL \n" +

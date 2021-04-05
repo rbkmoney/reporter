@@ -32,7 +32,7 @@ import static com.rbkmoney.reporter.domain.tables.AdjustmentAggsByHour.ADJUSTMEN
 import static com.rbkmoney.reporter.domain.tables.PaymentAggsByHour.PAYMENT_AGGS_BY_HOUR;
 import static com.rbkmoney.reporter.domain.tables.PayoutAggsByHour.PAYOUT_AGGS_BY_HOUR;
 import static com.rbkmoney.reporter.domain.tables.RefundAggsByHour.REFUND_AGGS_BY_HOUR;
-import static com.rbkmoney.reporter.util.TestDataUtil.*;
+import static com.rbkmoney.reporter.data.CommonTestData.*;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 
@@ -156,8 +156,8 @@ public class AggregationServiceTest extends AbstractDaoConfig {
         for (int i = 0; i < count; i++) {
             LocalDateTime createdAt = LocalDateTime.now().minusHours(1L);
             Long extPayoutId = payoutDao.savePayout(createTestPayout(partyId, shopId, createdAt, i));
-            payoutDao.savePayoutState(createTestPayoutState(extPayoutId, createdAt, PayoutStatus.unpaid));
-            payoutDao.savePayoutState(createTestPayoutState(extPayoutId, createdAt, PayoutStatus.paid));
+            payoutDao.savePayoutState(createTestPayoutState(extPayoutId, createdAt, PayoutStatus.unpaid, i));
+            payoutDao.savePayoutState(createTestPayoutState(extPayoutId, createdAt, PayoutStatus.paid, i));
         }
 
         LocalDateTime prevAggregateTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS).minusHours(2L);

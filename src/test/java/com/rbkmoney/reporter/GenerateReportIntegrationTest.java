@@ -38,7 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.rbkmoney.reporter.util.TestDataUtil.*;
+import static com.rbkmoney.reporter.data.CommonTestData.*;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

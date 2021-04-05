@@ -1,4 +1,4 @@
-package com.rbkmoney.reporter.util;
+package com.rbkmoney.reporter.data;
 
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.*;
@@ -14,7 +14,7 @@ import java.util.Collections;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 
-public class TestDataUtil {
+public class CommonTestData {
 
     private static final String DEFAULT_CURRENCY = "RUB";
 
@@ -95,18 +95,26 @@ public class TestDataUtil {
         );
     }
 
-    public static PayoutState createTestPayoutState(Long extPayoutId, LocalDateTime createdAt, PayoutStatus status) {
+    public static PayoutState createTestPayoutState(Long extPayoutId,
+                                                    LocalDateTime createdAt,
+                                                    PayoutStatus status,
+                                                    int i) {
         PayoutState payoutState = random(PayoutState.class);
         payoutState.setId(null);
         payoutState.setExtPayoutId(extPayoutId);
         payoutState.setEventCreatedAt(createdAt);
         payoutState.setStatus(status);
+        payoutState.setPayoutId("payout." + i);
         return payoutState;
     }
 
-    public static Payout createTestPayout(String partyId, String shopId, LocalDateTime createdAt, int i) {
+    public static Payout createTestPayout(String partyId,
+                                          String shopId,
+                                          LocalDateTime createdAt,
+                                          int i) {
         Payout payout = random(Payout.class);
         payout.setId(null);
+        payout.setPayoutId("payout." + i);
         payout.setShopId(shopId + i % 2);
         payout.setPartyId(partyId + i % 2);
         payout.setCreatedAt(createdAt);

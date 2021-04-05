@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.rbkmoney.reporter.util.TestDataUtil.*;
+import static com.rbkmoney.reporter.data.CommonTestData.*;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 
@@ -105,10 +105,10 @@ public class AggregationDaoTest extends AbstractDaoConfig {
         String partyId = random(String.class);
         String shopId = random(String.class);
 
-        int count = 100;
+        int count = 10;
         for (int i = 0; i < count; i++) {
             Long extPayoutId = payoutDao.savePayout(createTestPayout(partyId, shopId, LocalDateTime.now(), i));
-            PayoutState payoutState = createTestPayoutState(extPayoutId, LocalDateTime.now(), PayoutStatus.unpaid);
+            PayoutState payoutState = createTestPayoutState(extPayoutId, LocalDateTime.now(), PayoutStatus.unpaid, i);
             payoutDao.savePayoutState(payoutState);
             payoutState.setStatus(PayoutStatus.paid);
             payoutDao.savePayoutState(payoutState);
@@ -117,13 +117,13 @@ public class AggregationDaoTest extends AbstractDaoConfig {
         aggregatesDao.aggregateByHour(
                 AggregationType.PAYOUT,
                 LocalDateTime.now().minusHours(2L),
-                LocalDateTime.now()
+                LocalDateTime.now().plusHours(1L)
         );
         List<PayoutAggsByHourRecord> payoutsAggsByHour =
                 aggregatesDao.getPayoutsAggregatesByHour(LocalDateTime.now().minusHours(3L), LocalDateTime.now());
         assertEquals(2, payoutsAggsByHour.size());
         PayoutAggsByHourRecord payoutAggsByHourRecord = payoutsAggsByHour.get(0);
-        assertEquals(Long.valueOf(50000L), payoutAggsByHourRecord.getAmount());
+        assertEquals(Long.valueOf(5000L), payoutAggsByHourRecord.getAmount());
     }
 
 }
