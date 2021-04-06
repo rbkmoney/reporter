@@ -24,6 +24,7 @@ import java.util.*;
 import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.PaymentAdditionalInfo.PAYMENT_ADDITIONAL_INFO;
 import static com.rbkmoney.reporter.domain.tables.PaymentAggsByHour.PAYMENT_AGGS_BY_HOUR;
+import static com.rbkmoney.reporter.util.AccountingDaoUtils.getFunds;
 
 @Component
 public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
@@ -104,9 +105,9 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                         .unionAll(oldPaymentShopAccountingQuery)
         ).fetchOne();
 
-        return fundsResult == null
-                ? new PaymentFundsAmount(0L, 0L)
-                : new PaymentFundsAmount(fundsResult.value1().longValue(), fundsResult.value2().longValue());
+        return Optional.ofNullable(fundsResult)
+                .map(result -> new PaymentFundsAmount(getFunds(result.value1()), getFunds(result.value2())))
+                .orElse(new PaymentFundsAmount(0L, 0L));
     }
 
     private SelectConditionStep<Record2<BigDecimal, BigDecimal>> getPaymentFundsAmountQuery(String partyId,
