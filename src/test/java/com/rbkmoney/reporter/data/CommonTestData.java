@@ -29,8 +29,10 @@ public class CommonTestData {
         russianLegalEntity.setRegisteredName(random(String.class));
         russianLegalEntity.setRepresentativePosition(random(String.class));
         russianLegalEntity.setRepresentativeFullName(random(String.class));
-        contract.setContractor(Contractor.legal_entity(LegalEntity.russian_legal_entity(russianLegalEntity)));
-        contract.setLegalAgreement(new LegalAgreement(TypeUtil.temporalToString(Instant.now()), random(String.class)));
+        contract.setContractor(
+                Contractor.legal_entity(LegalEntity.russian_legal_entity(russianLegalEntity)));
+        contract.setLegalAgreement(
+                new LegalAgreement(TypeUtil.temporalToString(Instant.now()), random(String.class)));
         party.setShops(Collections.singletonMap(shopId, getTestShop(shopId, contractId)));
         party.setContracts(Collections.singletonMap(contractId, contract));
         return party;
@@ -125,7 +127,10 @@ public class CommonTestData {
         return payout;
     }
 
-    public static Adjustment createTestAdjustment(String partyId, String shopId, LocalDateTime createdAt, int i) {
+    public static Adjustment createTestAdjustment(String partyId,
+                                                  String shopId,
+                                                  LocalDateTime createdAt,
+                                                  int i) {
         Adjustment adjustment = random(Adjustment.class);
         adjustment.setShopId(shopId + i % 2);
         adjustment.setPartyId(partyId + i % 2);
@@ -168,9 +173,17 @@ public class CommonTestData {
         return payment;
     }
 
-    public static PaymentAggsByHour createTestPaymentAggsByHour(
-            LocalDateTime createdAt, String partyId, String shopId, Long amount, Long fee
-    ) {
+    public static PaymentAggsByHour createTestPaymentAggsByHour(LocalDateTime createdAt,
+                                                                String partyId,
+                                                                String shopId) {
+        return createTestPaymentAggsByHour(createdAt, partyId, shopId, 10000L, 2000L);
+    }
+
+    public static PaymentAggsByHour createTestPaymentAggsByHour(LocalDateTime createdAt,
+                                                                String partyId,
+                                                                String shopId,
+                                                                Long amount,
+                                                                Long fee) {
         PaymentAggsByHour paymentAggsByHour = new PaymentAggsByHour();
         paymentAggsByHour.setCreatedAt(createdAt);
         paymentAggsByHour.setPartyId(partyId);
@@ -184,9 +197,17 @@ public class CommonTestData {
         return paymentAggsByHour;
     }
 
-    public static RefundAggsByHour createTestRefundAggsByHour(
-            LocalDateTime createdAt, String partyId, String shopId, Long amount, Long fee
-    ) {
+    public static RefundAggsByHour createTestRefundAggsByHour(LocalDateTime createdAt,
+                                                              String partyId,
+                                                              String shopId) {
+        return createTestRefundAggsByHour(createdAt, partyId, shopId, 10000L, 2000L);
+    }
+
+    public static RefundAggsByHour createTestRefundAggsByHour(LocalDateTime createdAt,
+                                                              String partyId,
+                                                              String shopId,
+                                                              Long amount,
+                                                              Long fee) {
         RefundAggsByHour refundAggsByHour = new RefundAggsByHour();
         refundAggsByHour.setCreatedAt(createdAt);
         refundAggsByHour.setPartyId(partyId);
@@ -199,9 +220,17 @@ public class CommonTestData {
         return refundAggsByHour;
     }
 
-    public static PayoutAggsByHour createTestPayoutAggsByHour(
-            LocalDateTime createdAt, String partyId, String shopId, Long amount, Long fee
-    ) {
+    public static PayoutAggsByHour createTestPayoutAggsByHour(LocalDateTime createdAt,
+                                                              String partyId,
+                                                              String shopId) {
+        return createTestPayoutAggsByHour(createdAt, partyId, shopId, 10000L, 2000L);
+    }
+
+    public static PayoutAggsByHour createTestPayoutAggsByHour(LocalDateTime createdAt,
+                                                              String partyId,
+                                                              String shopId,
+                                                              Long amount,
+                                                              Long fee) {
         PayoutAggsByHour payoutAggsByHour = new PayoutAggsByHour();
         payoutAggsByHour.setCreatedAt(createdAt);
         payoutAggsByHour.setPartyId(partyId);
@@ -213,9 +242,16 @@ public class CommonTestData {
         return payoutAggsByHour;
     }
 
-    public static AdjustmentAggsByHour createTestAdjAggsByHour(
-            LocalDateTime createdAt, String partyId, String shopId, Long amount
-    ) {
+    public static AdjustmentAggsByHour createTestAdjAggsByHour(LocalDateTime createdAt,
+                                                               String partyId,
+                                                               String shopId) {
+        return createTestAdjAggsByHour(createdAt, partyId, shopId, 10000L);
+    }
+
+    public static AdjustmentAggsByHour createTestAdjAggsByHour(LocalDateTime createdAt,
+                                                               String partyId,
+                                                               String shopId,
+                                                               Long amount) {
         AdjustmentAggsByHour adjustmentAggsByHour = new AdjustmentAggsByHour();
         adjustmentAggsByHour.setCreatedAt(createdAt);
         adjustmentAggsByHour.setPartyId(partyId);

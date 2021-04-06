@@ -86,13 +86,13 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
         LocalDateTime fromTimeTruncHour = reportFromTime.truncatedTo(ChronoUnit.HOURS);
         LocalDateTime toTimeTruncHour = toTime.truncatedTo(ChronoUnit.HOURS);
 
-        var youngAdjustmentFundsQuery = getAdjustmentShopAccountingReportData(
+        var youngAdjustmentFundsQuery = getAdjustmentFundsAmountQuery(
                 partyId, shopId, currencyCode, reportFromTime, fromTimeTruncHour.plusHours(1L)
         );
-        var adjustmentAggByHourShopAccountingQuery = getAdjustmentAggByHourShopAccountingQuery(
+        var adjustmentAggByHourShopAccountingQuery = getAggByHourAdjustmentFundsAmountQuery(
                 partyId, shopId, currencyCode, fromTimeTruncHour, toTimeTruncHour
         );
-        var oldAdjustmentFundsQuery = getAdjustmentShopAccountingReportData(
+        var oldAdjustmentFundsQuery = getAdjustmentFundsAmountQuery(
                 partyId, shopId, currencyCode, toTimeTruncHour, toTime
         );
         var fundsAdjustedAmountResult = getDslContext()
@@ -106,11 +106,11 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
         return getFundsAmountResult(fundsAdjustedAmountResult);
     }
 
-    private SelectConditionStep<Record1<BigDecimal>> getAdjustmentAggByHourShopAccountingQuery(String partyId,
-                                                                                    String partyShopId,
-                                                                                    String currencyCode,
-                                                                                    LocalDateTime fromTime,
-                                                                                    LocalDateTime toTime) {
+    private SelectConditionStep<Record1<BigDecimal>> getAggByHourAdjustmentFundsAmountQuery(String partyId,
+                                                                                            String shopId,
+                                                                                            String currencyCode,
+                                                                                            LocalDateTime fromTime,
+                                                                                            LocalDateTime toTime) {
         return getDslContext()
                 .select(DSL.sum(ADJUSTMENT_AGGS_BY_HOUR.AMOUNT).as(AMOUNT_KEY))
                 .from(ADJUSTMENT_AGGS_BY_HOUR)
@@ -118,15 +118,15 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                 .and(ADJUSTMENT_AGGS_BY_HOUR.CREATED_AT.lessThan(toTime))
                 .and(ADJUSTMENT_AGGS_BY_HOUR.CURRENCY_CODE.eq(currencyCode))
                 .and(ADJUSTMENT_AGGS_BY_HOUR.PARTY_ID.eq(partyId))
-                .and(ADJUSTMENT_AGGS_BY_HOUR.SHOP_ID.eq(partyShopId));
+                .and(ADJUSTMENT_AGGS_BY_HOUR.SHOP_ID.eq(shopId));
     }
 
 
-    private SelectConditionStep<Record1<BigDecimal>> getAdjustmentShopAccountingReportData(String partyId,
-                                                                                String partyShopId,
-                                                                                String currencyCode,
-                                                                                LocalDateTime fromTime,
-                                                                                LocalDateTime toTime) {
+    private SelectConditionStep<Record1<BigDecimal>> getAdjustmentFundsAmountQuery(String partyId,
+                                                                                   String shopId,
+                                                                                   String currencyCode,
+                                                                                   LocalDateTime fromTime,
+                                                                                   LocalDateTime toTime) {
         return getDslContext()
                 .select(DSL.sum(ADJUSTMENT.AMOUNT).as(AMOUNT_KEY))
                 .from(ADJUSTMENT)
@@ -135,7 +135,7 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                 .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.captured))
                 .and(ADJUSTMENT.CURRENCY_CODE.eq(currencyCode))
                 .and(ADJUSTMENT.PARTY_ID.eq(partyId))
-                .and(ADJUSTMENT.SHOP_ID.eq(partyShopId));
+                .and(ADJUSTMENT.SHOP_ID.eq(shopId));
     }
 
 }

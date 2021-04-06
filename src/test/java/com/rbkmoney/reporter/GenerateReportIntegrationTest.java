@@ -76,9 +76,8 @@ public class GenerateReportIntegrationTest extends AbstractIntegrationConfig {
     public void setUp() throws Exception {
         given(statisticService.getCapturedPaymentsIterator(anyString(), anyString(), any(), any()))
                 .willReturn(getStatPayment());
-
-        given(statisticService.getRefundsIterator(anyString(), anyString(), any(), any())).willReturn(getStatRefund());
-
+        given(statisticService.getRefundsIterator(anyString(), anyString(), any(), any()))
+                .willReturn(getStatRefund());
         given(statisticService.getAdjustmentsIterator(anyString(), anyString(), any(), any()))
                 .willReturn(getStatAdjustment());
 

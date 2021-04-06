@@ -31,12 +31,18 @@ public class StatisticServiceImpl implements StatisticService {
     private ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
     @Override
-    public ShopAccountingModel getShopAccounting(String partyId, String shopId, String currencyCode, Instant toTime) {
+    public ShopAccountingModel getShopAccounting(String partyId,
+                                                 String shopId,
+                                                 String currencyCode,
+                                                 Instant toTime) {
         return getShopAccounting(partyId, shopId, currencyCode, Optional.empty(), toTime);
     }
 
     @Override
-    public ShopAccountingModel getShopAccounting(String partyId, String shopId, String currencyCode, Instant fromTime,
+    public ShopAccountingModel getShopAccounting(String partyId,
+                                                 String shopId,
+                                                 String currencyCode,
+                                                 Instant fromTime,
                                                  Instant toTime) {
         return getShopAccounting(partyId, shopId, currencyCode, Optional.of(fromTime), toTime);
     }
@@ -191,7 +197,9 @@ public class StatisticServiceImpl implements StatisticService {
     }
 
     @Override
-    public Iterator<StatAdjustment> getAdjustmentsIterator(String partyId, String shopId, Instant fromTime,
+    public Iterator<StatAdjustment> getAdjustmentsIterator(String partyId,
+                                                           String shopId,
+                                                           Instant fromTime,
                                                            Instant toTime) {
         return new Iterator<>() {
 

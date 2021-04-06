@@ -129,7 +129,6 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                         .from(PAYOUT_STATE).fetchOne()
                         .value1()
         );
-
     }
 
     @Override
@@ -142,13 +141,13 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
         LocalDateTime fromTimeTruncHour = reportFromTime.truncatedTo(ChronoUnit.HOURS);
         LocalDateTime toTimeTruncHour = toTime.truncatedTo(ChronoUnit.HOURS);
 
-        var youngPayoutShopAccountingQuery = getPayoutShopAccountingReportData(
+        var youngPayoutShopAccountingQuery = getPayoutFundsAmountQuery(
                 partyId, shopId, currencyCode, reportFromTime, fromTimeTruncHour.plusHours(1L)
         );
-        var payoutAggByHourShopAccountingQuery = getPayoutAggByHourShopAccountingQuery(
+        var payoutAggByHourShopAccountingQuery = getAggByHourPayoutFundsAmountQuery(
                 partyId, shopId, currencyCode, fromTimeTruncHour, toTimeTruncHour
         );
-        var oldPayoutShopAccountingQuery = getPayoutShopAccountingReportData(
+        var oldPayoutShopAccountingQuery = getPayoutFundsAmountQuery(
                 partyId, shopId, currencyCode, toTimeTruncHour, toTime
         );
         var fundsPayOutAmountResult = getDslContext()
@@ -162,11 +161,11 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
         return getFundsAmountResult(fundsPayOutAmountResult);
     }
 
-    private SelectConditionStep<Record1<BigDecimal>> getPayoutAggByHourShopAccountingQuery(String partyId,
-                                                                                           String partyShopId,
-                                                                                           String currencyCode,
-                                                                                           LocalDateTime fromTime,
-                                                                                           LocalDateTime toTime) {
+    private SelectConditionStep<Record1<BigDecimal>> getAggByHourPayoutFundsAmountQuery(String partyId,
+                                                                                        String partyShopId,
+                                                                                        String currencyCode,
+                                                                                        LocalDateTime fromTime,
+                                                                                        LocalDateTime toTime) {
         return getDslContext()
                 .select(DSL.sum(PAYOUT_AGGS_BY_HOUR.AMOUNT).as(AMOUNT_KEY))
                 .from(PAYOUT_AGGS_BY_HOUR)
@@ -177,11 +176,11 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                 .and(PAYOUT_AGGS_BY_HOUR.SHOP_ID.eq(partyShopId));
     }
 
-    private SelectConditionStep<Record1<BigDecimal>> getPayoutShopAccountingReportData(String partyId,
-                                                                                       String partyShopId,
-                                                                                       String currencyCode,
-                                                                                       LocalDateTime fromTime,
-                                                                                       LocalDateTime toTime) {
+    private SelectConditionStep<Record1<BigDecimal>> getPayoutFundsAmountQuery(String partyId,
+                                                                               String partyShopId,
+                                                                               String currencyCode,
+                                                                               LocalDateTime fromTime,
+                                                                               LocalDateTime toTime) {
         return getDslContext()
                 .select(DSL.sum(PAYOUT.AMOUNT).as(AMOUNT_KEY))
                 .from(PAYOUT_STATE)

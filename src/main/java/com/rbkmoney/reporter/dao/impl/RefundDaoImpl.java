@@ -98,13 +98,13 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
         LocalDateTime fromTimeTruncHour = reportFromTime.truncatedTo(ChronoUnit.HOURS);
         LocalDateTime toTimeTruncHour = toTime.truncatedTo(ChronoUnit.HOURS);
 
-        var youngRefundShopAccountingQuery = getRefundShopAccountingQuery(
+        var youngRefundShopAccountingQuery = getRefundFundsAmountQuery(
                 partyId, partyShopId, currencyCode, reportFromTime, fromTimeTruncHour.plusHours(1L)
         );
-        var refundAggByHourShopAccountingQuery = getRefundAggByHourShopAccountingQuery(
+        var refundAggByHourShopAccountingQuery = getAggByHourRefundFundsAmountQuery(
                 partyId, partyShopId, currencyCode, fromTimeTruncHour, toTimeTruncHour
         );
-        var oldRefundShopAccountingQuery = getRefundShopAccountingQuery(
+        var oldRefundShopAccountingQuery = getRefundFundsAmountQuery(
                 partyId, partyShopId, currencyCode, toTimeTruncHour, toTime
         );
         var fundsRefundedAmountResult = getDslContext()
@@ -118,11 +118,11 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
         return getFundsAmountResult(fundsRefundedAmountResult);
     }
 
-    private SelectConditionStep<Record1<BigDecimal>> getRefundShopAccountingQuery(String partyId,
-                                                                   String partyShopId,
-                                                                   String currencyCode,
-                                                                   LocalDateTime fromTime,
-                                                                   LocalDateTime toTime) {
+    private SelectConditionStep<Record1<BigDecimal>> getRefundFundsAmountQuery(String partyId,
+                                                                               String partyShopId,
+                                                                               String currencyCode,
+                                                                               LocalDateTime fromTime,
+                                                                               LocalDateTime toTime) {
         return getDslContext()
                 .select(DSL.sum(REFUND.AMOUNT).as(AMOUNT_KEY))
                 .from(REFUND)
@@ -134,11 +134,11 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                 .and(REFUND.SHOP_ID.eq(partyShopId));
     }
 
-    private SelectConditionStep<Record1<BigDecimal>> getRefundAggByHourShopAccountingQuery(String partyId,
-                                                                            String partyShopId,
-                                                                            String currencyCode,
-                                                                            LocalDateTime fromTime,
-                                                                            LocalDateTime toTime) {
+    private SelectConditionStep<Record1<BigDecimal>> getAggByHourRefundFundsAmountQuery(String partyId,
+                                                                                        String partyShopId,
+                                                                                        String currencyCode,
+                                                                                        LocalDateTime fromTime,
+                                                                                        LocalDateTime toTime) {
         return getDslContext()
                 .select(DSL.sum(REFUND_AGGS_BY_HOUR.AMOUNT).as(AMOUNT_KEY))
                 .from(REFUND_AGGS_BY_HOUR)

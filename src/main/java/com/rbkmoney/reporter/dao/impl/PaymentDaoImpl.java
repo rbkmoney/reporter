@@ -5,7 +5,6 @@ import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.PaymentAdditionalInfo;
-import com.rbkmoney.reporter.domain.tables.records.PaymentAggsByHourRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.model.PaymentFundsAmount;
 import com.zaxxer.hikari.HikariDataSource;
@@ -60,7 +59,8 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                         .and(PAYMENT.STATUS_CREATED_AT.lessThan(dateTo))
                         .and(PAYMENT.STATUS.in(statuses)))
                 .fetch();
-        return records == null || records.isEmpty() ? new ArrayList<>() : records.into(Payment.class);
+        return records == null || records.isEmpty()
+                ? new ArrayList<>() : records.into(Payment.class);
     }
 
     @Override
@@ -84,14 +84,14 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
         LocalDateTime toTimeTruncHour = toTime.truncatedTo(ChronoUnit.HOURS);
 
         SelectConditionStep<Record2<BigDecimal, BigDecimal>> youngPaymentShopAccountingQuery =
-                getPaymentShopAccountingQuery(
+                getPaymentFundsAmountQuery(
                     partyId, shopId, currencyCode, reportFromTime, fromTimeTruncHour.plusHours(1L)
             );
 
-        var paymentAggByHourShopAccountingQuery = getPaymentAggByHourShopAccountingQuery(
+        var paymentAggByHourShopAccountingQuery = getAggByHourPaymentFundsAmountQuery(
                 partyId, shopId, currencyCode, fromTimeTruncHour, toTimeTruncHour
         );
-        var oldPaymentShopAccountingQuery = getPaymentShopAccountingQuery(
+        var oldPaymentShopAccountingQuery = getPaymentFundsAmountQuery(
                 partyId, shopId, currencyCode, toTimeTruncHour, toTime
         );
 
@@ -109,19 +109,17 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 : new PaymentFundsAmount(fundsResult.value1().longValue(), fundsResult.value2().longValue());
     }
 
-    private SelectConditionStep<Record2<BigDecimal, BigDecimal>> getPaymentShopAccountingQuery(
-            String partyId,
-            String partyShopId,
-            String currencyCode,
-            LocalDateTime fromTime,
-            LocalDateTime toTime) {
+    private SelectConditionStep<Record2<BigDecimal, BigDecimal>> getPaymentFundsAmountQuery(String partyId,
+                                                                                            String partyShopId,
+                                                                                            String currencyCode,
+                                                                                            LocalDateTime fromTime,
+                                                                                            LocalDateTime toTime) {
         return getDslContext()
                 .select(
                         DSL.sum(PAYMENT.AMOUNT).as(AMOUNT_KEY),
                         DSL.sum(DSL.coalesce(PAYMENT.FEE, 0L)).as(FEE_KEY)
                 )
                 .from(PAYMENT)
-                //.selectFrom(PAYMENT)
                 .where(PAYMENT.STATUS_CREATED_AT.greaterOrEqual(fromTime))
                 .and(PAYMENT.STATUS_CREATED_AT.lessThan(toTime))
                 .and(PAYMENT.STATUS.eq(InvoicePaymentStatus.captured))
@@ -130,7 +128,7 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 .and(PAYMENT.SHOP_ID.eq(partyShopId));
     }
 
-    private SelectConditionStep<Record2<BigDecimal, BigDecimal>> getPaymentAggByHourShopAccountingQuery(
+    private SelectConditionStep<Record2<BigDecimal, BigDecimal>> getAggByHourPaymentFundsAmountQuery(
             String partyId,
             String partyShopId,
             String currencyCode,
