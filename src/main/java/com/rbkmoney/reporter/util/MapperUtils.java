@@ -459,8 +459,8 @@ public final class MapperUtils {
         String stringClassName = "String";
         if (stringClassName.equalsIgnoreCase(field.getType().getSimpleName())) {
             try {
+                field.setAccessible(true);
                 if (field.get(object) != null) {
-                    field.setAccessible(true);
                     String resultString = field.get(object).toString()
                             .replace("\u0000", "")
                             .replace("\\u0000", "");
