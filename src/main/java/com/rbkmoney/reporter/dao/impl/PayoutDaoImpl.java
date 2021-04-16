@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.Tables.PAYOUT_AGGS_BY_HOUR;
+import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.Payout.PAYOUT;
 import static com.rbkmoney.reporter.domain.tables.PayoutAccount.PAYOUT_ACCOUNT;
 import static com.rbkmoney.reporter.domain.tables.PayoutInternationalAccount.PAYOUT_INTERNATIONAL_ACCOUNT;
@@ -137,12 +138,31 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                                      String currencyCode,
                                      Optional<LocalDateTime> fromTime,
                                      LocalDateTime toTime) {
-        LocalDateTime reportFromTime = fromTime.orElse(LocalDateTime.now());
-        LocalDateTime fromTimeTruncHour = reportFromTime.truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime reportFromTime = fromTime
+                .orElse(
+                        getFirstOparationDateTime(partyId, shopId)
+                                .orElse(toTime)
+                );
+        if (reportFromTime.until(toTime, ChronoUnit.HOURS) > 1) {
+            return getFundsPayOutAmountWithAggs(partyId, shopId, currencyCode, reportFromTime, toTime);
+        } else {
+            var fundsPayOutAmountResult = getPayoutFundsAmountQuery(
+                    partyId, shopId, currencyCode, reportFromTime, toTime
+            ).fetchOne();
+            return getFundsAmountResult(fundsPayOutAmountResult);
+        }
+    }
+
+    public Long getFundsPayOutAmountWithAggs(String partyId,
+                                             String shopId,
+                                             String currencyCode,
+                                             LocalDateTime fromTime,
+                                             LocalDateTime toTime) {
+        LocalDateTime fromTimeTruncHour = fromTime.truncatedTo(ChronoUnit.HOURS);
         LocalDateTime toTimeTruncHour = toTime.truncatedTo(ChronoUnit.HOURS);
 
         var youngPayoutShopAccountingQuery = getPayoutFundsAmountQuery(
-                partyId, shopId, currencyCode, reportFromTime, fromTimeTruncHour.plusHours(1L)
+                partyId, shopId, currencyCode, fromTime, fromTimeTruncHour.plusHours(1L)
         );
         var payoutAggByHourShopAccountingQuery = getAggByHourPayoutFundsAmountQuery(
                 partyId, shopId, currencyCode, fromTimeTruncHour, toTimeTruncHour
@@ -159,6 +179,17 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                 )
                 .fetchOne();
         return getFundsAmountResult(fundsPayOutAmountResult);
+    }
+
+    private Optional<LocalDateTime> getFirstOparationDateTime(String partyId, String shopId) {
+        Record1<LocalDateTime> result = getDslContext()
+                .select(DSL.min(PAYOUT.CREATED_AT))
+                .from(PAYOUT)
+                .where(PAYOUT.PARTY_ID.eq(partyId))
+                .and(PAYOUT.SHOP_ID.eq(shopId))
+                .fetchOne();
+        return Optional.ofNullable(result)
+                .map(r -> r.value1());
     }
 
     private SelectConditionStep<Record1<BigDecimal>> getAggByHourPayoutFundsAmountQuery(String partyId,
