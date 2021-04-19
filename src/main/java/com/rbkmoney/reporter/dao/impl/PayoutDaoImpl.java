@@ -21,7 +21,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static com.rbkmoney.reporter.domain.Tables.PAYOUT_AGGS_BY_HOUR;
-import static com.rbkmoney.reporter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.Payout.PAYOUT;
 import static com.rbkmoney.reporter.domain.tables.PayoutAccount.PAYOUT_ACCOUNT;
 import static com.rbkmoney.reporter.domain.tables.PayoutInternationalAccount.PAYOUT_INTERNATIONAL_ACCOUNT;
@@ -143,6 +142,9 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                         getFirstOparationDateTime(partyId, shopId)
                                 .orElse(toTime)
                 );
+        if (toTime.isEqual(reportFromTime)) {
+            return 0L;
+        }
         if (reportFromTime.until(toTime, ChronoUnit.HOURS) > 1) {
             return getFundsPayOutAmountWithAggs(partyId, shopId, currencyCode, reportFromTime, toTime);
         } else {

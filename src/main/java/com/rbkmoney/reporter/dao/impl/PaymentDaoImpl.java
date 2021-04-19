@@ -82,6 +82,9 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                         getFirstOparationDateTime(partyId, shopId)
                                 .orElse(toTime)
                 );
+        if (toTime.isEqual(reportFromTime)) {
+            return new PaymentFundsAmount(0L, 0L);
+        }
         if (reportFromTime.until(toTime, ChronoUnit.HOURS) > 1) {
             return getPaymentFundsAmountWithAggs(partyId, shopId, currencyCode, reportFromTime, toTime);
         } else {

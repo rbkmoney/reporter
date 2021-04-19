@@ -100,6 +100,9 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                         getFirstOparationDateTime(partyId, partyShopId)
                                 .orElse(toTime)
                 );
+        if (toTime.isEqual(reportFromTime)) {
+            return 0L;
+        }
         if (reportFromTime.until(toTime, ChronoUnit.HOURS) > 1) {
             return getFundsRefundedAmountWithAggs(partyId, partyShopId, currencyCode, reportFromTime, toTime);
         } else {

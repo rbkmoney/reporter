@@ -85,9 +85,12 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                                        LocalDateTime toTime) {
         LocalDateTime reportFromTime = fromTime
                 .orElse(
-                        getFirstOparationDateTime(partyId, shopId)
+                        getFirstOperationDateTime(partyId, shopId)
                                 .orElse(toTime)
                 );
+        if (toTime.isEqual(reportFromTime)) {
+            return 0L;
+        }
         if (reportFromTime.until(toTime, ChronoUnit.HOURS) > 1) {
             return getFundsAdjustedAmountWithAggs(partyId, shopId, currencyCode, reportFromTime, toTime);
         } else {
@@ -158,7 +161,7 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                 .and(ADJUSTMENT.SHOP_ID.eq(shopId));
     }
 
-    private Optional<LocalDateTime> getFirstOparationDateTime(String partyId, String shopId) {
+    private Optional<LocalDateTime> getFirstOperationDateTime(String partyId, String shopId) {
         Record1<LocalDateTime> result = getDslContext()
                 .select(DSL.min(ADJUSTMENT.STATUS_CREATED_AT))
                 .from(ADJUSTMENT)
