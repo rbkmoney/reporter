@@ -329,7 +329,8 @@ public final class MapperUtils {
             BankCard bankCard = paymentTool.getBankCard();
 
             additionalInfo.setBankCardToken(bankCard.getToken());
-            additionalInfo.setBankCardSystem(bankCard.getPaymentSystem().toString());
+            additionalInfo.setBankCardSystem(bankCard.getPaymentSystem() == null
+                    ? null : bankCard.getPaymentSystem().toString());
             additionalInfo.setBankCardBin(bankCard.getBin());
             additionalInfo.setBankCardMaskedPan(bankCard.getLastDigits());
             if (TokenProviderUtil.isSetTokenProvider(bankCard)) {
