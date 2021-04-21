@@ -145,7 +145,7 @@ public class AggregatesDaoImpl extends AbstractDao implements AggregatesDao {
         String sql = "with paid_payouts as (\n" +
                 "    SELECT date_trunc('hour', ps.event_created_at) as created_at, \n" +
                 "           pay.party_id, pay.shop_id, (sum(pay.amount) - sum(pay.fee)) as amount, \n" +
-                "           0 as fee, pay.currency_code, pay.type \n" +
+                "           pay.currency_code, pay.type \n" +
                 "    FROM rpt.payout_state as ps \n" +
                 "    JOIN rpt.payout as pay on pay.payout_id = ps.payout_id  \n" +
                 "    WHERE ps.event_created_at >= {0} AND ps.event_created_at < {1} \n" +
@@ -158,7 +158,7 @@ public class AggregatesDaoImpl extends AbstractDao implements AggregatesDao {
                 "cancelled_payouts as (\n" +
                 "    SELECT date_trunc('hour', ps.event_created_at) as created_at, \n" +
                 "           pay.party_id, pay.shop_id, -1 * (sum(pay.amount) - sum(pay.fee)) as amount, \n" +
-                "           0 as fee, pay.currency_code, pay.type \n" +
+                "           pay.currency_code, pay.type \n" +
                 "    FROM rpt.payout_state as ps \n" +
                 "    JOIN rpt.payout as pay on pay.payout_id = ps.payout_id  \n" +
                 "    JOIN rpt.payout_state as ps_success " +
