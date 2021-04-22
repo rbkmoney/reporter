@@ -170,8 +170,7 @@ public class AdjustmentDaoImpl extends AbstractDao implements AdjustmentDao {
                 .and(ADJUSTMENT.SHOP_ID.eq(shopId))
                 .fetchOne();
         return Optional.ofNullable(result)
-                .filter(r -> r.value1() != null)
-                .map(r -> r.value1().minusMinutes(1L));
+                .map(r -> r.value1());
     }
 
 }

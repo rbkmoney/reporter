@@ -181,8 +181,7 @@ public class PayoutDaoImpl extends AbstractDao implements PayoutDao {
                 .and(PAYOUT.SHOP_ID.eq(shopId))
                 .fetchOne();
         return Optional.ofNullable(result)
-                .filter(r -> r.value1() != null)
-                .map(r -> r.value1().minusMinutes(1L));
+                .map(r -> r.value1());
     }
 
     private SelectConditionStep<Record1<BigDecimal>> getAggByHourPayoutFundsAmountQuery(String partyId,
