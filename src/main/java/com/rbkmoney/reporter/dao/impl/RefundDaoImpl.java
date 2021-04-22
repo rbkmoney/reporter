@@ -149,7 +149,8 @@ public class RefundDaoImpl extends AbstractDao implements RefundDao {
                 .and(REFUND.SHOP_ID.eq(shopId))
                 .fetchOne();
         return Optional.ofNullable(result)
-                .map(r -> r.value1());
+                .filter(r -> r.value1() != null)
+                .map(r -> r.value1().minusMinutes(1L));
     }
 
     private SelectConditionStep<Record1<BigDecimal>> getRefundFundsAmountQuery(String partyId,

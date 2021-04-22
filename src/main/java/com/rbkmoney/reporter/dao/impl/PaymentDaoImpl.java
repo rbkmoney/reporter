@@ -141,7 +141,8 @@ public class PaymentDaoImpl extends AbstractDao implements PaymentDao {
                 .and(PAYMENT.SHOP_ID.eq(shopId))
                 .fetchOne();
         return Optional.ofNullable(result)
-                .map(r -> r.value1());
+                .filter(r -> r.value1() != null)
+                .map(r -> r.value1().minusMinutes(1L));
     }
 
     private SelectConditionStep<Record2<BigDecimal, BigDecimal>> getPaymentFundsAmountQuery(String partyId,
