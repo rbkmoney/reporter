@@ -1,7 +1,6 @@
 package com.rbkmoney.reporter.job;
 
 import com.rbkmoney.damsel.domain.Shop;
-import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.exception.StorageException;
 import com.rbkmoney.reporter.service.PartyService;
@@ -45,20 +44,21 @@ public class GenerateReportJob implements Job {
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
         String partyId = jobDataMap.getString(PARTY_ID);
         String contractId = jobDataMap.getString(CONTRACT_ID);
-        ReportType reportType = TypeUtil.toEnumField(jobDataMap.getString(REPORT_TYPE), ReportType.class);
-
         log.info("Trying to create report for contract, partyId='{}', " +
                         "contractId='{}', trigger='{}', jobExecutionContext='{}'",
                 partyId, contractId, trigger, jobExecutionContext);
         try {
             Instant toTime = trigger.getCurrentCronTime().toInstant();
             ZoneId zoneId = trigger.getTimeZone().toZoneId();
-            Instant fromTime =
-                    YearMonth.from(toLocalDateTime(toTime, zoneId)).minusMonths(1).atDay(1).atStartOfDay(zoneId)
+            Instant fromTime = YearMonth.from(toLocalDateTime(toTime, zoneId))
+                            .minusMonths(1)
+                            .atDay(1)
+                            .atStartOfDay(zoneId)
                             .toInstant();
 
             List<Shop> shops = partyService.getParty(partyId).getShops().values()
-                    .stream().filter(shop -> shop.getContractId().equals(contractId))
+                    .stream()
+                    .filter(shop -> shop.getContractId().equals(contractId))
                     .collect(Collectors.toList());
 
             if (shops.isEmpty()) {
@@ -67,9 +67,15 @@ public class GenerateReportJob implements Job {
                 return;
             }
 
-            shops.forEach(shop -> reportService
-                    .createReport(partyId, shop.getId(), fromTime, toTime, reportType, zoneId,
-                            jobExecutionContext.getFireTime().toInstant()));
+            shops.forEach(shop -> reportService.createReport(
+                    partyId,
+                    shop.getId(),
+                    fromTime,
+                    toTime,
+                    ReportType.payment_registry,
+                    zoneId,
+                    jobExecutionContext.getFireTime().toInstant())
+            );
 
             log.info("Report for contract have been successfully created, partyId='{}', " +
                             "contractId='{}', trigger='{}', jobExecutionContext='{}'",
