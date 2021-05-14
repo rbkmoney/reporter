@@ -21,6 +21,7 @@ import com.rbkmoney.reporter.domain.enums.InvoiceStatus;
 import com.rbkmoney.reporter.domain.enums.OnHoldExpiration;
 import com.rbkmoney.reporter.domain.tables.pojos.*;
 import com.rbkmoney.reporter.domain.tables.pojos.Invoice;
+import com.rbkmoney.reporter.model.FeeType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -442,24 +443,6 @@ public final class MapperUtils {
             payment.setPhoneNumber(contactInfo.getPhoneNumber());
             payment.setEmail(contactInfo.getEmail());
         }
-    }
-
-    public static ReportComparingData createReportComparingData(long reportId,
-                                                                ReportType reportType,
-                                                                ComparingStatus status) {
-        return createReportComparingData(reportId, reportType, status, null);
-    }
-
-    public static ReportComparingData createReportComparingData(long reportId,
-                                                                ReportType reportType,
-                                                                ComparingStatus status,
-                                                                String failureReason) {
-        ReportComparingData comparingData = new ReportComparingData();
-        comparingData.setReportId(reportId);
-        comparingData.setReportType(reportType);
-        comparingData.setStatus(status);
-        comparingData.setFailureReason(failureReason);
-        return comparingData;
     }
 
     public static void removeNullSymbols(Object object) {

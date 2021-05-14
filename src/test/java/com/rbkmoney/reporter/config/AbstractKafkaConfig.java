@@ -2,7 +2,6 @@ package com.rbkmoney.reporter.config;
 
 import com.rbkmoney.easyway.*;
 import com.rbkmoney.reporter.config.properties.KafkaSslProperties;
-import com.rbkmoney.reporter.listener.PartyManagementListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 import org.junit.runner.Description;
@@ -27,8 +26,6 @@ import java.util.function.Supplier;
                 KafkaSslProperties.class,
                 KafkaConfig.class,
                 KafkaConsumerBeanEnableConfig.class,
-                PartyManagementListener.class,
-
         },
         initializers = AbstractKafkaConfig.Initializer.class
 )

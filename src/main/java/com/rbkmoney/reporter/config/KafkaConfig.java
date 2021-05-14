@@ -29,8 +29,6 @@ import java.util.Map;
 @EnableConfigurationProperties(KafkaSslProperties.class)
 public class KafkaConfig {
 
-    @Value("${retry-policy.maxAttempts}")
-    int maxAttempts;
     @Value("${kafka.consumer.auto-offset-reset}")
     private String autoOffsetReset;
     @Value("${kafka.consumer.enable-auto-commit}")
@@ -49,8 +47,6 @@ public class KafkaConfig {
     private String bootstrapServers;
     @Value("${kafka.topics.invoicing.concurrency}")
     private int invoicingConcurrency;
-    @Value("${kafka.topics.party-management.concurrency}")
-    private int partyConcurrency;
 
     @Bean
     public Map<String, Object> consumerConfigs(KafkaSslProperties kafkaSslProperties) {
@@ -91,17 +87,6 @@ public class KafkaConfig {
 
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>>
-            kafkaListenerContainerFactory(
-                    ConsumerFactory<String, MachineEvent> consumerFactory
-    ) {
-        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
-                createDefaultListenerContainerFactory(consumerFactory);
-        factory.setConcurrency(partyConcurrency);
-        return factory;
-    }
-
-    @Bean
-    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>>
             kafkaInvoicingListenerContainerFactory(
                     ConsumerFactory<String, MachineEvent> consumerFactory
     ) {
@@ -125,6 +110,8 @@ public class KafkaConfig {
     }
 
     public BatchErrorHandler kafkaErrorHandler() {
+        //TODO: сейчас при проблемах с инфрой можем пропустить какие-то события.
+        // Нужно пофиксить, чтобы такого не происходило
         return new SeekToCurrentWithSleepBatchErrorHandler();
     }
 

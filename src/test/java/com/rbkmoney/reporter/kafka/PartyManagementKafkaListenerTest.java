@@ -29,8 +29,6 @@ public class PartyManagementKafkaListenerTest extends AbstractKafkaConfig {
     private static final long DEFAULT_KAFKA_SYNC_TIMEOUT = 5000L;
     @Value("${kafka.topics.invoicing.id}")
     public String invoicingTopic;
-    @Value("${kafka.topics.party-management.id}")
-    public String partyTopic;
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
     @MockBean
@@ -42,17 +40,6 @@ public class PartyManagementKafkaListenerTest extends AbstractKafkaConfig {
         sinkEvent.setEvent(createMessage());
 
         writeToTopic(invoicingTopic, sinkEvent);
-
-        verify(eventService, timeout(DEFAULT_KAFKA_SYNC_TIMEOUT).times(1))
-                .handleEvents(anyList());
-    }
-
-    @Test
-    public void listenPartyChanges() throws Exception {
-        SinkEvent sinkEvent = new SinkEvent();
-        sinkEvent.setEvent(createMessage());
-
-        writeToTopic(partyTopic, sinkEvent);
 
         verify(eventService, timeout(DEFAULT_KAFKA_SYNC_TIMEOUT).times(1))
                 .handleEvents(anyList());
