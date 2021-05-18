@@ -24,7 +24,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 @Slf4j
-public class PartyManagementKafkaListenerTest extends AbstractKafkaConfig {
+public class KafkaListenerTest extends AbstractKafkaConfig {
 
     private static final long DEFAULT_KAFKA_SYNC_TIMEOUT = 5000L;
     @Value("${kafka.topics.invoicing.id}")
