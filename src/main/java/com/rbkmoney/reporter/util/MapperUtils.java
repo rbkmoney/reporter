@@ -334,12 +334,7 @@ public final class MapperUtils {
             additionalInfo.setBankCardSystem(PaymentSystemUtil.getPaymentSystemName(bankCard));
             additionalInfo.setBankCardBin(bankCard.getBin());
             additionalInfo.setBankCardMaskedPan(bankCard.getLastDigits());
-            String tokenProviderName = TokenProviderUtil.getTokenProviderName(bankCard);
-            if (tokenProviderName != null) {
-                additionalInfo.setBankCardTokenProvider(
-                        TypeUtil.toEnumField(tokenProviderName, BankCardTokenProvider.class)
-                );
-            }
+            additionalInfo.setBankCardTokenProvider(TokenProviderUtil.getTokenProviderName(bankCard));
         } else if (paymentTool.isSetPaymentTerminal()) {
             PaymentTerminal paymentTerminal = paymentTool.getPaymentTerminal();
 
