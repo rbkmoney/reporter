@@ -20,29 +20,35 @@ import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 public class KafkaListenerTest extends AbstractKafkaConfig {
-
-    private static final long DEFAULT_KAFKA_SYNC_TIMEOUT = 5000L;
+    
     @Value("${kafka.topics.invoicing.id}")
     public String invoicingTopic;
+    
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
+    
     @MockBean
     private EventService eventService;
 
     @Test
     public void listenInvoicingChanges() throws Exception {
+        int ceventsCount = 5;
+        for (int i = 0; i < ceventsCount; i++) {
+            writeToTopic(invoicingTopic, createSinkEvent());
+        }
+
+        verify(eventService, timeout(DEFAULT_KAFKA_SYNC_TIMEOUT).times(ceventsCount))
+                .handleEvents(anyList());
+    }
+
+    private SinkEvent createSinkEvent() {
         SinkEvent sinkEvent = new SinkEvent();
         sinkEvent.setEvent(createMessage());
-
-        writeToTopic(invoicingTopic, sinkEvent);
-
-        verify(eventService, timeout(DEFAULT_KAFKA_SYNC_TIMEOUT).times(1))
-                .handleEvents(anyList());
+        return sinkEvent;
     }
 
     private MachineEvent createMessage() {

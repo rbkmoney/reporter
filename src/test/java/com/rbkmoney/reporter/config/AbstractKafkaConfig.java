@@ -34,6 +34,10 @@ import java.util.function.Supplier;
 @Slf4j
 public abstract class AbstractKafkaConfig extends AbstractTestUtils {
 
+    public static final int DEFAULT_MAX_POLL_RECORDS = 5;
+
+    public static final long DEFAULT_KAFKA_SYNC_TIMEOUT = 5000L;
+
     private static TestContainers testContainers =
             TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
                     .addKafkaTestContainer()
@@ -69,8 +73,8 @@ public abstract class AbstractKafkaConfig extends AbstractTestUtils {
 
     private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
         return environmentProperties -> {
-            environmentProperties.put("kafka.topics.party-management.enabled", "true");
             environmentProperties.put("kafka.topics.invoicing.enabled", "true");
+            environmentProperties.put("kafka.consumer.max-poll-records", String.valueOf(DEFAULT_MAX_POLL_RECORDS));
         };
     }
 

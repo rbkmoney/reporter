@@ -47,6 +47,10 @@ public class KafkaConfig {
     private String bootstrapServers;
     @Value("${kafka.topics.invoicing.concurrency}")
     private int invoicingConcurrency;
+    @Value("${kafka.consumer.disconnect-backoff-ms}")
+    private int disconnectBackoffMs;
+    @Value("${kafka.consumer.retry-backoff-ms}")
+    private int retryBackoffMs;
 
     @Bean
     public Map<String, Object> consumerConfigs(KafkaSslProperties kafkaSslProperties) {
@@ -61,6 +65,8 @@ public class KafkaConfig {
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, sessionTimeoutMs);
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollIntervalMs);
+        props.put(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG, disconnectBackoffMs);
+        props.put(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG, retryBackoffMs);
         configureSsl(props, kafkaSslProperties);
         return props;
     }
@@ -110,8 +116,6 @@ public class KafkaConfig {
     }
 
     public BatchErrorHandler kafkaErrorHandler() {
-        //TODO: сейчас при проблемах с инфрой можем пропустить какие-то события.
-        // Нужно пофиксить, чтобы такого не происходило
         return new SeekToCurrentWithSleepBatchErrorHandler();
     }
 
