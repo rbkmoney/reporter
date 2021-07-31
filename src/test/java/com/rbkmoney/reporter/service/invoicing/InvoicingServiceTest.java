@@ -3,7 +3,7 @@ package com.rbkmoney.reporter.service.invoicing;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.config.PostgresqlSpringBootITest;
+import com.rbkmoney.reporter.config.testconfiguration.MockedUnimportantServicesConfig;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
@@ -20,10 +20,13 @@ import com.rbkmoney.reporter.handler.invoicing.InvoiceStatusChangeHandler;
 import com.rbkmoney.reporter.service.HellgateInvoicingService;
 import com.rbkmoney.reporter.service.impl.InvoicingService;
 import com.rbkmoney.sink.common.parser.Parser;
+import com.rbkmoney.testcontainers.annotations.DefaultSpringBootTest;
+import com.rbkmoney.testcontainers.annotations.postgresql.PostgresqlTestcontainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -35,7 +38,9 @@ import static com.rbkmoney.reporter.data.InvoicingData.*;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-@PostgresqlSpringBootITest
+@PostgresqlTestcontainer
+@DefaultSpringBootTest
+@Import(MockedUnimportantServicesConfig.class)
 public class InvoicingServiceTest {
 
     private static final String INVOICE_ID = "inv-1";
