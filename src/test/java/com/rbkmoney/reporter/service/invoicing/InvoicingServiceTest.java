@@ -3,7 +3,7 @@ package com.rbkmoney.reporter.service.invoicing;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
-import com.rbkmoney.reporter.config.AbstractInvoicingServiceConfig;
+import com.rbkmoney.reporter.config.PostgresqlSpringBootITest;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
@@ -20,8 +20,8 @@ import com.rbkmoney.reporter.handler.invoicing.InvoiceStatusChangeHandler;
 import com.rbkmoney.reporter.service.HellgateInvoicingService;
 import com.rbkmoney.reporter.service.impl.InvoicingService;
 import com.rbkmoney.sink.common.parser.Parser;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -33,10 +33,10 @@ import java.util.List;
 
 import static com.rbkmoney.reporter.data.InvoicingData.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-public class InvoicingServiceTest extends AbstractInvoicingServiceConfig {
+@PostgresqlSpringBootITest
+public class InvoicingServiceTest {
 
     private static final String INVOICE_ID = "inv-1";
     private static final String INVOICE_ID_2 = "inv-2";
@@ -59,10 +59,10 @@ public class InvoicingServiceTest extends AbstractInvoicingServiceConfig {
     private Parser<MachineEvent, EventPayload> paymentMachineEventParser;
     @MockBean
     private HellgateInvoicingService hgInvoicingService;
-    private MachineEvent machineEventOne = createMachineEvent(INVOICE_ID);
-    private MachineEvent machineEventTwo = createMachineEvent(INVOICE_ID_2);
+    private final MachineEvent machineEventOne = createMachineEvent(INVOICE_ID);
+    private final MachineEvent machineEventTwo = createMachineEvent(INVOICE_ID_2);
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         when(hgInvoicingService.getInvoice(INVOICE_ID, 1L))
                 .thenReturn(createHgInvoice(INVOICE_ID, PAYMENT_ID, REFUND_ID, ADJUSTMENT_ID));
@@ -230,5 +230,4 @@ public class InvoicingServiceTest extends AbstractInvoicingServiceConfig {
         assertEquals("Adjustment amount is not equal to expected",
                 Long.valueOf(2418L), adjustment.getAmount());
     }
-
 }
