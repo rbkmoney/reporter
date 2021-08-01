@@ -4,6 +4,7 @@ import com.rbkmoney.reporter.config.testconfiguration.MockedUnimportantServicesC
 import com.rbkmoney.testcontainers.annotations.KafkaSpringBootTest;
 import com.rbkmoney.testcontainers.annotations.kafka.KafkaTestcontainerSingleton;
 import com.rbkmoney.testcontainers.annotations.postgresql.PostgresqlTestcontainerSingleton;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -21,5 +22,6 @@ import java.lang.annotation.Target;
         topicsKeys = "kafka.topics.invoicing.id")
 @KafkaSpringBootTest
 @Import(MockedUnimportantServicesConfig.class)
+@Disabled
 public @interface KafkaPostgresqlSpringBootITest {
 }
