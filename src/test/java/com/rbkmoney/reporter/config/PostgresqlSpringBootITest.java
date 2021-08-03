@@ -4,6 +4,7 @@ import com.rbkmoney.reporter.config.testconfiguration.MockedUnimportantServicesC
 import com.rbkmoney.testcontainers.annotations.DefaultSpringBootTest;
 import com.rbkmoney.testcontainers.annotations.postgresql.PostgresqlTestcontainer;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,5 +16,6 @@ import java.lang.annotation.Target;
 @PostgresqlTestcontainer
 @DefaultSpringBootTest
 @Import(MockedUnimportantServicesConfig.class)
+@Transactional
 public @interface PostgresqlSpringBootITest {
 }
