@@ -1,7 +1,7 @@
 CREATE TABLE rpt.allocation
 (
     id                                BIGSERIAL                   NOT NULL,
-    payment_id                        CHARACTER VARYING           NOT NULL,
+    payment_id                        BIGSERIAL                   NOT NULL,
     party_id                          CHARACTER VARYING           NOT NULL,
     shop_id                           CHARACTER VARYING           NOT NULL,
     amount                            BIGINT                      NOT NULL,
