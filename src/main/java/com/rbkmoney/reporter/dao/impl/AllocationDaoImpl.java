@@ -2,6 +2,7 @@ package com.rbkmoney.reporter.dao.impl;
 
 import com.rbkmoney.reporter.dao.AbstractDao;
 import com.rbkmoney.reporter.dao.AllocationDao;
+import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPaymentDetails;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefund;
@@ -33,8 +34,8 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
                 .set(getDslContext().newRecord(ALLOCATION_PAYMENT, allocationPayment))
                 .onConflict(
                         ALLOCATION_PAYMENT.INVOICE_ID,
-                        ALLOCATION_PAYMENT.PAYMENT_ID,
-                        ALLOCATION_PAYMENT.EXT_ALLOCATION_ID
+                        ALLOCATION_PAYMENT.EXT_PAYMENT_ID,
+                        ALLOCATION_PAYMENT.ALLOCATION_ID
                 )
                 .doUpdate()
                 .set(getDslContext().newRecord(ALLOCATION_PAYMENT, allocationPayment))
@@ -48,17 +49,22 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
         getDslContext()
                 .insertInto(ALLOCATION_PAYMENT_DETAILS)
                 .set(getDslContext().newRecord(ALLOCATION_PAYMENT_DETAILS, allocationPaymentDetails))
-                .onDuplicateKeyUpdate()
+                .onConflict(
+                        ALLOCATION_PAYMENT_DETAILS.EXT_ALLOCATION_PAYMENT_ID
+                )
+                .doUpdate()
                 .set(getDslContext().newRecord(ALLOCATION_PAYMENT_DETAILS, allocationPaymentDetails))
                 .execute();
     }
 
     @Override
-    public Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(String invoiceId, String paymentId) {
+    public Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(String invoiceId, Long paymentId,
+                                                                       InvoicePaymentStatus status) {
         return getDslContext()
                 .selectFrom(ALLOCATION_PAYMENT)
                 .where(ALLOCATION_PAYMENT.INVOICE_ID.eq(invoiceId))
-                .and(ALLOCATION_PAYMENT.PAYMENT_ID.eq(paymentId))
+                .and(ALLOCATION_PAYMENT.EXT_PAYMENT_ID.eq(paymentId))
+                .and(ALLOCATION_PAYMENT.STATUS.eq(status))
                 .fetchLazy();
     }
 
@@ -69,9 +75,9 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
                 .set(getDslContext().newRecord(ALLOCATION_REFUND, allocationRefund))
                 .onConflict(
                         ALLOCATION_REFUND.INVOICE_ID,
-                        ALLOCATION_REFUND.PAYMENT_ID,
+                        ALLOCATION_REFUND.EXT_PAYMENT_ID,
                         ALLOCATION_REFUND.REFUND_ID,
-                        ALLOCATION_REFUND.EXT_ALLOCATION_ID
+                        ALLOCATION_REFUND.ALLOCATION_ID
                 )
                 .doUpdate()
                 .set(getDslContext().newRecord(ALLOCATION_REFUND, allocationRefund))
@@ -85,19 +91,23 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
         getDslContext()
                 .insertInto(ALLOCATION_REFUND_DETAILS)
                 .set(getDslContext().newRecord(ALLOCATION_REFUND_DETAILS, allocationRefundDetails))
-                .onDuplicateKeyUpdate()
+                .onConflict(
+                        ALLOCATION_REFUND_DETAILS.EXT_ALLOCATION_REFUND_ID
+                )
+                .doUpdate()
                 .set(getDslContext().newRecord(ALLOCATION_REFUND_DETAILS, allocationRefundDetails))
                 .execute();
     }
 
     @Override
-    public Cursor<AllocationRefundRecord> getAllocationRefundsCursor(String invoiceId, String paymentId,
-                                                                     String refundId) {
+    public Cursor<AllocationRefundRecord> getAllocationRefundsCursor(String invoiceId, Long paymentId,
+                                                                     String refundId, InvoicePaymentStatus status) {
         return getDslContext()
                 .selectFrom(ALLOCATION_REFUND)
                 .where(ALLOCATION_REFUND.INVOICE_ID.eq(invoiceId))
-                .and(ALLOCATION_REFUND.PAYMENT_ID.eq(paymentId))
+                .and(ALLOCATION_REFUND.EXT_PAYMENT_ID.eq(paymentId))
                 .and(ALLOCATION_REFUND.REFUND_ID.eq(refundId))
+                .and(ALLOCATION_REFUND.STATUS.eq(status))
                 .fetchLazy();
     }
 }

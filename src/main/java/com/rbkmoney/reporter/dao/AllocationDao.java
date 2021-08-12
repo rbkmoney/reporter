@@ -1,5 +1,6 @@
 package com.rbkmoney.reporter.dao;
 
+import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPaymentDetails;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefund;
@@ -16,7 +17,8 @@ public interface AllocationDao {
 
     Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(
             String invoiceId,
-            String paymentId
+            Long paymentId,
+            InvoicePaymentStatus status
     );
 
     Long saveAllocationRefund(AllocationRefund allocationRefund);
@@ -25,7 +27,8 @@ public interface AllocationDao {
 
     Cursor<AllocationRefundRecord> getAllocationRefundsCursor(
             String invoiceId,
-            String paymentId,
-            String refundId
+            Long paymentId,
+            String refundId,
+            InvoicePaymentStatus status
     );
 }
