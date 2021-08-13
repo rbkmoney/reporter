@@ -23,7 +23,8 @@ public class AllocationDaoTest {
     @Autowired
     private AllocationDao allocationDao;
 
-    @Autowired PaymentDao paymentDao;
+    @Autowired
+    private PaymentDao paymentDao;
 
     @Test
     public void saveAndGetAllocationPaymentTest() {
