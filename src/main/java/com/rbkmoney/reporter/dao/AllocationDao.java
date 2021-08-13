@@ -16,7 +16,7 @@ public interface AllocationDao {
 
     List<AllocationPayment> getAllocationPayments(
             String invoiceId,
-            Long paymentId,
+            String paymentId,
             InvoicePaymentStatus status
     );
 
@@ -26,7 +26,7 @@ public interface AllocationDao {
 
     List<AllocationRefund> getAllocationRefunds(
             String invoiceId,
-            Long paymentId,
+            String paymentId,
             String refundId,
             InvoicePaymentStatus status
     );

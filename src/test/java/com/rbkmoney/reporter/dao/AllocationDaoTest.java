@@ -4,7 +4,6 @@ import com.rbkmoney.reporter.config.PostgresqlSpringBootITest;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefund;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,15 +22,11 @@ public class AllocationDaoTest {
     @Autowired
     private AllocationDao allocationDao;
 
-    @Autowired
-    private PaymentDao paymentDao;
-
     @Test
     public void saveAndGetAllocationPaymentTest() {
         int recordsCount = 100;
 
-        Long extPaymentId = random(Long.class);
-        createPayment(extPaymentId);
+        String paymentId = random(String.class);
         String invoiceId = random(String.class);
         InvoicePaymentStatus status = random(InvoicePaymentStatus.class);
 
@@ -40,7 +35,7 @@ public class AllocationDaoTest {
                     String allocationId = random(String.class);
                     AllocationPayment allocationPayment = random(AllocationPayment.class);
                     allocationPayment.setInvoiceId(invoiceId);
-                    allocationPayment.setExtPaymentId(extPaymentId);
+                    allocationPayment.setPaymentId(paymentId);
                     allocationPayment.setAllocationId(allocationId);
                     allocationPayment.setStatus(status);
                     allocationDao.saveAllocationPayment(allocationPayment);
@@ -48,7 +43,7 @@ public class AllocationDaoTest {
                 }).collect(Collectors.toList());
 
         List<AllocationPayment> resultRecords =
-                allocationDao.getAllocationPayments(invoiceId, extPaymentId, status);
+                allocationDao.getAllocationPayments(invoiceId, paymentId, status);
 
         assertEquals(recordsCount, resultRecords.size());
         sourceRecords.sort(Comparator.comparingLong(AllocationPayment::getId));
@@ -60,8 +55,7 @@ public class AllocationDaoTest {
     public void saveAndGetAllocationRefundTest() {
         int recordsCount = 100;
 
-        Long extPaymentId = random(Long.class);
-        createPayment(extPaymentId);
+        String paymentId = random(String.class);
         String invoiceId = random(String.class);
         String refundId = random(String.class);
         InvoicePaymentStatus status = random(InvoicePaymentStatus.class);
@@ -71,7 +65,7 @@ public class AllocationDaoTest {
                     String allocationId = random(String.class);
                     AllocationRefund allocationRefund = random(AllocationRefund.class);
                     allocationRefund.setInvoiceId(invoiceId);
-                    allocationRefund.setExtPaymentId(extPaymentId);
+                    allocationRefund.setPaymentId(paymentId);
                     allocationRefund.setRefundId(refundId);
                     allocationRefund.setAllocationId(allocationId);
                     allocationRefund.setStatus(status);
@@ -80,17 +74,11 @@ public class AllocationDaoTest {
                 }).collect(Collectors.toList());
 
         List<AllocationRefund> resultRecords =
-                allocationDao.getAllocationRefunds(invoiceId, extPaymentId, refundId, status);
+                allocationDao.getAllocationRefunds(invoiceId, paymentId, refundId, status);
 
         assertEquals(recordsCount, resultRecords.size());
         sourceRecords.sort(Comparator.comparingLong(AllocationRefund::getId));
         resultRecords.sort(Comparator.comparingLong(AllocationRefund::getId));
         assertIterableEquals(sourceRecords, resultRecords);
-    }
-
-    private void createPayment(Long paymentId) {
-        Payment payment = random(Payment.class);
-        payment.setId(paymentId);
-        paymentDao.savePayment(payment);
     }
 }

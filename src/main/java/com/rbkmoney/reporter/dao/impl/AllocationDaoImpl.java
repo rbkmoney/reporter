@@ -37,7 +37,7 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
                 .set(getDslContext().newRecord(ALLOCATION_PAYMENT, allocationPayment))
                 .onConflict(
                         ALLOCATION_PAYMENT.INVOICE_ID,
-                        ALLOCATION_PAYMENT.EXT_PAYMENT_ID,
+                        ALLOCATION_PAYMENT.PAYMENT_ID,
                         ALLOCATION_PAYMENT.ALLOCATION_ID
                 )
                 .doUpdate()
@@ -63,13 +63,13 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
     @Override
     public List<AllocationPayment> getAllocationPayments(
             String invoiceId,
-            Long paymentId,
+            String paymentId,
             InvoicePaymentStatus status
     ) {
         Result<AllocationPaymentRecord> records = getDslContext()
                 .selectFrom(ALLOCATION_PAYMENT)
                 .where(ALLOCATION_PAYMENT.INVOICE_ID.eq(invoiceId))
-                .and(ALLOCATION_PAYMENT.EXT_PAYMENT_ID.eq(paymentId))
+                .and(ALLOCATION_PAYMENT.PAYMENT_ID.eq(paymentId))
                 .and(ALLOCATION_PAYMENT.STATUS.eq(status))
                 .fetch();
         return records.isEmpty() ? new ArrayList<>() : records.into(AllocationPayment.class);
@@ -82,7 +82,7 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
                 .set(getDslContext().newRecord(ALLOCATION_REFUND, allocationRefund))
                 .onConflict(
                         ALLOCATION_REFUND.INVOICE_ID,
-                        ALLOCATION_REFUND.EXT_PAYMENT_ID,
+                        ALLOCATION_REFUND.PAYMENT_ID,
                         ALLOCATION_REFUND.REFUND_ID,
                         ALLOCATION_REFUND.ALLOCATION_ID
                 )
@@ -109,14 +109,14 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
     @Override
     public List<AllocationRefund> getAllocationRefunds(
             String invoiceId,
-            Long paymentId,
+            String paymentId,
             String refundId,
             InvoicePaymentStatus status
     ) {
         Result<AllocationRefundRecord> records = getDslContext()
                 .selectFrom(ALLOCATION_REFUND)
                 .where(ALLOCATION_REFUND.INVOICE_ID.eq(invoiceId))
-                .and(ALLOCATION_REFUND.EXT_PAYMENT_ID.eq(paymentId))
+                .and(ALLOCATION_REFUND.PAYMENT_ID.eq(paymentId))
                 .and(ALLOCATION_REFUND.REFUND_ID.eq(refundId))
                 .and(ALLOCATION_REFUND.STATUS.eq(status))
                 .fetch();

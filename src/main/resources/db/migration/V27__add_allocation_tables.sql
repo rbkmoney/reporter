@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS rpt.allocation_payment
 (
     id                                BIGSERIAL                   NOT NULL,
     invoice_id                        CHARACTER VARYING           NOT NULL,
-    ext_payment_id                    BIGINT                      NOT NULL,
+    payment_id                        CHARACTER VARYING           NOT NULL,
     allocation_id                     CHARACTER VARYING           NOT NULL,
     party_id                          CHARACTER VARYING           NOT NULL,
     shop_id                           CHARACTER VARYING           NOT NULL,
@@ -11,12 +11,11 @@ CREATE TABLE IF NOT EXISTS rpt.allocation_payment
     status                            rpt.invoice_payment_status  NOT NULL,
     status_created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     created_at                        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    CONSTRAINT allocation_payment_pkey PRIMARY KEY (id),
-    FOREIGN KEY (ext_payment_id) REFERENCES rpt.payment (id)
+    CONSTRAINT allocation_payment_pkey PRIMARY KEY (id)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS allocation_payment_complex_id_idx
-ON rpt.allocation_payment (invoice_id, ext_payment_id, allocation_id);
+ON rpt.allocation_payment (invoice_id, payment_id, allocation_id);
 CREATE INDEX IF NOT EXISTS allocation_payment_created_at_idx ON rpt.allocation_payment (created_at);
 CREATE INDEX IF NOT EXISTS allocation_payment_created_at_and_status_idx ON rpt.allocation_payment (status, created_at);
 
@@ -43,7 +42,7 @@ CREATE TABLE IF NOT EXISTS rpt.allocation_refund
 (
     id                                BIGSERIAL                   NOT NULL,
     invoice_id                        CHARACTER VARYING           NOT NULL,
-    ext_payment_id                    BIGINT                      NOT NULL,
+    payment_id                        CHARACTER VARYING           NOT NULL,
     refund_id                         CHARACTER VARYING           NOT NULL,
     allocation_id                     CHARACTER VARYING           NOT NULL,
     party_id                          CHARACTER VARYING           NOT NULL,
@@ -53,11 +52,10 @@ CREATE TABLE IF NOT EXISTS rpt.allocation_refund
     status                            rpt.invoice_payment_status  NOT NULL,
     status_created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     created_at                        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    CONSTRAINT allocation_refund_pkey PRIMARY KEY (id),
-    FOREIGN KEY (ext_payment_id) REFERENCES rpt.payment (id)
+    CONSTRAINT allocation_refund_pkey PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS allocation_refund_complex_id_idx
-ON rpt.allocation_refund (invoice_id, ext_payment_id, refund_id, allocation_id);
+ON rpt.allocation_refund (invoice_id, payment_id, refund_id, allocation_id);
 CREATE INDEX IF NOT EXISTS allocation_refund_created_at_idx ON rpt.allocation_refund (created_at);
 CREATE INDEX IF NOT EXISTS allocation_refund_created_at_and_status_idx ON rpt.allocation_refund (status, created_at);
 
