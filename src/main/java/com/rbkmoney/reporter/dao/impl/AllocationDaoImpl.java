@@ -10,9 +10,12 @@ import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefundDetails;
 import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
 import com.zaxxer.hikari.HikariDataSource;
-import org.jooq.Cursor;
+import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.rbkmoney.reporter.domain.tables.AllocationPayment.ALLOCATION_PAYMENT;
 import static com.rbkmoney.reporter.domain.tables.AllocationPaymentDetails.ALLOCATION_PAYMENT_DETAILS;
@@ -58,14 +61,18 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
     }
 
     @Override
-    public Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(String invoiceId, Long paymentId,
-                                                                       InvoicePaymentStatus status) {
-        return getDslContext()
+    public List<AllocationPayment> getAllocationPayments(
+            String invoiceId,
+            Long paymentId,
+            InvoicePaymentStatus status
+    ) {
+        Result<AllocationPaymentRecord> records = getDslContext()
                 .selectFrom(ALLOCATION_PAYMENT)
                 .where(ALLOCATION_PAYMENT.INVOICE_ID.eq(invoiceId))
                 .and(ALLOCATION_PAYMENT.EXT_PAYMENT_ID.eq(paymentId))
                 .and(ALLOCATION_PAYMENT.STATUS.eq(status))
-                .fetchLazy();
+                .fetch();
+        return records.isEmpty() ? new ArrayList<>() : records.into(AllocationPayment.class);
     }
 
     @Override
@@ -100,14 +107,19 @@ public class AllocationDaoImpl extends AbstractDao implements AllocationDao {
     }
 
     @Override
-    public Cursor<AllocationRefundRecord> getAllocationRefundsCursor(String invoiceId, Long paymentId,
-                                                                     String refundId, InvoicePaymentStatus status) {
-        return getDslContext()
+    public List<AllocationRefund> getAllocationRefunds(
+            String invoiceId,
+            Long paymentId,
+            String refundId,
+            InvoicePaymentStatus status
+    ) {
+        Result<AllocationRefundRecord> records = getDslContext()
                 .selectFrom(ALLOCATION_REFUND)
                 .where(ALLOCATION_REFUND.INVOICE_ID.eq(invoiceId))
                 .and(ALLOCATION_REFUND.EXT_PAYMENT_ID.eq(paymentId))
                 .and(ALLOCATION_REFUND.REFUND_ID.eq(refundId))
                 .and(ALLOCATION_REFUND.STATUS.eq(status))
-                .fetchLazy();
+                .fetch();
+        return records.isEmpty() ? new ArrayList<>() : records.into(AllocationRefund.class);
     }
 }

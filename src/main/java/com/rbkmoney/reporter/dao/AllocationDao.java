@@ -5,9 +5,8 @@ import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPaymentDetails;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefund;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefundDetails;
-import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
-import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
-import org.jooq.Cursor;
+
+import java.util.List;
 
 public interface AllocationDao {
 
@@ -15,7 +14,7 @@ public interface AllocationDao {
 
     void saveAllocationPaymentDetails(AllocationPaymentDetails allocationPaymentDetails);
 
-    Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(
+    List<AllocationPayment> getAllocationPayments(
             String invoiceId,
             Long paymentId,
             InvoicePaymentStatus status
@@ -25,7 +24,7 @@ public interface AllocationDao {
 
     void saveAllocationRefundDetails(AllocationRefundDetails allocationRefundDetails);
 
-    Cursor<AllocationRefundRecord> getAllocationRefundsCursor(
+    List<AllocationRefund> getAllocationRefunds(
             String invoiceId,
             Long paymentId,
             String refundId,

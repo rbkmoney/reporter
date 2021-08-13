@@ -2,17 +2,12 @@ package com.rbkmoney.reporter.dao;
 
 import com.rbkmoney.reporter.config.PostgresqlSpringBootITest;
 import com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus;
-import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
 import com.rbkmoney.reporter.domain.tables.pojos.AllocationRefund;
-import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
-import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
-import org.jooq.Cursor;
-import org.jooq.Result;
+import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,13 +46,8 @@ public class AllocationDaoTest {
                     return allocationPayment;
                 }).collect(Collectors.toList());
 
-        Cursor<AllocationPaymentRecord> cursor =
-                allocationDao.getAllocationPaymentsCursor(invoiceId, extPaymentId, status);
-        List<AllocationPayment> resultRecords = new ArrayList<>();
-        while (cursor.hasNext()) {
-            Result<AllocationPaymentRecord> allocationPaymentRecords = cursor.fetchNext(100);
-            resultRecords.addAll(allocationPaymentRecords.into(AllocationPayment.class));
-        }
+        List<AllocationPayment> resultRecords =
+                allocationDao.getAllocationPayments(invoiceId, extPaymentId, status);
 
         assertEquals(recordsCount, resultRecords.size());
         sourceRecords.sort(Comparator.comparingLong(AllocationPayment::getId));
@@ -88,13 +78,8 @@ public class AllocationDaoTest {
                     return allocationRefund;
                 }).collect(Collectors.toList());
 
-        Cursor<AllocationRefundRecord> cursor =
-                allocationDao.getAllocationRefundsCursor(invoiceId, extPaymentId, refundId, status);
-        List<AllocationRefund> resultRecords = new ArrayList<>();
-        while (cursor.hasNext()) {
-            Result<AllocationRefundRecord> allocationRefundRecords = cursor.fetchNext(100);
-            resultRecords.addAll(allocationRefundRecords.into(AllocationRefund.class));
-        }
+        List<AllocationRefund> resultRecords =
+                allocationDao.getAllocationRefunds(invoiceId, extPaymentId, refundId, status);
 
         assertEquals(recordsCount, resultRecords.size());
         sourceRecords.sort(Comparator.comparingLong(AllocationRefund::getId));
