@@ -3,6 +3,9 @@ package com.rbkmoney.reporter.template;
 import com.rbkmoney.reporter.domain.enums.ReportType;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentDetailsRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.model.LocalReportCreatorDto;
@@ -12,6 +15,7 @@ import com.rbkmoney.reporter.service.ReportCreatorService;
 import com.rbkmoney.reporter.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Cursor;
+import org.jooq.Result;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -58,16 +62,25 @@ public class LocalPaymentRegistryTemplateImpl implements ReportTemplate {
         try (
                 Cursor<PaymentRecord> paymentsCursor =
                         localStatisticService.getPaymentsCursor(partyId, shopId, fromTime, toTime);
+                Cursor<AllocationPaymentRecord> allocationPaymentCursor =
+                        localStatisticService.getAllocationPaymentsCursor(partyId, shopId, fromTime, toTime);
                 Cursor<RefundRecord> refundsCursor =
                         localStatisticService.getRefundsCursor(partyId, shopId, fromTime, toTime);
+                Cursor<AllocationRefundRecord> allocationRefundCursor = localStatisticService
+                        .getAllocationRefundsCursor(partyId, shopId, fromTime, toTime);
                 Cursor<AdjustmentRecord> adjustmentCursor =
-                        localStatisticService.getAdjustmentCursor(partyId, shopId, fromTime, toTime)
+                        localStatisticService.getAdjustmentCursor(partyId, shopId, fromTime, toTime);
         ) {
+            Result<AllocationPaymentDetailsRecord> allocationPaymentDetails =
+                    localStatisticService.getAllocationPaymentsDetails(partyId, shopId, fromTime, toTime);
             LocalReportCreatorDto reportCreatorDto = LocalReportCreatorDto.builder()
                     .fromTime(formattedFromTime)
                     .toTime(formattedToTime)
                     .paymentsCursor(paymentsCursor)
+                    .allocationPaymentCursor(allocationPaymentCursor)
+                    .allocationPaymentDetails(allocationPaymentDetails)
                     .refundsCursor(refundsCursor)
+                    .allocationRefundCursor(allocationRefundCursor)
                     .adjustmentsCursor(adjustmentCursor)
                     .report(report)
                     .outputStream(outputStream)

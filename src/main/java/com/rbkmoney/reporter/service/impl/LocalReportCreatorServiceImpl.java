@@ -2,6 +2,8 @@ package com.rbkmoney.reporter.service.impl;
 
 import com.rbkmoney.reporter.domain.enums.PaymentPayerType;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentDetailsRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
@@ -13,7 +15,16 @@ import com.rbkmoney.reporter.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.poi.ss.SpreadsheetVersion;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -24,22 +35,25 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Setter
 @Service
 @RequiredArgsConstructor
 public class LocalReportCreatorServiceImpl implements ReportCreatorService<LocalReportCreatorDto> {
 
+    private static final int PACKAGE_SIZE = 100;
     private final LocalStatisticService localStatisticService;
-
     @Value("${report.includeAdjustments}")
     private boolean includeAdjustments;
-
     private int limit = SpreadsheetVersion.EXCEL2007.getLastRowIndex();
-
-    private static final int PACKAGE_SIZE = 100;
 
     @Override
     public void createReport(LocalReportCreatorDto reportCreatorDto) throws IOException {
@@ -73,10 +87,50 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
         AtomicLong totalPayoutAmnt = new AtomicLong();
 
         Cursor<PaymentRecord> paymentsCursor = reportCreatorDto.getPaymentsCursor();
+        Cursor<AllocationPaymentRecord> allocationPaymentCursor = reportCreatorDto.getAllocationPaymentCursor();
+
+        Map<String, List<AllocationPaymentRecord>> paymentIdToAllocations = new HashMap<>();
+        if (allocationPaymentCursor.hasNext()) {
+            Result<AllocationPaymentRecord> allocationPaymentRecords = allocationPaymentCursor.fetch();
+            allocationPaymentRecords
+                    .forEach(it -> {
+                        String paymentId = it.getPaymentId();
+                        if (!paymentIdToAllocations.containsKey(paymentId)) {
+                            paymentIdToAllocations.put(paymentId, new ArrayList<>());
+                        }
+                        paymentIdToAllocations.get(paymentId).add(it);
+                    });
+        }
+        Map<Long, AllocationPaymentDetailsRecord> idToAllocationsDetails = new HashMap<>();
+        reportCreatorDto.getAllocationPaymentDetails()
+                .forEach(it -> {
+                    idToAllocationsDetails.put(it.getExtAllocationPaymentId(), it);
+                });
+
         while (paymentsCursor.hasNext()) {
             Result<PaymentRecord> paymentRecords = paymentsCursor.fetchNext(PACKAGE_SIZE);
+
             for (PaymentRecord paymentRecord : paymentRecords) {
-                createPaymentRow(reportCreatorDto, sh, totalAmnt, totalPayoutAmnt, rownum, paymentRecord);
+                List<AllocationPaymentRecord> allocationPayments =
+                        paymentIdToAllocations.get(paymentRecord.getPaymentId());
+                Set<Long> allocationIds = allocationPayments.stream()
+                        .map(AllocationPaymentRecord::getId)
+                        .collect(Collectors.toSet());
+                List<AllocationPaymentDetailsRecord> allocationPaymentsDetails =
+                        reportCreatorDto.getAllocationPaymentDetails().stream()
+                                .filter(it -> allocationIds.contains(it.getExtAllocationPaymentId()))
+                                .collect(Collectors.toList());
+                createPaymentRow(
+                        reportCreatorDto,
+                        wb,
+                        sh,
+                        totalAmnt,
+                        totalPayoutAmnt,
+                        rownum,
+                        paymentRecord,
+                        allocationPayments,
+                        allocationPaymentsDetails
+                );
                 sh = checkAndReset(wb, sh, rownum);
             }
         }
@@ -343,54 +397,115 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
     }
 
     private void createPaymentRow(LocalReportCreatorDto reportCreatorDto,
+                                  SXSSFWorkbook wb,
                                   Sheet sh,
                                   AtomicLong totalAmnt,
                                   AtomicLong totalPayoutAmnt,
                                   AtomicInteger rownum,
-                                  PaymentRecord payment) {
+                                  PaymentRecord payment,
+                                  List<AllocationPaymentRecord> allocationPayments,
+                                  List<AllocationPaymentDetailsRecord> allocationPaymentsDetails) {
+        createFullPaymentRow(reportCreatorDto, sh, totalAmnt, totalPayoutAmnt, rownum, payment);
+        sh = checkAndReset(wb, sh, rownum);
+
+        for (AllocationPaymentRecord allocationPayment : allocationPayments) {
+            AllocationPaymentDetailsRecord allocationDetails = allocationPaymentsDetails.stream()
+                    .filter(it -> it.getExtAllocationPaymentId().equals(allocationPayment.getId()))
+                    .findFirst().orElseThrow();
+            createAllocationRow(reportCreatorDto, sh, rownum, payment, allocationPayment, allocationDetails);
+            sh = checkAndReset(wb, sh, rownum);
+        }
+    }
+
+    private void createFullPaymentRow(
+            LocalReportCreatorDto reportCreatorDto,
+            Sheet sh,
+            AtomicLong totalAmnt,
+            AtomicLong totalPayoutAmnt,
+            AtomicInteger rownum,
+            PaymentRecord payment
+    ) {
         ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
+
         Row row = sh.createRow(rownum.getAndIncrement());
         row.createCell(0).setCellValue(payment.getInvoiceId() + "." + payment.getPaymentId());
-        row.createCell(1).setCellValue(
+        row.createCell(1).setCellValue(payment.getShopId());
+        row.createCell(2).setCellValue(
                 TimeUtil.toLocalizedDateTime(payment.getStatusCreatedAt(), reportZoneId));
-        row.createCell(2).setCellValue(payment.getTool().getName());
-        row.createCell(3).setCellValue(FormatUtil.formatCurrency(payment.getAmount()));
-        row.createCell(4).setCellValue(
+        row.createCell(3).setCellValue(payment.getTool().getName());
+        row.createCell(4).setCellValue(FormatUtil.formatCurrency(payment.getAmount()));
+        row.createCell(5).setCellValue("не указывается");
+        row.createCell(6).setCellValue(
                 FormatUtil.formatCurrency(payment.getAmount() - payment.getFee()));
         totalAmnt.addAndGet(payment.getAmount());
         totalPayoutAmnt.addAndGet(payment.getAmount() - payment.getFee());
-        row.createCell(5).setCellValue(payment.getEmail());
-        row.createCell(6).setCellValue(reportCreatorDto.getShopUrls().get(payment.getShopId()));
+        row.createCell(7).setCellValue(payment.getEmail());
+        row.createCell(8).setCellValue(reportCreatorDto.getShopUrls().get(payment.getShopId()));
         String purpose = reportCreatorDto.getPurposes().get(payment.getInvoiceId());
         if (purpose == null) {
             InvoiceRecord invoice = localStatisticService.getInvoice(payment.getInvoiceId());
             purpose = invoice.getProduct();
         }
-        row.createCell(7).setCellValue(purpose);
-        row.createCell(8).setCellValue(FormatUtil.formatCurrency(payment.getFee()));
-        row.createCell(9).setCellValue(payment.getCurrencyCode());
-        row.createCell(10).setCellValue(payment.getExternalId());
+        row.createCell(9).setCellValue(purpose);
+        row.createCell(10).setCellValue(FormatUtil.formatCurrency(payment.getFee()));
+        row.createCell(11).setCellValue(payment.getCurrencyCode());
+        row.createCell(12).setCellValue(payment.getExternalId());
+    }
+
+    private void createAllocationRow(
+            LocalReportCreatorDto reportCreatorDto,
+            Sheet sh,
+            AtomicInteger rownum,
+            PaymentRecord payment,
+            AllocationPaymentRecord allocationPayment,
+            AllocationPaymentDetailsRecord allocationPaymentDetails
+    ) {
+        ZoneId reportZoneId = ZoneId.of(reportCreatorDto.getReport().getTimezone());
+
+        Row row = sh.createRow(rownum.getAndIncrement());
+        row.createCell(0).setCellValue(payment.getInvoiceId() + "." + payment.getPaymentId());
+        row.createCell(1).setCellValue(allocationPayment.getShopId());
+        row.createCell(2).setCellValue(
+                TimeUtil.toLocalizedDateTime(payment.getStatusCreatedAt(), reportZoneId));
+        row.createCell(3).setCellValue(payment.getTool().getName());
+        row.createCell(4).setCellValue("не указывается");
+        row.createCell(5).setCellValue(FormatUtil.formatCurrency(allocationPayment.getAmount()));
+        row.createCell(6).setCellValue(
+                FormatUtil.formatCurrency(allocationPayment.getAmount() - allocationPaymentDetails.getFeeAmount()));
+        row.createCell(7).setCellValue(payment.getEmail());
+        row.createCell(8).setCellValue(reportCreatorDto.getShopUrls().get(payment.getShopId()));
+        String purpose = reportCreatorDto.getPurposes().get(payment.getInvoiceId());
+        if (purpose == null) {
+            InvoiceRecord invoice = localStatisticService.getInvoice(payment.getInvoiceId());
+            purpose = invoice.getProduct();
+        }
+        row.createCell(9).setCellValue(purpose);
+        row.createCell(10).setCellValue(FormatUtil.formatCurrency(allocationPaymentDetails.getFeeAmount()));
+        row.createCell(11).setCellValue(allocationPayment.getCurrencyCode());
+        row.createCell(12).setCellValue(payment.getExternalId());
     }
 
     private void createPaymentsColumnsDesciptionRow(Workbook wb, Sheet sh, AtomicInteger rownum) {
         Row rowSecondPayments = sh.createRow(rownum.getAndIncrement());
-        for (int i = 0; i < 11; ++i) {
+        for (int i = 0; i < 13; ++i) {
             Cell cell = rowSecondPayments.createCell(i);
             CellUtil.setAlignment(cell, HorizontalAlignment.CENTER);
             cell.setCellStyle(createGreyCellStyle(wb));
             CellUtil.setFont(cell, createBoldFont(wb));
         }
         rowSecondPayments.getCell(0).setCellValue("Id платежа");
-        rowSecondPayments.getCell(1).setCellValue("Дата");
-        rowSecondPayments.getCell(2).setCellValue("Метод оплаты");
-        rowSecondPayments.getCell(3).setCellValue("Сумма платежа");
-        rowSecondPayments.getCell(4).setCellValue("Сумма к выводу");
-        rowSecondPayments.getCell(5).setCellValue("Email плательщика");
-        rowSecondPayments.getCell(6).setCellValue("URL магазина");
-        rowSecondPayments.getCell(7).setCellValue("Назначение платежа");
-        rowSecondPayments.getCell(8).setCellValue("Комиссия");
-        rowSecondPayments.getCell(9).setCellValue("Валюта");
-        rowSecondPayments.getCell(10).setCellValue("Id мерчанта");
+        rowSecondPayments.getCell(1).setCellValue("Shop ID");
+        rowSecondPayments.getCell(2).setCellValue("Дата");
+        rowSecondPayments.getCell(3).setCellValue("Метод оплаты");
+        rowSecondPayments.getCell(4).setCellValue("Сумма платежа");
+        rowSecondPayments.getCell(5).setCellValue("Стоимость товара/услуги");
+        rowSecondPayments.getCell(6).setCellValue("Сумма к выводу");
+        rowSecondPayments.getCell(7).setCellValue("Email плательщика");
+        rowSecondPayments.getCell(8).setCellValue("URL магазина");
+        rowSecondPayments.getCell(9).setCellValue("Назначение платежа");
+        rowSecondPayments.getCell(10).setCellValue("Комиссия");
+        rowSecondPayments.getCell(11).setCellValue("Валюта");
+        rowSecondPayments.getCell(12).setCellValue("Id мерчанта");
     }
 
     private void createPaymentsHeadRow(LocalReportCreatorDto reportCreatorDto,

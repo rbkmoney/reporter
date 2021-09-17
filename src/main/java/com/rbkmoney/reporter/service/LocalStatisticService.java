@@ -1,10 +1,14 @@
 package com.rbkmoney.reporter.service;
 
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentDetailsRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import org.jooq.Cursor;
+import org.jooq.Result;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -20,9 +24,24 @@ public interface LocalStatisticService {
                                             LocalDateTime fromTime,
                                             LocalDateTime toTime);
 
+    Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(String partyId,
+                                                                String shopId,
+                                                                LocalDateTime fromTime,
+                                                                LocalDateTime toTime);
+
+    Result<AllocationPaymentDetailsRecord> getAllocationPaymentsDetails(String partyId,
+                                                                        String shopId,
+                                                                        LocalDateTime fromTime,
+                                                                        LocalDateTime toTime);
+
     PaymentRecord getCapturedPayment(String partyId, String shopId, String invoiceId, String paymentId);
 
     Cursor<RefundRecord> getRefundsCursor(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime);
+
+    Cursor<AllocationRefundRecord> getAllocationRefundsCursor(String partyId,
+                                                              String shopId,
+                                                              LocalDateTime fromTime,
+                                                              LocalDateTime toTime);
 
     Cursor<AdjustmentRecord> getAdjustmentCursor(String partyId,
                                                  String shopId,

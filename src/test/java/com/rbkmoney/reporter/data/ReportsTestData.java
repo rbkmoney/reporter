@@ -5,6 +5,8 @@ import com.rbkmoney.reporter.domain.enums.PaymentFlow;
 import com.rbkmoney.reporter.domain.enums.PaymentPayerType;
 import com.rbkmoney.reporter.domain.enums.RefundStatus;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentDetailsRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 
@@ -99,6 +101,57 @@ public class ReportsTestData {
         payment.setFee(feeAmount);
         payment.setCurrencyCode(DEFAULT_CURRENCY);
         return payment;
+    }
+
+    public static AllocationPaymentRecord buildAllocationPaymentRecord(
+            int index,
+            String paymentId,
+            String partyId,
+            String shopId,
+            LocalDateTime createdAt
+    ) {
+        long amount = 123L + index;
+        return buildAllocationPaymentRecord(index, paymentId, partyId, shopId, amount, createdAt);
+    }
+
+    public static AllocationPaymentRecord buildAllocationPaymentRecord(
+            int index,
+            String paymentId,
+            String partyId,
+            String shopId,
+            Long amount,
+            LocalDateTime statusCreatedAt) {
+        AllocationPaymentRecord allocation = new AllocationPaymentRecord();
+        allocation.setPaymentId(paymentId);
+        allocation.setAllocationId("allocationId" + index);
+        allocation.setCreatedAt(LocalDateTime.now());
+        allocation.setInvoiceId("invoiceId" + index);
+        allocation.setPaymentId("paymentId" + index);
+        allocation.setPartyId(partyId);
+        allocation.setShopId(shopId);
+        allocation.setStatus(com.rbkmoney.reporter.domain.enums.InvoicePaymentStatus.captured);
+        allocation.setStatusCreatedAt(statusCreatedAt);
+        allocation.setAmount(amount);
+        allocation.setCurrencyCode(DEFAULT_CURRENCY);
+        return allocation;
+    }
+
+    public static AllocationPaymentDetailsRecord buildAllocationPaymentDetailsRecord(
+            int index,
+            Long allocationId
+    ) {
+        long feeAmount = 2L + index;
+        return buildAllocationPaymentDetailsRecord(allocationId, feeAmount);
+    }
+
+    public static AllocationPaymentDetailsRecord buildAllocationPaymentDetailsRecord(
+            Long allocationId,
+            Long feeAmount
+    ) {
+        AllocationPaymentDetailsRecord details = new AllocationPaymentDetailsRecord();
+        details.setExtAllocationPaymentId(allocationId);
+        details.setFeeAmount(feeAmount);
+        return details;
     }
 
     public static Map<String, String> buildPurposes(int count) {

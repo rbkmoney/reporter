@@ -3,15 +3,21 @@ package com.rbkmoney.reporter.report;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
 import com.rbkmoney.reporter.config.PostgresqlSpringBootITest;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
+import com.rbkmoney.reporter.dao.AllocationDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.data.ReportsTestData;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
+import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
+import com.rbkmoney.reporter.domain.tables.pojos.AllocationPaymentDetails;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentDetailsRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
@@ -21,6 +27,7 @@ import com.rbkmoney.reporter.service.impl.LocalReportCreatorServiceImpl;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jooq.Cursor;
+import org.jooq.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,7 +38,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static com.rbkmoney.testcontainers.annotations.util.RandomBeans.random;
@@ -43,6 +54,9 @@ public class ReportCreatorServiceTest {
 
     @Autowired
     private PaymentDao paymentDao;
+
+    @Autowired
+    private AllocationDao allocationDao;
 
     @Autowired
     private RefundDao refundDao;
@@ -79,6 +93,30 @@ public class ReportCreatorServiceTest {
             paymentDao.savePayment(paymentRecord.into(Payment.class));
         }
 
+        List<AllocationPaymentRecord> allocationPaymentRecordList = new ArrayList<>();
+        for (int i = 0; i < defaultOperationsCount; ++i) {
+            PaymentRecord payment = paymentRecordList.get(i);
+            AllocationPaymentRecord allocationRecord = ReportsTestData.buildAllocationPaymentRecord(
+                    i,
+                    payment.getPaymentId(),
+                    partyId,
+                    shopId,
+                    payment.getCreatedAt()
+            );
+            Long id = allocationDao.saveAllocationPayment(allocationRecord.into(AllocationPayment.class));
+            allocationRecord.setId(id);
+            allocationPaymentRecordList.add(allocationRecord);
+        }
+
+        List<AllocationPaymentDetailsRecord> allocationPaymentDetailsRecordList = new ArrayList<>();
+        for (int i = 0; i < defaultOperationsCount; ++i) {
+            AllocationPaymentRecord allocation = allocationPaymentRecordList.get(i);
+            AllocationPaymentDetailsRecord allocationDetailsRecord =
+                    ReportsTestData.buildAllocationPaymentDetailsRecord(i, allocation.getId());
+            allocationPaymentDetailsRecordList.add(allocationDetailsRecord);
+            allocationDao.saveAllocationPaymentDetails(allocationDetailsRecord.into(AllocationPaymentDetails.class));
+        }
+
         List<RefundRecord> refundRecordList = new ArrayList<>();
         for (int i = 0; i < defaultOperationsCount; ++i) {
             LocalDateTime createdAt = LocalDateTime.now().minusHours(defaultOperationsCount + 1 - i);
@@ -104,8 +142,14 @@ public class ReportCreatorServiceTest {
         LocalDateTime toTime = LocalDateTime.now();
         Cursor<PaymentRecord> paymentCursor =
                 paymentDao.getPaymentsCursor(partyId, shopId, Optional.of(fromTime), toTime);
+        Cursor<AllocationPaymentRecord> allocationPaymentCursor =
+                allocationDao.getAllocationPaymentsCursor(partyId, shopId, Optional.of(fromTime), toTime);
+        Result<AllocationPaymentDetailsRecord> allocationPaymentDetails =
+                allocationDao.getAllocationPaymentsDetails(partyId, shopId, Optional.of(fromTime), toTime);
         Cursor<RefundRecord> refundCursor =
                 refundDao.getRefundsCursor(partyId, shopId, fromTime, toTime);
+        Cursor<AllocationRefundRecord> allocationRefundCursor =
+                allocationDao.getAllocationRefundsCursor(partyId, shopId, Optional.of(fromTime), toTime);
         Cursor<AdjustmentRecord> adjustmentCursor =
                 adjustmentDao.getAdjustmentCursor(partyId, shopId, fromTime, toTime);
 
@@ -127,7 +171,10 @@ public class ReportCreatorServiceTest {
                     fromTime.toString(),
                     toTime.toString(),
                     paymentCursor,
+                    allocationPaymentCursor,
+                    allocationPaymentDetails,
                     refundCursor,
+                    allocationRefundCursor,
                     adjustmentCursor,
                     report,
                     Files.newOutputStream(tempFile),
