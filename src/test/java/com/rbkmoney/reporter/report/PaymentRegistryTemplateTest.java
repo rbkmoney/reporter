@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.rbkmoney.testcontainers.annotations.util.RandomBeans.random;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -184,6 +185,10 @@ public class PaymentRegistryTemplateTest {
             Row paymentsFirstRow = sheet.getRow(2);
             assertEquals(FormatUtil.formatCurrency(2L), paymentsFirstRow.getCell(10).getStringCellValue());
             assertEquals("RUB", paymentsFirstRow.getCell(11).getStringCellValue());
+
+            Row paymentSecondRow = sheet.getRow(3);
+            assertEquals(shopId, paymentSecondRow.getCell(1).getStringCellValue());
+            assertNotNull(paymentSecondRow.getCell(5).getStringCellValue());
 
             Cell paymentsTotalSum = sheet.getRow(8).getCell(3);
             assertEquals(FormatUtil.formatCurrency(expectedSum), paymentsTotalSum.getStringCellValue());
