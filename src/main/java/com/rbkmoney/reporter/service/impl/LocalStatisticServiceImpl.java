@@ -14,23 +14,17 @@ import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
 import com.rbkmoney.reporter.exception.PaymentNotFoundException;
+import com.rbkmoney.reporter.model.LocalReportFilter;
 import com.rbkmoney.reporter.service.LocalStatisticService;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Cursor;
 import org.jooq.Result;
 import org.springframework.stereotype.Service;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -42,19 +36,14 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
     private final AllocationDao allocationDao;
     private final AdjustmentDao adjustmentDao;
 
-    private ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-
     @Override
-    public Map<String, String> getPurposes(String partyId,
-                                           String shopId,
-                                           LocalDateTime fromTime,
-                                           LocalDateTime toTime) {
+    public Map<String, String> getPurposes(LocalReportFilter filter) {
         Map<String, String> purposes = new HashMap<>();
         List<Invoice> invoices = invoiceDao.getInvoices(
-                partyId,
-                shopId,
-                Optional.ofNullable(fromTime),
-                toTime
+                filter.getPartyId(),
+                filter.getShopId(),
+                Optional.ofNullable(filter.getFromTime()),
+                filter.getToTime()
         );
         invoices.forEach(invoice -> purposes.put(invoice.getInvoiceId(), invoice.getProduct()));
         return purposes;
@@ -66,46 +55,37 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
     }
 
     @Override
-    public Cursor<PaymentRecord> getPaymentsCursor(String partyId,
-                                                   String shopId,
-                                                   LocalDateTime fromTime,
-                                                   LocalDateTime toTime) {
+    public Cursor<PaymentRecord> getPaymentsCursor(LocalReportFilter filter) {
         return paymentDao.getPaymentsCursor(
-                partyId,
-                shopId,
-                Optional.ofNullable(fromTime),
-                toTime
+                filter.getPartyId(),
+                filter.getShopId(),
+                Optional.ofNullable(filter.getFromTime()),
+                filter.getToTime()
         );
     }
 
     @Override
-    public Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(String partyId, String shopId,
-                                                                       LocalDateTime fromTime, LocalDateTime toTime) {
+    public Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(LocalReportFilter filter) {
         return allocationDao.getAllocationPaymentsCursor(
-                partyId,
-                shopId,
-                Optional.ofNullable(fromTime),
-                toTime
+                filter.getPartyId(),
+                filter.getShopId(),
+                Optional.ofNullable(filter.getFromTime()),
+                filter.getToTime()
         );
     }
 
     @Override
-    public Result<AllocationPaymentDetailsRecord> getAllocationPaymentsDetails(String partyId, String shopId,
-                                                                               LocalDateTime fromTime,
-                                                                               LocalDateTime toTime) {
+    public Result<AllocationPaymentDetailsRecord> getAllocationPaymentsDetails(LocalReportFilter filter) {
         return allocationDao.getAllocationPaymentsDetails(
-                partyId,
-                shopId,
-                Optional.ofNullable(fromTime),
-                toTime
+                filter.getPartyId(),
+                filter.getShopId(),
+                Optional.ofNullable(filter.getFromTime()),
+                filter.getToTime()
         );
     }
 
     @Override
-    public PaymentRecord getCapturedPayment(String partyId,
-                                            String shopId,
-                                            String invoiceId,
-                                            String paymentId) {
+    public PaymentRecord getCapturedPayment(String partyId, String shopId, String invoiceId, String paymentId) {
         PaymentRecord payment = paymentDao.getPayment(partyId, shopId, invoiceId, paymentId);
         if (payment == null) {
             throw new PaymentNotFoundException(String.format("Payment not found, " +
@@ -115,37 +95,33 @@ public class LocalStatisticServiceImpl implements LocalStatisticService {
     }
 
     @Override
-    public Cursor<RefundRecord> getRefundsCursor(String partyId,
-                                                 String shopId,
-                                                 LocalDateTime fromTime,
-                                                 LocalDateTime toTime) {
-        return refundDao.getRefundsCursor(partyId, shopId, fromTime, toTime);
-    }
-
-    @Override
-    public Cursor<AllocationRefundRecord> getAllocationRefundsCursor(String partyId, String shopId,
-                                                                     LocalDateTime fromTime, LocalDateTime toTime) {
-        return allocationDao.getAllocationRefundsCursor(
-                partyId,
-                shopId,
-                Optional.ofNullable(fromTime),
-                toTime
+    public Cursor<RefundRecord> getRefundsCursor(LocalReportFilter filter) {
+        return refundDao.getRefundsCursor(
+                filter.getPartyId(),
+                filter.getShopId(),
+                filter.getFromTime(),
+                filter.getToTime()
         );
     }
 
     @Override
-    public Cursor<AdjustmentRecord> getAdjustmentCursor(String partyId,
-                                                        String shopId,
-                                                        LocalDateTime fromTime,
-                                                        LocalDateTime toTime) {
-        return adjustmentDao.getAdjustmentCursor(partyId, shopId, fromTime, toTime);
+    public Cursor<AllocationRefundRecord> getAllocationRefundsCursor(LocalReportFilter filter) {
+        return allocationDao.getAllocationRefundsCursor(
+                filter.getPartyId(),
+                filter.getShopId(),
+                Optional.ofNullable(filter.getFromTime()),
+                filter.getToTime()
+        );
     }
 
-    private <T> void validate(T model) {
-        Set<ConstraintViolation<T>> constraintViolations = factory.getValidator().validate(model);
-        if (!constraintViolations.isEmpty()) {
-            throw new ConstraintViolationException(constraintViolations);
-        }
+    @Override
+    public Cursor<AdjustmentRecord> getAdjustmentCursor(LocalReportFilter filter) {
+        return adjustmentDao.getAdjustmentCursor(
+                filter.getPartyId(),
+                filter.getShopId(),
+                filter.getFromTime(),
+                filter.getToTime()
+        );
     }
 
 }

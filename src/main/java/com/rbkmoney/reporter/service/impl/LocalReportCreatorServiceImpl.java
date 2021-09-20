@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -76,6 +75,32 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
         }
     }
 
+    private Map<String, List<AllocationPaymentRecord>> prepareAllocationPayments(
+            Cursor<AllocationPaymentRecord> cursor
+    ) {
+        Map<String, List<AllocationPaymentRecord>> paymentIdToAllocations = new HashMap<>();
+        if (cursor.hasNext()) {
+            Result<AllocationPaymentRecord> allocationPaymentRecords = cursor.fetch();
+            allocationPaymentRecords
+                    .forEach(it -> {
+                        String paymentId = it.getPaymentId();
+                        if (!paymentIdToAllocations.containsKey(paymentId)) {
+                            paymentIdToAllocations.put(paymentId, new ArrayList<>());
+                        }
+                        paymentIdToAllocations.get(paymentId).add(it);
+                    });
+        }
+        return paymentIdToAllocations;
+    }
+
+    private Map<Long, AllocationPaymentDetailsRecord> prepareAllocationPaymentDetails(
+            Result<AllocationPaymentDetailsRecord> allocationPaymentDetails
+    ) {
+        Map<Long, AllocationPaymentDetailsRecord> idToAllocationsDetails = new HashMap<>();
+        allocationPaymentDetails.forEach(it -> idToAllocationsDetails.put(it.getExtAllocationPaymentId(), it));
+        return idToAllocationsDetails;
+    }
+
     private Sheet createPaymentTable(LocalReportCreatorDto reportCreatorDto,
                                      SXSSFWorkbook wb,
                                      Sheet sh,
@@ -88,24 +113,13 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
 
         Cursor<PaymentRecord> paymentsCursor = reportCreatorDto.getPaymentsCursor();
         Cursor<AllocationPaymentRecord> allocationPaymentCursor = reportCreatorDto.getAllocationPaymentCursor();
+        Result<AllocationPaymentDetailsRecord> allocationPaymentDetailsResult =
+                reportCreatorDto.getAllocationPaymentDetails();
 
-        Map<String, List<AllocationPaymentRecord>> paymentIdToAllocations = new HashMap<>();
-        if (allocationPaymentCursor.hasNext()) {
-            Result<AllocationPaymentRecord> allocationPaymentRecords = allocationPaymentCursor.fetch();
-            allocationPaymentRecords
-                    .forEach(it -> {
-                        String paymentId = it.getPaymentId();
-                        if (!paymentIdToAllocations.containsKey(paymentId)) {
-                            paymentIdToAllocations.put(paymentId, new ArrayList<>());
-                        }
-                        paymentIdToAllocations.get(paymentId).add(it);
-                    });
-        }
-        Map<Long, AllocationPaymentDetailsRecord> idToAllocationsDetails = new HashMap<>();
-        reportCreatorDto.getAllocationPaymentDetails()
-                .forEach(it -> {
-                    idToAllocationsDetails.put(it.getExtAllocationPaymentId(), it);
-                });
+        Map<String, List<AllocationPaymentRecord>> paymentIdToAllocations =
+                prepareAllocationPayments(allocationPaymentCursor);
+        Map<Long, AllocationPaymentDetailsRecord> idToAllocationsDetails =
+                prepareAllocationPaymentDetails(allocationPaymentDetailsResult);
 
         while (paymentsCursor.hasNext()) {
             Result<PaymentRecord> paymentRecords = paymentsCursor.fetchNext(PACKAGE_SIZE);
@@ -113,13 +127,10 @@ public class LocalReportCreatorServiceImpl implements ReportCreatorService<Local
             for (PaymentRecord paymentRecord : paymentRecords) {
                 List<AllocationPaymentRecord> allocationPayments =
                         paymentIdToAllocations.get(paymentRecord.getPaymentId());
-                Set<Long> allocationIds = allocationPayments.stream()
+                List<AllocationPaymentDetailsRecord> allocationPaymentsDetails = allocationPayments.stream()
                         .map(AllocationPaymentRecord::getId)
-                        .collect(Collectors.toSet());
-                List<AllocationPaymentDetailsRecord> allocationPaymentsDetails =
-                        reportCreatorDto.getAllocationPaymentDetails().stream()
-                                .filter(it -> allocationIds.contains(it.getExtAllocationPaymentId()))
-                                .collect(Collectors.toList());
+                        .map(idToAllocationsDetails::get)
+                        .collect(Collectors.toList());
                 createPaymentRow(
                         reportCreatorDto,
                         wb,

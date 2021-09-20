@@ -7,45 +7,30 @@ import com.rbkmoney.reporter.domain.tables.records.AllocationRefundRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
+import com.rbkmoney.reporter.model.LocalReportFilter;
 import org.jooq.Cursor;
 import org.jooq.Result;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 public interface LocalStatisticService {
 
-    Map<String, String> getPurposes(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime);
+    Map<String, String> getPurposes(LocalReportFilter filter);
 
     InvoiceRecord getInvoice(String invoiceId);
 
-    Cursor<PaymentRecord> getPaymentsCursor(String partyId,
-                                            String shopId,
-                                            LocalDateTime fromTime,
-                                            LocalDateTime toTime);
+    Cursor<PaymentRecord> getPaymentsCursor(LocalReportFilter filter);
 
-    Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(String partyId,
-                                                                String shopId,
-                                                                LocalDateTime fromTime,
-                                                                LocalDateTime toTime);
+    Cursor<AllocationPaymentRecord> getAllocationPaymentsCursor(LocalReportFilter filter);
 
-    Result<AllocationPaymentDetailsRecord> getAllocationPaymentsDetails(String partyId,
-                                                                        String shopId,
-                                                                        LocalDateTime fromTime,
-                                                                        LocalDateTime toTime);
+    Result<AllocationPaymentDetailsRecord> getAllocationPaymentsDetails(LocalReportFilter filter);
 
     PaymentRecord getCapturedPayment(String partyId, String shopId, String invoiceId, String paymentId);
 
-    Cursor<RefundRecord> getRefundsCursor(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime);
+    Cursor<RefundRecord> getRefundsCursor(LocalReportFilter filter);
 
-    Cursor<AllocationRefundRecord> getAllocationRefundsCursor(String partyId,
-                                                              String shopId,
-                                                              LocalDateTime fromTime,
-                                                              LocalDateTime toTime);
+    Cursor<AllocationRefundRecord> getAllocationRefundsCursor(LocalReportFilter filter);
 
-    Cursor<AdjustmentRecord> getAdjustmentCursor(String partyId,
-                                                 String shopId,
-                                                 LocalDateTime fromTime,
-                                                 LocalDateTime toTime);
+    Cursor<AdjustmentRecord> getAdjustmentCursor(LocalReportFilter filter);
 
 }
