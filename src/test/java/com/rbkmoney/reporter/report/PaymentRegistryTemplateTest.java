@@ -5,15 +5,20 @@ import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.reporter.config.PostgresqlSpringBootITest;
 import com.rbkmoney.reporter.dao.AdjustmentDao;
+import com.rbkmoney.reporter.dao.AllocationDao;
 import com.rbkmoney.reporter.dao.InvoiceDao;
 import com.rbkmoney.reporter.dao.PaymentDao;
 import com.rbkmoney.reporter.dao.RefundDao;
 import com.rbkmoney.reporter.data.ReportsTestData;
 import com.rbkmoney.reporter.domain.tables.pojos.Adjustment;
+import com.rbkmoney.reporter.domain.tables.pojos.AllocationPayment;
+import com.rbkmoney.reporter.domain.tables.pojos.AllocationPaymentDetails;
 import com.rbkmoney.reporter.domain.tables.pojos.Payment;
 import com.rbkmoney.reporter.domain.tables.pojos.Refund;
 import com.rbkmoney.reporter.domain.tables.pojos.Report;
 import com.rbkmoney.reporter.domain.tables.records.AdjustmentRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentDetailsRecord;
+import com.rbkmoney.reporter.domain.tables.records.AllocationPaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.reporter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.reporter.domain.tables.records.RefundRecord;
@@ -44,6 +49,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.rbkmoney.testcontainers.annotations.util.RandomBeans.random;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -53,6 +59,9 @@ public class PaymentRegistryTemplateTest {
 
     @Autowired
     private PaymentDao paymentDao;
+
+    @Autowired
+    private AllocationDao allocationDao;
 
     @Autowired
     private RefundDao refundDao;
@@ -90,6 +99,30 @@ public class PaymentRegistryTemplateTest {
             PaymentRecord paymentRecord = ReportsTestData.buildPaymentRecord(i, partyId, shopId, createdAt);
             paymentRecordList.add(paymentRecord);
             paymentDao.savePayment(paymentRecord.into(Payment.class));
+        }
+
+        List<AllocationPaymentRecord> allocationPaymentRecordList = new ArrayList<>();
+        for (int i = 0; i < defaultOperationsCount; ++i) {
+            PaymentRecord payment = paymentRecordList.get(i);
+            AllocationPaymentRecord allocationRecord = ReportsTestData.buildAllocationPaymentRecord(
+                    i,
+                    payment.getPaymentId(),
+                    partyId,
+                    shopId,
+                    payment.getCreatedAt()
+            );
+            Long id = allocationDao.saveAllocationPayment(allocationRecord.into(AllocationPayment.class));
+            allocationRecord.setId(id);
+            allocationPaymentRecordList.add(allocationRecord);
+        }
+
+        List<AllocationPaymentDetailsRecord> allocationPaymentDetailsRecordList = new ArrayList<>();
+        for (int i = 0; i < defaultOperationsCount; ++i) {
+            AllocationPaymentRecord allocation = allocationPaymentRecordList.get(i);
+            AllocationPaymentDetailsRecord allocationDetailsRecord =
+                    ReportsTestData.buildAllocationPaymentDetailsRecord(i, allocation.getId());
+            allocationPaymentDetailsRecordList.add(allocationDetailsRecord);
+            allocationDao.saveAllocationPaymentDetails(allocationDetailsRecord.into(AllocationPaymentDetails.class));
         }
 
         List<RefundRecord> refundRecordList = new ArrayList<>();
@@ -150,22 +183,26 @@ public class PaymentRegistryTemplateTest {
                     paymentsHeaderCell.getStringCellValue());
 
             Row paymentsFirstRow = sheet.getRow(2);
-            assertEquals(FormatUtil.formatCurrency(2L), paymentsFirstRow.getCell(8).getStringCellValue());
-            assertEquals("RUB", paymentsFirstRow.getCell(9).getStringCellValue());
+            assertEquals(FormatUtil.formatCurrency(2L), paymentsFirstRow.getCell(10).getStringCellValue());
+            assertEquals("RUB", paymentsFirstRow.getCell(11).getStringCellValue());
 
-            Cell paymentsTotalSum = sheet.getRow(5).getCell(3);
+            Row paymentSecondRow = sheet.getRow(3);
+            assertEquals(shopId, paymentSecondRow.getCell(1).getStringCellValue());
+            assertNotNull(paymentSecondRow.getCell(5).getStringCellValue());
+
+            Cell paymentsTotalSum = sheet.getRow(8).getCell(3);
             assertEquals(FormatUtil.formatCurrency(expectedSum), paymentsTotalSum.getStringCellValue());
 
-            Cell refundsHeaderCell = sheet.getRow(8).getCell(0);
+            Cell refundsHeaderCell = sheet.getRow(11).getCell(0);
             assertEquals(String.format("Возвраты за период с %s по %s", from, to),
                     refundsHeaderCell.getStringCellValue());
 
-            Row refundsFirstRow = sheet.getRow(10);
+            Row refundsFirstRow = sheet.getRow(13);
             assertEquals("0", refundsFirstRow.getCell(8).getStringCellValue());
             assertEquals("You are the reason of my life", refundsFirstRow.getCell(9).getStringCellValue());
             assertEquals("RUB", refundsFirstRow.getCell(10).getStringCellValue());
 
-            Cell refundsTotalSum = sheet.getRow(13).getCell(3);
+            Cell refundsTotalSum = sheet.getRow(16).getCell(3);
             assertEquals(FormatUtil.formatCurrency(expectedRefundSum), refundsTotalSum.getStringCellValue());
         } finally {
             Files.deleteIfExists(tempFile);
