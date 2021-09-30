@@ -57,6 +57,7 @@ public class InvoiceDaoImpl extends AbstractDao implements InvoiceDao {
     public String getInvoicePurpose(String invoiceId) {
         final Record1<String> purpose = getDslContext()
                 .select(INVOICE.PRODUCT)
+                .from(INVOICE)
                 .where(INVOICE.INVOICE_ID.eq(invoiceId))
                 .fetchOne();
         return purpose == null ? null : purpose.value1();
