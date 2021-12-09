@@ -102,8 +102,8 @@ storage:
   signerOverride: S3SignerType
   bucketName: test
   client:
+    protocol: HTTP
     maxErrorRetry: 10
-    clientProtocol: HTTP
   accessKey: test
   secretKey: test
 
